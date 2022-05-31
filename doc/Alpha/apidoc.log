@@ -1,0 +1,24 @@
+5月 31, 2022 11:06:24 上午 io.github.yedaxia.apidocs.LogUtils info
+信息: info: find java src paths:  [./src/main/java]
+5月 31, 2022 11:06:24 上午 io.github.yedaxia.apidocs.LogUtils info
+信息: info: project type not set, try to figure out...
+5月 31, 2022 11:06:24 上午 io.github.yedaxia.apidocs.LogUtils info
+信息: info: start find controllers in path : ./src/main/java
+5月 31, 2022 11:06:24 上午 io.github.yedaxia.apidocs.LogUtils info
+信息: info: find controller file : UserController.java
+5月 31, 2022 11:06:24 上午 io.github.yedaxia.apidocs.LogUtils info
+信息: info: start to parse controller file : UserController.java
+5月 31, 2022 11:06:24 上午 io.github.yedaxia.apidocs.LogUtils info
+信息: info: success to parse controller file : UserController.java
+5月 31, 2022 11:06:24 上午 io.github.yedaxia.apidocs.LogUtils info
+信息: info: generate api docs start...
+5月 31, 2022 11:06:24 上午 io.github.yedaxia.apidocs.LogUtils info
+信息: info: start to generate docs for controller file : D:\IdeaProjects\ArkLightsCloudBackEnd\.\src\main\java\moe\dazecake\arklightscloudbackend\controller\UserController.java
+5月 31, 2022 11:06:25 上午 io.github.yedaxia.apidocs.LogUtils info
+信息: info: success to generate docs for controller file : D:\IdeaProjects\ArkLightsCloudBackEnd\.\src\main\java\moe\dazecake\arklightscloudbackend\controller\UserController.java
+5月 31, 2022 11:06:25 上午 io.github.yedaxia.apidocs.LogUtils info
+信息: info: generate index start !!!
+5月 31, 2022 11:06:25 上午 io.github.yedaxia.apidocs.LogUtils info
+信息: info: generate index done !!!
+5月 31, 2022 11:06:25 上午 io.github.yedaxia.apidocs.LogUtils info
+信息: info: generate api docs done !!!
