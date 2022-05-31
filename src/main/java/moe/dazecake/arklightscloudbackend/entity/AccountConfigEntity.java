@@ -14,13 +14,16 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@TableName("account_config")
+@TableName("account")
 @Schema(description = "账户配置")
 public class AccountConfigEntity {
 
     @TableId
     @Schema(description = "id")
     Long id;//ID
+
+    @Schema(description = "名称")
+    String name;//名称
 
     @Schema(description = "账号")
     String account;//账号
@@ -30,9 +33,6 @@ public class AccountConfigEntity {
 
     @Schema(description = "服务器类型")
     Integer server;//服务器类型 0:官服 1:B服
-
-    @Schema(description = "名称")
-    String name;//名称
 
     @Schema(description = "配置")
     String config;//json配置
