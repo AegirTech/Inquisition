@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+
+
     @Override
     public Result<AccountConfigEntity> getDeviceAccountConfig(String deviceToken) {
         return null;

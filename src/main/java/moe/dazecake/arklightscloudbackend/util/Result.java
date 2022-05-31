@@ -1,6 +1,7 @@
 package moe.dazecake.arklightscloudbackend.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.Accessors;
 import moe.dazecake.arklightscloudbackend.constant.ResponseCodeConstants;
@@ -15,17 +16,21 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
+@Schema(description = "响应信息主体")
 public class Result<T> implements Serializable {
     @Getter
     @Setter
+    @Schema(description = "状态码")
     private int code = ResponseCodeConstants.SUCCESS;//状态码
 
     @Getter
     @Setter
+    @Schema(description = "消息")
     private String msg;//消息
 
     @Getter
     @Setter
+    @Schema(description = "数据")
     private T data;//数据
 
     public static <T> Result<T> success() {

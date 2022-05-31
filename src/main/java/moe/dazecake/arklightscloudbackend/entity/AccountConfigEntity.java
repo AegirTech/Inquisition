@@ -2,6 +2,7 @@ package moe.dazecake.arklightscloudbackend.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,23 +15,32 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @TableName("account_config")
+@Schema(description = "账户配置")
 public class AccountConfigEntity {
 
     @TableId
+    @Schema(description = "id")
     Long id;//ID
 
+    @Schema(description = "账号")
     String account;//账号
 
+    @Schema(description = "密码")
     String password;//密码
 
-    int sever;//服务器类型 0:官服 1:B服
+    @Schema(description = "服务器类型")
+    Integer sever;//服务器类型 0:官服 1:B服
 
+    @Schema(description = "名称")
     String name;//名称
 
+    @Schema(description = "配置")
     String config;//json配置
 
+    @Schema(description = "所属主机")
     String belong;//所属速通主机
 
+    @Schema(description = "过期时间")
     LocalDateTime expireTime;//过期时间
 
 
