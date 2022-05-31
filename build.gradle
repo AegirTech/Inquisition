@@ -27,6 +27,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation 'com.baomidou:mybatis-plus-boot-starter:3.5.1'
     implementation 'io.github.yedaxia:japidocs:1.4.4'
+    implementation 'com.spring4all:swagger-spring-boot-starter:2.0.2.RELEASE'
 }
 
 tasks.named('test') {
