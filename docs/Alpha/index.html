@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>用户接口</title>
+    <title>ArkLightsCloudBackEndAPI Documentation</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/google-code-prettify@1.0.5/bin/prettify.min.css">
@@ -23,6 +23,7 @@
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Alpha<span class="caret"></span></a>
                     <ul class="dropdown-menu">
+                                <li><a href="../CNAME/index.html">CNAME</a></li>
                     </ul>
                 </li>
             </ul>
@@ -53,59 +54,17 @@
             <div class="book-header">
                 <div class="d-flex justify-content-between">
                     <a class="header-menu toggle-catalog" href="javascript:void(0)"><i
-                            class="glyphicon glyphicon-align-justify"></i> 目录</a>
+                                class="glyphicon glyphicon-align-justify"></i> 目录</a>
                 </div>
             </div>
             <div class="page-wrapper">
                 <div class="page-inner">
-                    <div class="action-list">
-                        <div class="action-item">
-<h2 id="getDeviceAccountConfig"><a href="#">通过deviceToken获取所属账户配置 </a></h2>
-    <p class="text-muted"><em>作者: DazeCake</em></p>
-<p><strong>请求URL</strong></p>
-<p>
-    <code>/getDeviceAccountConfig</code>
-        <span class="label label-default">GET</span>
-</p>
-        <p><strong>请求参数</strong> <span class="badge">application/x-www-form-urlencoded</span></p>
-        <table class="table table-bordered">
-            <tr>
-                <th>参数名</th>
-                <th>类型</th>
-                <th>必须</th>
-                <th>描述</th>
-            </tr>
-                    <tr>
-                        <td>deviceToken</td>
-                        <td>string</td>
-                        <td>否</td>
-                        <td>设备token</td>
-                    </tr>
-        </table>
-    <p><strong>返回结果</strong></p>
-    <pre class="prettyprint lang-json">{
-	"code":"int",
-	"msg":"string",
-	"data":{
-		"id":"long",
-		"account":"string",
-		"password":"string",
-		"sever":"int",
-		"name":"string",
-		"config":"string",
-		"belong":"string",
-		"expireTime":"date"
-	}
-}</pre>
-        <div class="form-group">
-            <a type="button" class="btn btn-sm btn-default" href="javaCodes/moe_dazecake_arklightscloudbackend_controller_UserController_getDeviceAccountConfig_moe.dazecake.arklightscloudbackend.util.Result.html"><i
-                        class="fa fa-android" aria-hidden="true"></i> Android Model</a>
-            <a type="button" class="btn btn-sm btn-default" href="iosCodes/moe_dazecake_arklightscloudbackend_controller_UserController_getDeviceAccountConfig_moe.dazecake.arklightscloudbackend.util.Result.html"><i class="fa fa-apple"
-                                                                                                 aria-hidden="true"></i>
-                iOS Model</a>
-        </div>
+                    <div class="main-content">
+                        <img src="http://static.nowait.xin/pic/japidocs-logo.png" width="200" height="200">
+                        <h4 style="margin: 20px">本文档由JApiDocs生成</h4>
+                        <div class="list-group" style="min-width: 200px">
+                                <a href="moe_dazecake_arklightscloudbackend_controller_UserController.html" class="list-group-item">用户接口</a>
                         </div>
-                        <hr>
                     </div>
                 </div>
             </div>
@@ -119,9 +78,8 @@
 <script>
 
     var search_source_data = [
-            {name: '用户接口.通过deviceToken获取所属账户配置', url: 'moe_dazecake_arklightscloudbackend_controller_UserController.html#getDeviceAccountConfig'},
+        {name: '用户接口.通过deviceToken获取所属账户配置', url: 'moe_dazecake_arklightscloudbackend_controller_UserController.html#getDeviceAccountConfig'},
     ];
-
 
 
     $('.toggle-catalog').click(function () {
