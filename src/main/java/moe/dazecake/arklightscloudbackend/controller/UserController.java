@@ -1,6 +1,9 @@
 package moe.dazecake.arklightscloudbackend.controller;
 
 import io.github.yedaxia.apidocs.ApiDoc;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.arklightscloudbackend.entity.AccountConfigEntity;
 import moe.dazecake.arklightscloudbackend.service.Impl.UserServiceImpl;
 import moe.dazecake.arklightscloudbackend.util.Result;
@@ -13,6 +16,7 @@ import javax.annotation.Resource;
 /**
  * 用户接口
  */
+@Tag(name = "用户接口")
 @ApiDoc
 @ResponseBody
 @RestController
@@ -29,6 +33,7 @@ public class UserController {
      * @author DazeCake
      * @date 2022/5/30 21:29
      */
+    @Operation(summary = "通过deviceToken获取所属账户配置")
     @GetMapping("/getDeviceAccountConfig")
     public Result<AccountConfigEntity> getDeviceAccountConfig(String deviceToken) {
         return userService.getDeviceAccountConfig(deviceToken);
