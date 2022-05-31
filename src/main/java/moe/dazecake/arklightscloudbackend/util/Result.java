@@ -18,15 +18,15 @@ import java.io.Serializable;
 public class Result<T> implements Serializable {
     @Getter
     @Setter
-    private int code = ResponseCodeConstants.SUCCESS;
+    private int code = ResponseCodeConstants.SUCCESS;//状态码
 
     @Getter
     @Setter
-    private String msg;
+    private String msg;//消息
 
     @Getter
     @Setter
-    private T data;
+    private T data;//数据
 
     public static <T> Result<T> success() {
         return restResult(null, ResponseCodeConstants.SUCCESS, null);
