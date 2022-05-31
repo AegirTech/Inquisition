@@ -3,4 +3,4 @@
 
 ## API文档
 
-[在线文档](https://arklights-api.dazecake.moe/Alpha) 或 [以MarkDown形式查看](https://github.com/DazeCake/ArkLightsCloudBackEnd/blob/main/docs/Alpha/ArkLightsCloudBackEnd-Alpha-api-docs.md)
+部署后[访问](http://127.0.0.1:2000/swagger-ui/index.htm)
