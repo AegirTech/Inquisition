@@ -29,7 +29,7 @@ public class AccountConfigEntity {
     String password;//密码
 
     @Schema(description = "服务器类型")
-    Integer sever;//服务器类型 0:官服 1:B服
+    Integer server;//服务器类型 0:官服 1:B服
 
     @Schema(description = "名称")
     String name;//名称
