@@ -88,4 +88,24 @@ public class UserController {
 
         return result;
     }
+
+    @Operation(summary = "完成任务上报")
+    @PostMapping("/completeAccountTask")
+    public Result<String> completeAccountTask(String deviceToken, Long id){
+        Result<String> result = new Result<>();
+
+        //移除任务队列
+        for (int i = 0; i < dynamicInfo.getTaskList().get(deviceToken).size(); i++) {
+            if (Objects.equals(dynamicInfo.getTaskList().get(deviceToken).get(i).getId(), id)) {
+                dynamicInfo.getTaskList().get(deviceToken).remove(dynamicInfo.getTaskList().get(deviceToken).get(i));
+                break;
+            }
+        }
+
+        result.setCode(200);
+        result.setMsg("success");
+        result.setData("null");
+
+        return result;
+    }
 }
