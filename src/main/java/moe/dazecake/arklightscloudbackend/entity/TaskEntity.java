@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,9 +16,7 @@ import lombok.NoArgsConstructor;
 @Schema(description = "回执")
 public class TaskEntity {
 
-    @Schema(description = "操作码")
-    Integer code;
+    @Schema(description = "任务列表")
+    ArrayList<HashMap<Integer, String>> list;
 
-    @Schema(description = "任务报文")
-    String task;
 }

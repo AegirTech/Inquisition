@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 @TableName("account")
 @Schema(description = "账户配置")
-public class AccountConfigEntity {
+public class AccountEntity {
 
     @TableId
     @Schema(description = "id")
