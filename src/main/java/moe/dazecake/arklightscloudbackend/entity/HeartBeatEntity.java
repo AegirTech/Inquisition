@@ -14,8 +14,8 @@ import lombok.NoArgsConstructor;
 public class HeartBeatEntity {
 
     @Schema(description = "状态")
-    private Integer status;//状态
+    Integer status;//状态
 
     @Schema(description = "设备token")
-    private String deviceToken;//设备token
+    String deviceToken;//设备token
 }

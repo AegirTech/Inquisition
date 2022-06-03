@@ -1,7 +1,6 @@
 package moe.dazecake.arklightscloudbackend.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.arklightscloudbackend.entity.AccountEntity;
 import moe.dazecake.arklightscloudbackend.entity.HeartBeatEntity;
@@ -9,13 +8,11 @@ import moe.dazecake.arklightscloudbackend.entity.TaskEntity;
 import moe.dazecake.arklightscloudbackend.service.Impl.UserServiceImpl;
 import moe.dazecake.arklightscloudbackend.util.DynamicInfo;
 import moe.dazecake.arklightscloudbackend.util.Result;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -35,7 +32,7 @@ public class UserController {
     public Result<TaskEntity> postHeartBeat(@RequestBody HeartBeatEntity heartBeat) {
         Result<TaskEntity> result = new Result<>();
 
-        if (dynamicInfo.getDeviceStatusMap().get(heartBeat.getDeviceToken()) == null) {
+        if (!dynamicInfo.getDeviceStatusMap().containsKey(heartBeat.getDeviceToken())) {
             //动态上线
             dynamicInfo.getDeviceStatusMap().put(heartBeat.getDeviceToken(), 1);
         } else {
@@ -46,16 +43,22 @@ public class UserController {
             }
 
             //检查操作队列
-            if (!dynamicInfo.getOperateList().get(heartBeat.getDeviceToken()).isEmpty()) {
+            if (dynamicInfo.getOperateList().containsKey(heartBeat.getDeviceToken())) {
                 result.setCode(201);
                 result.setMsg("There are remote operations waiting to be completed");
                 //下发操作任务
                 dynamicInfo.getOperateList().get(heartBeat.getDeviceToken()).forEach(
-                        operateMap -> operateMap.forEach(
+                        operateList -> operateList.forEach(
                                 (code, task) -> {
                                     HashMap<Integer, String> data = new HashMap<>();
                                     data.put(code, task);
-                                    result.getData().getList().add(data);
+                                    TaskEntity taskEntity = new TaskEntity();
+                                    taskEntity.setList(new ArrayList<>(){
+                                        {
+                                            add(data);
+                                        }
+                                    });
+                                    result.setData(taskEntity);
                                 }
                         )
                 );

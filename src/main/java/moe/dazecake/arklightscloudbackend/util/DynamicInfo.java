@@ -14,10 +14,10 @@ import java.util.HashMap;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DynamicInfo {
-    HashMap<String, Integer> deviceStatusMap;
+    HashMap<String, Integer> deviceStatusMap = new HashMap<>();
 
-    HashMap<String, ArrayList<AccountEntity>> taskSet;
+    HashMap<String, ArrayList<AccountEntity>> taskSet = new HashMap<>();
 
-    HashMap<String, ArrayList<HashMap<Integer, String>>> operateList;
+    HashMap<String, ArrayList<HashMap<Integer, String>>> operateList = new HashMap<>();
 
 }
