@@ -16,7 +16,7 @@ import java.util.HashMap;
 public class DynamicInfo {
     HashMap<String, Integer> deviceStatusMap = new HashMap<>();
 
-    HashMap<String, ArrayList<AccountEntity>> taskSet = new HashMap<>();
+    HashMap<String, ArrayList<AccountEntity>> taskList = new HashMap<>();
 
     HashMap<String, ArrayList<HashMap<Integer, String>>> operateList = new HashMap<>();
 

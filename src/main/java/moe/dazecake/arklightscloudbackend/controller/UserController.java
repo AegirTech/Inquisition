@@ -79,6 +79,13 @@ public class UserController {
     @Operation(summary = "通过deviceToken获取所属账户配置")
     @GetMapping("/getDeviceAccountConfig")
     public Result<AccountEntity> getDeviceAccountConfig(String deviceToken) {
-        return userService.getDeviceAccountConfig(deviceToken);
+        Result<AccountEntity> result = new Result<>();
+        var taskList = dynamicInfo.getTaskList().get(deviceToken);
+
+        result.setCode(200);
+        result.setMsg("success");
+        result.setData(taskList.get(0));
+
+        return result;
     }
 }
