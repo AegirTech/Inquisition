@@ -53,7 +53,7 @@ public class UserController {
                                     HashMap<Integer, String> data = new HashMap<>();
                                     data.put(code, task);
                                     TaskEntity taskEntity = new TaskEntity();
-                                    taskEntity.setList(new ArrayList<>(){
+                                    taskEntity.setList(new ArrayList<>() {
                                         {
                                             add(data);
                                         }
@@ -84,14 +84,14 @@ public class UserController {
 
         result.setCode(200);
         result.setMsg("success");
-        result.setData(taskList.get(0));
+        result.setData(taskList.size() == 0 ? null : taskList.get(0));
 
         return result;
     }
 
     @Operation(summary = "完成任务上报")
     @PostMapping("/completeAccountTask")
-    public Result<String> completeAccountTask(String deviceToken, Long id){
+    public Result<String> completeAccountTask(String deviceToken, Long id) {
         Result<String> result = new Result<>();
 
         //移除任务队列

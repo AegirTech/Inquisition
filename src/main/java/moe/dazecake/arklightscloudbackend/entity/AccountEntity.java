@@ -1,5 +1,6 @@
 package moe.dazecake.arklightscloudbackend.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -42,6 +43,10 @@ public class AccountEntity {
 
     @Schema(description = "过期时间")
     LocalDateTime expireTime;//过期时间
+
+    @Schema(description = "逻辑删除")
+    @TableField(value = "`delete`")
+    Integer delete;
 
 
 }

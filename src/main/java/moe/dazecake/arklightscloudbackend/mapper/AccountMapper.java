@@ -2,6 +2,8 @@ package moe.dazecake.arklightscloudbackend.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import moe.dazecake.arklightscloudbackend.entity.AccountEntity;
+import org.apache.ibatis.annotations.Mapper;
 
-public interface AccountConfigMapper extends BaseMapper<AccountEntity> {
+@Mapper
+public interface AccountMapper extends BaseMapper<AccountEntity> {
 }
