@@ -29,9 +29,6 @@ public class DeviceEntity {
     @Schema(description = "设备token")
     String deviceToken;
 
-    @Schema(description = "在线状态 0:离线 1:空闲 2:工作")
-    Integer status;
-
     @Schema(description = "到期时间")
     LocalDateTime expireTime;
 

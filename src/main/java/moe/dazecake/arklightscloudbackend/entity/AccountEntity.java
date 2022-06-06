@@ -35,11 +35,11 @@ public class AccountEntity {
     @Schema(description = "服务器类型")
     Integer server;//服务器类型 0:官服 1:B服
 
+    @Schema(description = "任务类型")
+    String taskType;//任务类型
+
     @Schema(description = "配置")
     String config;//json配置
-
-    @Schema(description = "所属主机")
-    String belong;//所属速通主机
 
     @Schema(description = "过期时间")
     LocalDateTime expireTime;//过期时间
