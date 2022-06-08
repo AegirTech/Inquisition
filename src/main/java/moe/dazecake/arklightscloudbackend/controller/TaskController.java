@@ -23,8 +23,8 @@ public class TaskController {
     private DynamicInfo dynamicInfo;
 
     @Operation(summary = "获取任务")
-    @GetMapping("/getDeviceAccountConfig")
-    public Result<AccountEntity> getDeviceAccountConfig(String deviceToken) {
+    @GetMapping("/getTask")
+    public Result<AccountEntity> getTask(String deviceToken) {
         Result<AccountEntity> result = new Result<>();
         result.setCode(200).setMsg("success");
 
@@ -55,16 +55,34 @@ public class TaskController {
     }
 
     @Operation(summary = "完成任务上报")
-    @PostMapping("/completeAccountTask")
-    public Result<String> completeAccountTask(String deviceToken) {
+    @PostMapping("/completeTask")
+    public Result<String> completeTask(String deviceToken) {
         Result<String> result = new Result<>();
 
         //移除队列
         dynamicInfo.getLockTaskList().remove(deviceToken);
 
-        result.setCode(200);
-        result.setMsg("success");
-        result.setData("null");
+        result.setCode(200)
+                .setMsg("success")
+                .setData("null");
+
+        return result;
+    }
+
+    @Operation(summary = "任务失败上报")
+    @PostMapping("/failTask")
+    public Result<String> failTask(String deviceToken) {
+        Result<String> result = new Result<>();
+
+        var map = dynamicInfo.getLockTaskList().get(deviceToken);
+        map.forEach(
+                (accountEntity, localDateTime) -> dynamicInfo.getFreeTaskList().add(accountEntity)
+        );
+        dynamicInfo.getLockTaskList().remove(deviceToken);
+
+        result.setCode(200)
+                .setMsg("success")
+                .setData("null");
 
         return result;
     }
