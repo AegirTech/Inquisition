@@ -3,6 +3,7 @@ package moe.dazecake.arklightscloudbackend.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import moe.dazecake.arklightscloudbackend.annotation.Login;
 import moe.dazecake.arklightscloudbackend.entity.AccountEntity;
 import moe.dazecake.arklightscloudbackend.entity.DeviceEntity;
 import moe.dazecake.arklightscloudbackend.mapper.DeviceMapper;
@@ -21,6 +22,7 @@ public class DeviceController {
     @Resource
     DeviceMapper deviceMapper;
 
+    @Login
     @Operation(summary = "增加设备")
     @PostMapping("/addDevice")
     public Result<DeviceEntity> addDevice(@RequestBody DeviceEntity deviceEntity) {
@@ -37,6 +39,7 @@ public class DeviceController {
         return result;
     }
 
+    @Login
     @Operation(summary = "删除设备")
     @PostMapping("/delDevice")
     public Result<String> delDevice(Long id) {
@@ -60,6 +63,7 @@ public class DeviceController {
         return result;
     }
 
+    @Login
     @Operation(summary = "分页查询设备")
     @GetMapping("/showDevice")
     public Result<ArrayList<DeviceEntity>> showDevice(Long current, Long size) {
@@ -75,6 +79,7 @@ public class DeviceController {
         return result;
     }
 
+    @Login
     @Operation(summary = "更新设备")
     @PostMapping("/updateDevice")
     public Result<String> updateDevice(Long id, @RequestBody DeviceEntity deviceEntity) {

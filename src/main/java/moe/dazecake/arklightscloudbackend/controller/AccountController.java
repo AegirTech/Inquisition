@@ -3,6 +3,7 @@ package moe.dazecake.arklightscloudbackend.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import moe.dazecake.arklightscloudbackend.annotation.Login;
 import moe.dazecake.arklightscloudbackend.entity.AccountEntity;
 import moe.dazecake.arklightscloudbackend.mapper.AccountMapper;
 import moe.dazecake.arklightscloudbackend.util.Result;
@@ -19,6 +20,7 @@ public class AccountController {
     @Resource
     AccountMapper accountMapper;
 
+    @Login
     @Operation(summary = "增加账号")
     @PostMapping("/addAccount")
     public Result<String> addAccount(@RequestBody AccountEntity accountEntity) {
@@ -33,6 +35,7 @@ public class AccountController {
         return result;
     }
 
+    @Login
     @Operation(summary = "删除账号")
     @PostMapping("/delAccount")
     public Result<String> delAccount(Long id) {
@@ -56,6 +59,7 @@ public class AccountController {
 
     }
 
+    @Login
     @Operation(summary = "分页查询账号")
     @GetMapping("/showAccount")
     public Result<ArrayList<AccountEntity>> showAccount(Long current, Long size) {
@@ -71,6 +75,7 @@ public class AccountController {
         return result;
     }
 
+    @Login
     @Operation(summary = "更新账号")
     @PostMapping("/updateAccount")
     public Result<String> updateAccount(Long id, @RequestBody AccountEntity accountEntity) {
