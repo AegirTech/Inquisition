@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Objects;
 
 @Tag(name = "日志接口")
 @ResponseBody
@@ -30,20 +31,26 @@ public class LogController {
     @PostMapping("/addLog")
     public Result<String> addLog(@RequestBody LogEntity logEntity, String deviceToken) {
         Result<String> result = new Result<>();
+        logEntity.setId(0L);
 
-        var device = deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery().eq(DeviceEntity::getDeviceToken, deviceToken));
-
-        if (device != null) {
-            logEntity.setTime(LocalDateTime.now());
+        if (Objects.equals(deviceToken, "system")) {
             logMapper.insert(logEntity);
-
-            result.setCode(200)
-                    .setMsg("success")
-                    .setData(null);
+            return null;
         } else {
-            result.setCode(403)
-                    .setMsg("fail")
-                    .setData(null);
+            var device = deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery().eq(DeviceEntity::getDeviceToken, deviceToken));
+
+            if (device != null) {
+                logEntity.setTime(LocalDateTime.now());
+                logMapper.insert(logEntity);
+
+                result.setCode(200)
+                        .setMsg("success")
+                        .setData(null);
+            } else {
+                result.setCode(403)
+                        .setMsg("fail")
+                        .setData(null);
+            }
         }
 
         return result;

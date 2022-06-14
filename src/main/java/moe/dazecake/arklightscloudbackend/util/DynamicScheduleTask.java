@@ -2,7 +2,9 @@ package moe.dazecake.arklightscloudbackend.util;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
+import moe.dazecake.arklightscloudbackend.controller.LogController;
 import moe.dazecake.arklightscloudbackend.entity.AccountEntity;
+import moe.dazecake.arklightscloudbackend.entity.LogEntity;
 import moe.dazecake.arklightscloudbackend.mapper.AccountMapper;
 import moe.dazecake.arklightscloudbackend.mapper.DeviceMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +32,9 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
     @Resource
     DeviceMapper deviceMapper;
 
+    @Resource
+    LogController logController;
+
     @Value("${cron}")
     String cron;
 
@@ -48,6 +53,17 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                 )
                         );
                     }
+
+                    //记录日志
+                    LogEntity logEntity = new LogEntity();
+                    logEntity.setLevel("INFO")
+                            .setTaskType("system")
+                            .setTitle("任务列表刷新")
+                            .setDetail("")
+                            .setFrom("system")
+                            .setTime(LocalDateTime.now());
+                    logController.addLog(logEntity, "system");
+
                 },
                 triggerContext -> new CronTrigger(cron).nextExecutionTime(triggerContext)
         );
@@ -58,9 +74,24 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                             if (num == 0) {
                                 dynamicInfo.getDeviceStatusMap().put(token, 0);
                                 log.warn("设备离线: " + token);
+
+                                //记录日志
+                                LogEntity logEntity = new LogEntity();
+                                logEntity.setLevel("WARNING")
+                                        .setTaskType("system")
+                                        .setTitle("设备离线")
+                                        .setDetail("")
+                                        .setFrom(token)
+                                        .setTime(LocalDateTime.now());
+                                logController.addLog(logEntity, "system");
+
+                                dynamicInfo.getCounter().put(token, -1);
+
                             } else {
-                                --num;
-                                dynamicInfo.getCounter().put(token, num);
+                                if (num > 0) {
+                                    --num;
+                                    dynamicInfo.getCounter().put(token, num);
+                                }
                             }
                         }
                 ),
@@ -84,6 +115,19 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                             (token, account) -> {
                                 dynamicInfo.getLockTaskList().remove(token);
                                 dynamicInfo.getFreeTaskList().add(account);
+
+                                //记录日志
+                                LogEntity logEntity = new LogEntity();
+                                logEntity.setLevel("WARNING")
+                                        .setTaskType(account.getTaskType())
+                                        .setTitle("任务超时")
+                                        .setDetail("")
+                                        .setFrom(token)
+                                        .setName(account.getName())
+                                        .setPassword(account.getPassword())
+                                        .setTime(LocalDateTime.now());
+                                logController.addLog(logEntity, "system");
+
                             }
                     );
                     if (exceedMap.size() > 0) {
@@ -103,6 +147,17 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                     device.setDelete(1);
                                     deviceMapper.updateById(device);
                                     log.info("已过期设备: " + device.getId() + "--" + device.getDeviceToken());
+
+                                    //记录日志
+                                    LogEntity logEntity = new LogEntity();
+                                    logEntity.setLevel("WARNING")
+                                            .setTaskType("system")
+                                            .setTitle("设备过期")
+                                            .setDetail("")
+                                            .setFrom(device.getDeviceToken())
+                                            .setTime(LocalDateTime.now());
+                                    logController.addLog(logEntity, "system");
+
                                 }
                             }
                     );
