@@ -153,6 +153,7 @@ public class TaskController {
         return result;
     }
 
+    @Login
     @Operation(summary = "临时插队任务")
     @PostMapping("/tempAddTask")
     public Result<String> tempAddTask(@RequestBody AccountEntity accountEntity) {
@@ -163,6 +164,7 @@ public class TaskController {
         return result;
     }
 
+    @Login
     @Operation(summary = "临时移除任务")
     @PostMapping("/tempRemoveTask")
     public Result<String> tempRemoveTask(Integer id) {
