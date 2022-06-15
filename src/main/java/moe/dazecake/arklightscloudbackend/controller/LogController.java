@@ -85,7 +85,8 @@ public class LogController {
         Result<ArrayList<LogEntity>> result = new Result<>();
         result.setData(new ArrayList<>());
 
-        var data = logMapper.selectPage(new Page<>(current, size), null);
+        //降序分页查找
+        var data = logMapper.selectPage(new Page<>(current, size), Wrappers.<LogEntity>lambdaQuery().orderByDesc(LogEntity::getId));
         result.setCode(200)
                 .setMsg("success")
                 .getData()

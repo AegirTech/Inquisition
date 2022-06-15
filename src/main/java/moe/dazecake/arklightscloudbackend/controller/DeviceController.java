@@ -6,12 +6,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.arklightscloudbackend.annotation.Login;
 import moe.dazecake.arklightscloudbackend.entity.DeviceEntity;
 import moe.dazecake.arklightscloudbackend.mapper.DeviceMapper;
+import moe.dazecake.arklightscloudbackend.util.DynamicInfo;
 import moe.dazecake.arklightscloudbackend.util.Result;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 @Tag(name = "设备接口")
 @ResponseBody
@@ -20,6 +22,9 @@ public class DeviceController {
 
     @Resource
     DeviceMapper deviceMapper;
+
+    @Resource
+    DynamicInfo dynamicInfo;
 
     @Login
     @Operation(summary = "增加设备")
@@ -63,9 +68,9 @@ public class DeviceController {
     }
 
     @Login
-    @Operation(summary = "分页查询设备")
-    @GetMapping("/showDevice")
-    public Result<ArrayList<DeviceEntity>> showDevice(Long current, Long size) {
+    @Operation(summary = "分页查询库存设备")
+    @GetMapping("/showInventoryDevice")
+    public Result<ArrayList<DeviceEntity>> showInventoryDevice(Long current, Long size) {
         Result<ArrayList<DeviceEntity>> result = new Result<>();
         result.setData(new ArrayList<>());
 
@@ -74,6 +79,20 @@ public class DeviceController {
                 .setMsg("success")
                 .getData()
                 .addAll(data.getRecords());
+
+        return result;
+    }
+
+    @Login
+    @Operation(summary = "查询已载入设备")
+    @GetMapping("/showLoadedDevice")
+    public Result<HashMap<String,Integer>> showLoadedDevice() {
+        Result<HashMap<String,Integer>> result = new Result<>();
+        result.setData(new HashMap<>());
+
+        result.setCode(200)
+                .setMsg("success")
+                .setData(dynamicInfo.getDeviceStatusMap());
 
         return result;
     }
