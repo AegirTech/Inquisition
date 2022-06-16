@@ -229,11 +229,13 @@ public class TaskController {
     @Operation(summary = "立即强制从数据库刷新任务")
     @PostMapping("/forceRefreshFreeTaskList")
     public Result<String> forceRefreshFreeTaskList() {
+        dynamicInfo.getFreeTaskList().clear();
         dynamicInfo.getFreeTaskList().addAll(
                 accountMapper.selectList(
                         Wrappers.<AccountEntity>lambdaQuery()
                                 .eq(AccountEntity::getDelete, 0)
                                 .eq(AccountEntity::getTaskType, "daily")
+                                .ge(AccountEntity::getExpireTime,LocalDateTime.now())
                 )
         );
 

@@ -51,6 +51,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                         Wrappers.<AccountEntity>lambdaQuery()
                                                 .eq(AccountEntity::getDelete, 0)
                                                 .eq(AccountEntity::getTaskType, "daily")
+                                                .ge(AccountEntity::getExpireTime,LocalDateTime.now())
                                 )
                         );
                     }

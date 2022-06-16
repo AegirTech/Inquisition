@@ -6,8 +6,8 @@ import lombok.Data;
 public class Infrastructure {
 
     private boolean harvest;
-    private boolean relief;
-    private boolean advance;
+    private boolean shift;
+    private boolean acceleration;
     private boolean communication;
     private boolean deputy;
 

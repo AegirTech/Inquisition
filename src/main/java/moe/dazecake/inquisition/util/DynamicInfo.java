@@ -40,7 +40,9 @@ public class DynamicInfo {
     public void initInfo() {
         var devices = deviceMapper.selectList(
                 Wrappers.<DeviceEntity>lambdaQuery()
-                        .eq(DeviceEntity::getDelete, 0));
+                        .eq(DeviceEntity::getDelete, 0)
+                        .ge(DeviceEntity::getExpireTime,LocalDateTime.now())
+        );
         devices.forEach(
                 device-> {
                     deviceStatusMap.put(device.getDeviceToken(), 0);
@@ -50,7 +52,8 @@ public class DynamicInfo {
 
         freeTaskList = (ArrayList<AccountEntity>) accountMapper.selectList(
                 Wrappers.<AccountEntity>lambdaQuery()
-                        .eq(AccountEntity::getDelete, 0));
+                        .eq(AccountEntity::getDelete, 0)
+                        .ge(AccountEntity::getExpireTime,LocalDateTime.now()));
 
     }
 
