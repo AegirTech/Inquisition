@@ -17,6 +17,7 @@ import org.springframework.scheduling.support.CronTrigger;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Configuration
@@ -56,10 +57,26 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
 
                     //记录日志
                     LogEntity logEntity = new LogEntity();
+                    AtomicReference<String> detail = new AtomicReference<>("");
+                    if (dynamicInfo.getFreeTaskList().isEmpty()) {
+                        detail.set("有 " + dynamicInfo.getFreeTaskList().size() + " 个任务尚未完成\n");
+                        dynamicInfo.getFreeTaskList().forEach(
+                                accountEntity -> detail.set((detail +
+                                        accountEntity.getTaskType() +
+                                        "\t" +
+                                        accountEntity.getServer()).equals("0") ? "官服" : "B服" +
+                                        "\t" +
+                                        accountEntity.getAccount()
+                                )
+                        );
+                    } else {
+                        detail.set("已刷新 " + dynamicInfo.getFreeTaskList().size() + " 个任务\n");
+                    }
+
                     logEntity.setLevel("INFO")
                             .setTaskType("system")
                             .setTitle("任务列表刷新")
-                            .setDetail("")
+                            .setDetail(detail.get())
                             .setFrom("system")
                             .setTime(LocalDateTime.now());
                     logController.addLog(logEntity, "system");
@@ -80,7 +97,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                 logEntity.setLevel("WARNING")
                                         .setTaskType("system")
                                         .setTitle("设备离线")
-                                        .setDetail("")
+                                        .setDetail("设备token: " + token)
                                         .setFrom(token)
                                         .setTime(LocalDateTime.now());
                                 logController.addLog(logEntity, "system");

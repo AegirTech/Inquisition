@@ -3,11 +3,13 @@ package moe.dazecake.inquisition.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.GsonTypeHandler;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import moe.dazecake.inquisition.entity.ConfigEntitySet.ConfigEntity;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@TableName("account")
+@TableName(value = "account", autoResultMap = true)
 @Schema(description = "账户配置")
 public class AccountEntity {
 
@@ -39,7 +41,8 @@ public class AccountEntity {
     String taskType;//任务类型
 
     @Schema(description = "配置")
-    String config;//json配置
+    @TableField(typeHandler = GsonTypeHandler.class)
+    ConfigEntity config;
 
     @Schema(description = "过期时间")
     LocalDateTime expireTime;//过期时间

@@ -12,9 +12,9 @@ import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(
         info = @Info(
-                title = "Ark Lights Cloud Backend",
-                description = "明日方舟速通云控后端",
-                license = @License(name = "GPL-3.0", url = "https://github.com/DazeCake/ArkLightsCloudBackEnd/blob/main/LICENSE"),
+                title = "Inquisition",
+                description = "审判庭 明日方舟速通云控后端",
+                license = @License(name = "GPL-3.0", url = "https://github.com/AegirTech/Inquisition/blob/main/LICENSE"),
                 version = "1.0"
         ),
         security = @SecurityRequirement(name = "JWT")

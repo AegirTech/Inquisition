@@ -29,6 +29,7 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-ui:1.6.8'
     implementation 'com.auth0:java-jwt:3.19.1'
     implementation 'commons-codec:commons-codec:1.15'
+    implementation 'com.google.code.gson:gson:2.9.0'
 }
 
 tasks.named('test') {
