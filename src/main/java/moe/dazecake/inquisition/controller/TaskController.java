@@ -1,10 +1,12 @@
 package moe.dazecake.inquisition.controller;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
+import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Result;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,9 @@ public class TaskController {
 
     @Resource
     private LogController logController;
+
+    @Resource
+    private AccountMapper accountMapper;
 
     @Operation(summary = "获取任务")
     @GetMapping("/getTask")
@@ -218,5 +223,95 @@ public class TaskController {
 
         return result.setCode(200)
                 .setMsg("success");
+    }
+
+    @Login
+    @Operation(summary = "立即强制从数据库刷新任务")
+    @PostMapping("/forceRefreshFreeTaskList")
+    public Result<String> forceRefreshFreeTaskList() {
+        dynamicInfo.getFreeTaskList().addAll(
+                accountMapper.selectList(
+                        Wrappers.<AccountEntity>lambdaQuery()
+                                .eq(AccountEntity::getDelete, 0)
+                                .eq(AccountEntity::getTaskType, "daily")
+                )
+        );
+
+        //记录日志
+        LogEntity logEntity = new LogEntity();
+
+        logEntity.setLevel("INFO")
+                .setTaskType("system")
+                .setTitle("强制任务列表刷新")
+                .setDetail("审判官强制刷新了任务队列")
+                .setFrom("system")
+                .setTime(LocalDateTime.now());
+
+        logController.addLog(logEntity, "system");
+
+        return new Result<String>().setCode(200)
+                .setMsg("success")
+                .setData(null);
+    }
+
+    @Login
+    @Operation(summary = "立即强制释放一设备的上锁任务")
+    @PostMapping("/forceUnlockOneTask")
+    public Result<String> forceUnlockOneTask(String deviceToken) {
+        if (dynamicInfo.getLockTaskList().get(deviceToken) != null) {
+            dynamicInfo.getFreeTaskList()
+                    .add(dynamicInfo.getLockTaskList().get(deviceToken).keySet().iterator().next());
+            dynamicInfo.getLockTaskList().remove(deviceToken);
+
+            //记录日志
+            LogEntity logEntity = new LogEntity();
+            logEntity.setLevel("INFO")
+                    .setTaskType("system")
+                    .setTitle("强制解锁")
+                    .setDetail("审判官强制解锁释放了一个任务")
+                    .setFrom("system")
+                    .setTime(LocalDateTime.now());
+            logController.addLog(logEntity, "system");
+
+        } else {
+            return new Result<String>().setCode(404)
+                    .setMsg("not found")
+                    .setData(null);
+        }
+
+        return new Result<String>().setCode(200)
+                .setMsg("success")
+                .setData(null);
+    }
+
+    @Login
+    @Operation(summary = "立即强制释放整个上锁队列")
+    @PostMapping("/forceUnlockTaskList")
+    public Result<String> forceUnlockTaskList() {
+        if (dynamicInfo.getLockTaskList().size() != 0) {
+            dynamicInfo.getLockTaskList().forEach(
+                    (deviceToken, map) -> dynamicInfo.getFreeTaskList().add(map.keySet().iterator().next()
+                    )
+            );
+            dynamicInfo.getLockTaskList().clear();
+
+            //记录日志
+            LogEntity logEntity = new LogEntity();
+            logEntity.setLevel("INFO")
+                    .setTaskType("system")
+                    .setTitle("强制解锁")
+                    .setDetail("审判官强制解锁释放整个上锁队列")
+                    .setFrom("system")
+                    .setTime(LocalDateTime.now());
+            logController.addLog(logEntity, "system");
+
+            return new Result<String>().setCode(200)
+                    .setMsg("success")
+                    .setData(null);
+        } else {
+            return new Result<String>().setCode(200)
+                    .setMsg("The lock list is empty")
+                    .setData(null);
+        }
     }
 }
