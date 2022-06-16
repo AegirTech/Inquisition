@@ -11,7 +11,7 @@ public class Daily {
     private Sanity sanity;
     private boolean mail;
     private Offer offer;
-    private boolean friends;
+    private boolean friend;
     private Infrastructure infrastructure;
     private boolean credit;
     private boolean task;
