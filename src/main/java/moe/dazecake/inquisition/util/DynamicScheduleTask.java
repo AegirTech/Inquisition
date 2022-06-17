@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.controller.LogController;
 import moe.dazecake.inquisition.entity.AccountEntity;
+import moe.dazecake.inquisition.entity.DeviceEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
@@ -51,7 +52,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                         Wrappers.<AccountEntity>lambdaQuery()
                                                 .eq(AccountEntity::getDelete, 0)
                                                 .eq(AccountEntity::getTaskType, "daily")
-                                                .ge(AccountEntity::getExpireTime,LocalDateTime.now())
+                                                .ge(AccountEntity::getExpireTime, LocalDateTime.now())
                                 )
                         );
                     }
@@ -181,6 +182,25 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                     );
                 },
                 triggerContext -> new CronTrigger("* 0/10 * * * ?").nextExecutionTime(triggerContext)
+        );
+        //设备载入刷新
+        taskRegistrar.addTriggerTask(
+                () -> {
+                    var devices = deviceMapper.selectList(
+                            Wrappers.<DeviceEntity>lambdaQuery()
+                                    .eq(DeviceEntity::getDelete, 0)
+                                    .ge(DeviceEntity::getExpireTime, LocalDateTime.now())
+                    );
+                    devices.forEach(
+                            device -> {
+                                if (!dynamicInfo.getDeviceStatusMap().containsKey(device.getDeviceToken())) {
+                                    dynamicInfo.getDeviceStatusMap().put(device.getDeviceToken(), 0);
+                                    dynamicInfo.getCounter().put(device.getDeviceToken(), 1);
+                                }
+                            }
+                    );
+                },
+                triggerContext -> new CronTrigger("0 0/5 * * * ?").nextExecutionTime(triggerContext)
         );
     }
 }
