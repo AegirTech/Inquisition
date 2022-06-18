@@ -134,7 +134,7 @@ public class TaskController {
 
         //记录日志
         LogEntity logEntity = new LogEntity();
-        logEntity.setLevel("WARNING")
+        logEntity.setLevel("WARN")
                 .setTaskType(account.getTaskType())
                 .setTitle("任务失败")
                 .setDetail("")

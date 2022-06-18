@@ -96,7 +96,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
 
                                 //记录日志
                                 LogEntity logEntity = new LogEntity();
-                                logEntity.setLevel("WARNING")
+                                logEntity.setLevel("WARN")
                                         .setTaskType("system")
                                         .setTitle("设备离线")
                                         .setDetail("设备token: " + token)
@@ -138,7 +138,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
 
                                 //记录日志
                                 LogEntity logEntity = new LogEntity();
-                                logEntity.setLevel("WARNING")
+                                logEntity.setLevel("WARN")
                                         .setTaskType(account.getTaskType())
                                         .setTitle("任务超时")
                                         .setDetail("")
@@ -171,7 +171,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
 
                                     //记录日志
                                     LogEntity logEntity = new LogEntity();
-                                    logEntity.setLevel("WARNING")
+                                    logEntity.setLevel("WARN")
                                             .setTaskType("system")
                                             .setTitle("设备过期")
                                             .setDetail("")

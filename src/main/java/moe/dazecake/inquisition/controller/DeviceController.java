@@ -1,5 +1,6 @@
 package moe.dazecake.inquisition.controller;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,8 +13,10 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 @Tag(name = "设备接口")
 @ResponseBody
@@ -86,13 +89,35 @@ public class DeviceController {
     @Login
     @Operation(summary = "查询已载入设备")
     @GetMapping("/showLoadedDevice")
-    public Result<HashMap<String,Integer>> showLoadedDevice() {
-        Result<HashMap<String,Integer>> result = new Result<>();
-        result.setData(new HashMap<>());
+    public Result<ArrayList<HashMap<String, String>>> showLoadedDevice() {
+        Result<ArrayList<HashMap<String, String>>> result = new Result<>();
+        result.setData(new ArrayList<>());
+
+        var devices = deviceMapper.selectList(Wrappers.<DeviceEntity>lambdaQuery()
+                .eq(DeviceEntity::getDelete, 0)
+                .ge(DeviceEntity::getExpireTime, LocalDateTime.now())
+        );
+
+        dynamicInfo.getDeviceStatusMap().forEach(
+                (token,status)-> devices.forEach(
+                        deviceEntity -> {
+                            if (Objects.equals(deviceEntity.getDeviceToken(), token)) {
+                                result.getData().add(new HashMap<>(){
+                                    {
+                                        put("id", String.valueOf(deviceEntity.getId()));
+                                        put("deviceName", deviceEntity.getDeviceName());
+                                        put("deviceToken", token);
+                                        put("status", String.valueOf(status));
+                                        put("expireTime", String.valueOf(deviceEntity.getExpireTime()));
+                                    }
+                                });
+                            }
+                        }
+                )
+        );
 
         result.setCode(200)
-                .setMsg("success")
-                .setData(dynamicInfo.getDeviceStatusMap());
+                .setMsg("success");
 
         return result;
     }
