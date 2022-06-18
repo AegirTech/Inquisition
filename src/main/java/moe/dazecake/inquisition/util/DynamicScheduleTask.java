@@ -119,6 +119,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
         //任务超时检测
         taskRegistrar.addTriggerTask(
                 () -> {
+                    log.info("任务超时检测");
                     LocalDateTime nowTime = LocalDateTime.now();
                     HashMap<String, AccountEntity> exceedMap = new HashMap<>();
                     dynamicInfo.getLockTaskList().forEach(
@@ -158,6 +159,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
         //设备过期检测
         taskRegistrar.addTriggerTask(
                 () -> {
+                    log.info("设备过期检测");
                     LocalDateTime nowTime = LocalDateTime.now();
                     var deviceList = deviceMapper.selectList(null);
                     deviceList.forEach(
@@ -186,6 +188,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
         //设备载入刷新
         taskRegistrar.addTriggerTask(
                 () -> {
+                    log.info("设备载入刷新");
                     var devices = deviceMapper.selectList(
                             Wrappers.<DeviceEntity>lambdaQuery()
                                     .eq(DeviceEntity::getDelete, 0)
@@ -200,7 +203,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                             }
                     );
                 },
-                triggerContext -> new CronTrigger("0 0/5 * * * ?").nextExecutionTime(triggerContext)
+                triggerContext -> new CronTrigger("* 0/5 * * * ?").nextExecutionTime(triggerContext)
         );
     }
 }
