@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 @Tag(name = "任务接口")
 @ResponseBody
@@ -47,7 +49,31 @@ public class TaskController {
 
         //任务上锁
         if (!dynamicInfo.getFreeTaskList().isEmpty()) {
-            var account = dynamicInfo.getFreeTaskList().get(0);
+            AccountEntity account = new AccountEntity();
+
+            for (int i = 0; i < dynamicInfo.getFreeTaskList().size(); i++) {
+                account = dynamicInfo.getFreeTaskList().get(i);
+                if (dynamicInfo.getFreezeTaskList().containsKey(account.getId())) {
+
+                    //检测是否结束冻结
+                    if (dynamicInfo.getFreezeTaskList().get(account.getId()).isBefore(LocalDateTime.now())) {
+                        dynamicInfo.getFreezeTaskList().remove(account.getId());
+                        break;
+                    }
+
+                    //检测是否整个队列都被冻结
+                    if (i == dynamicInfo.getFreeTaskList().size() - 1) {
+                        result.setCode(200)
+                                .setMsg("success")
+                                .setData(null);
+                        return result;
+                    }
+
+                    continue;
+                }
+                break;
+            }
+
             dynamicInfo.getFreeTaskList().remove(account);
 
             //设置分配主机和超时时间
@@ -195,6 +221,24 @@ public class TaskController {
     }
 
     @Login
+    @Operation(summary = "临时冻结任务")
+    @PostMapping("/tempFreezeTask")
+    public Result<String> tempFreezeTask(Long id, String expirationTime) {
+        LocalDateTime localDateTime = LocalDateTime.parse(expirationTime, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
+        dynamicInfo.getFreeTaskList().forEach(
+                accountEntity -> {
+                    if (Objects.equals(accountEntity.getId(), id)) {
+                        dynamicInfo.getFreezeTaskList().put(id, localDateTime);
+                    }
+                }
+        );
+        return new Result<String>()
+                .setCode(200)
+                .setMsg("success")
+                .setData(null);
+    }
+
+    @Login
     @Operation(summary = "查询待分配任务列表")
     @GetMapping("/showFreeTaskList")
     public Result<ArrayList<AccountEntity>> showTaskList() {
@@ -226,6 +270,16 @@ public class TaskController {
     }
 
     @Login
+    @Operation(summary = "查询已冻结任务列表")
+    @GetMapping("/showFreezeTaskList")
+    public Result<HashMap<Long,LocalDateTime>> showFreezeTaskList(){
+        return new Result<HashMap<Long, LocalDateTime>>()
+                .setCode(200)
+                .setMsg("success")
+                .setData(dynamicInfo.getFreezeTaskList());
+    }
+
+    @Login
     @Operation(summary = "立即强制从数据库刷新任务")
     @PostMapping("/forceRefreshFreeTaskList")
     public Result<String> forceRefreshFreeTaskList() {
@@ -235,7 +289,7 @@ public class TaskController {
                         Wrappers.<AccountEntity>lambdaQuery()
                                 .eq(AccountEntity::getDelete, 0)
                                 .eq(AccountEntity::getTaskType, "daily")
-                                .ge(AccountEntity::getExpireTime,LocalDateTime.now())
+                                .ge(AccountEntity::getExpireTime, LocalDateTime.now())
                 )
         );
 

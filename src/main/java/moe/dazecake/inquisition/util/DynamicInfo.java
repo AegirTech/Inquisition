@@ -33,6 +33,8 @@ public class DynamicInfo {
 
     HashMap<String, HashMap<AccountEntity, LocalDateTime>> lockTaskList = new HashMap<>();
 
+    HashMap<Long, LocalDateTime> freezeTaskList = new HashMap<>();
+
     HashMap<String, ArrayList<HashMap<Integer, String>>> operateList = new HashMap<>();
 
     HashMap<String, Integer> counter = new HashMap<>();
