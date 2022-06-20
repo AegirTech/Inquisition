@@ -9,12 +9,14 @@ import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Result;
+import moe.dazecake.inquisition.util.TimeUtil;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -50,9 +52,191 @@ public class TaskController {
         //任务上锁
         if (!dynamicInfo.getFreeTaskList().isEmpty()) {
             AccountEntity account = new AccountEntity();
+            int i;
 
-            for (int i = 0; i < dynamicInfo.getFreeTaskList().size(); i++) {
+            //检查任务是否达到下发标准
+            for (i = 0; i < dynamicInfo.getFreeTaskList().size(); i++) {
                 account = dynamicInfo.getFreeTaskList().get(i);
+
+                //激活检查
+                int dayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1;
+                boolean accessFlag = true;
+
+                switch (dayOfWeek) {
+                    case 1:
+                        if (account.getActive().getMonday().isEnable()) {
+
+                            if (account.getActive().getMonday().getDetail().isEmpty()) {
+                                break;
+                            } else {
+                                //遍历非激活时间区间
+                                for (int i1 = 0; i1 < account.getActive().getMonday().getDetail().size(); i1++) {
+                                    String[] time = account.getActive().getMonday().getDetail().get(i1).split("-");
+
+                                    //处于非激活时间内
+                                    if (TimeUtil.isInTime(time[0], time[1])) {
+                                        //不通过
+                                        accessFlag = false;
+                                        break;
+                                    }
+                                }
+                            }
+
+                        } else {
+                            accessFlag = false;
+                        }
+                        break;
+                    case 2:
+                        if (account.getActive().getTuesday().isEnable()) {
+
+                            if (account.getActive().getTuesday().getDetail().isEmpty()) {
+                                break;
+                            } else {
+                                //遍历非激活时间区间
+                                for (int i1 = 0; i1 < account.getActive().getTuesday().getDetail().size(); i1++) {
+                                    String[] time = account.getActive().getTuesday().getDetail().get(i1).split("-");
+
+                                    //处于非激活时间内
+                                    if (TimeUtil.isInTime(time[0], time[1])) {
+                                        //不通过
+                                        accessFlag = false;
+                                        break;
+                                    }
+                                }
+                            }
+
+                        } else {
+                            accessFlag = false;
+                        }
+                        break;
+                    case 3:
+                        if (account.getActive().getWednesday().isEnable()) {
+
+                            if (account.getActive().getWednesday().getDetail().isEmpty()) {
+                                break;
+                            } else {
+                                //遍历非激活时间区间
+                                for (int i1 = 0; i1 < account.getActive().getWednesday().getDetail().size(); i1++) {
+                                    String[] time = account.getActive().getWednesday().getDetail().get(i1).split("-");
+
+                                    //处于非激活时间内
+                                    if (TimeUtil.isInTime(time[0], time[1])) {
+                                        //不通过
+                                        accessFlag = false;
+                                        break;
+                                    }
+                                }
+                            }
+
+                        } else {
+                            accessFlag = false;
+                        }
+                        break;
+                    case 4:
+                        if (account.getActive().getThursday().isEnable()) {
+
+                            if (account.getActive().getThursday().getDetail().isEmpty()) {
+                                break;
+                            } else {
+                                //遍历非激活时间区间
+                                for (int i1 = 0; i1 < account.getActive().getThursday().getDetail().size(); i1++) {
+                                    String[] time = account.getActive().getThursday().getDetail().get(i1).split("-");
+
+                                    //处于非激活时间内
+                                    if (TimeUtil.isInTime(time[0], time[1])) {
+                                        //不通过
+                                        accessFlag = false;
+                                        break;
+                                    }
+                                }
+                            }
+
+                        } else {
+                            accessFlag = false;
+                        }
+                        break;
+                    case 5:
+                        if (account.getActive().getFriday().isEnable()) {
+
+                            if (account.getActive().getFriday().getDetail().isEmpty()) {
+                                break;
+                            } else {
+                                //遍历非激活时间区间
+                                for (int i1 = 0; i1 < account.getActive().getFriday().getDetail().size(); i1++) {
+                                    String[] time = account.getActive().getFriday().getDetail().get(i1).split("-");
+
+                                    //处于非激活时间内
+                                    if (TimeUtil.isInTime(time[0], time[1])) {
+                                        //不通过
+                                        accessFlag = false;
+                                        break;
+                                    }
+                                }
+                            }
+
+                        } else {
+                            accessFlag = false;
+                        }
+                        break;
+                    case 6:
+                        if (account.getActive().getSaturday().isEnable()) {
+
+                            if (account.getActive().getSaturday().getDetail().isEmpty()) {
+                                break;
+                            } else {
+                                //遍历非激活时间区间
+                                for (int i1 = 0; i1 < account.getActive().getSaturday().getDetail().size(); i1++) {
+                                    String[] time = account.getActive().getSaturday().getDetail().get(i1).split("-");
+
+                                    //处于非激活时间内
+                                    if (TimeUtil.isInTime(time[0], time[1])) {
+                                        //不通过
+                                        accessFlag = false;
+                                        break;
+                                    }
+                                }
+                            }
+
+                        } else {
+                            accessFlag = false;
+                        }
+                        break;
+                    case 7:
+                        if (account.getActive().getSunday().isEnable()) {
+
+                            if (account.getActive().getSunday().getDetail().isEmpty()) {
+                                break;
+                            } else {
+                                //遍历非激活时间区间
+                                for (int i1 = 0; i1 < account.getActive().getSunday().getDetail().size(); i1++) {
+                                    String[] time = account.getActive().getSunday().getDetail().get(i1).split("-");
+
+                                    //处于非激活时间内
+                                    if (TimeUtil.isInTime(time[0], time[1])) {
+                                        //不通过
+                                        accessFlag = false;
+                                        break;
+                                    }
+                                }
+                            }
+
+                        } else {
+                            accessFlag = false;
+                        }
+                        break;
+                    default:
+                        return new Result<AccountEntity>()
+                                .setCode(500)
+                                .setMsg("未知错误")
+                                .setData(null);
+
+                }
+
+                if (!accessFlag) {
+                    continue;
+                }
+
+                //冻结检查
                 if (dynamicInfo.getFreezeTaskList().containsKey(account.getId())) {
 
                     //检测是否结束冻结
@@ -61,17 +245,19 @@ public class TaskController {
                         break;
                     }
 
-                    //检测是否整个队列都被冻结
-                    if (i == dynamicInfo.getFreeTaskList().size() - 1) {
-                        result.setCode(200)
-                                .setMsg("success")
-                                .setData(null);
-                        return result;
-                    }
-
-                    continue;
+                } else {
+                    break;
                 }
-                break;
+
+            }
+
+            System.out.println(i);
+            //检查是已经遍历完整个列表
+            if (i == dynamicInfo.getFreeTaskList().size()) {
+                //没有可用的任务
+                return result.setCode(200)
+                        .setMsg("success")
+                        .setData(null);
             }
 
             dynamicInfo.getFreeTaskList().remove(account);
@@ -224,7 +410,8 @@ public class TaskController {
     @Operation(summary = "临时冻结任务")
     @PostMapping("/tempFreezeTask")
     public Result<String> tempFreezeTask(Long id, String expirationTime) {
-        LocalDateTime localDateTime = LocalDateTime.parse(expirationTime, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));
+        LocalDateTime localDateTime = LocalDateTime.parse(expirationTime, DateTimeFormatter.ofPattern("yyyy-MM-dd" +
+                "'T'HH:mm:ss.SSS'Z'"));
         dynamicInfo.getFreeTaskList().forEach(
                 accountEntity -> {
                     if (Objects.equals(accountEntity.getId(), id)) {
@@ -272,7 +459,7 @@ public class TaskController {
     @Login
     @Operation(summary = "查询已冻结任务列表")
     @GetMapping("/showFreezeTaskList")
-    public Result<HashMap<Long,LocalDateTime>> showFreezeTaskList(){
+    public Result<HashMap<Long, LocalDateTime>> showFreezeTaskList() {
         return new Result<HashMap<Long, LocalDateTime>>()
                 .setCode(200)
                 .setMsg("success")

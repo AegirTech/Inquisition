@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import moe.dazecake.inquisition.entity.ActivationDateSet.ActivationDate;
 import moe.dazecake.inquisition.entity.ConfigEntitySet.ConfigEntity;
 
 import java.time.LocalDateTime;
@@ -43,6 +44,10 @@ public class AccountEntity {
     @Schema(description = "配置")
     @TableField(typeHandler = GsonTypeHandler.class)
     ConfigEntity config;
+
+    @Schema(description = "激活时间")
+    @TableField(typeHandler = GsonTypeHandler.class)
+    ActivationDate active;
 
     @Schema(description = "过期时间")
     LocalDateTime expireTime;//过期时间
