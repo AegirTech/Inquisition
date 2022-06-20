@@ -15,10 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Objects;
+import java.util.*;
 
 @Tag(name = "任务接口")
 @ResponseBody
@@ -273,6 +270,7 @@ public class TaskController {
                             .setTitle("任务开始")
                             .setDetail("")//序列化配置
                             .setFrom(deviceToken)
+                            .setServer(account.getServer())
                             .setName(account.getName())
                             .setPassword(account.getPassword())
                             .setTime(localDateTime);
@@ -322,6 +320,7 @@ public class TaskController {
                 .setDetail("")
                 .setImageUrl(imageUrl)
                 .setFrom(deviceToken)
+                .setServer(account.getServer())
                 .setName(account.getName())
                 .setPassword(account.getPassword())
                 .setTime(LocalDateTime.now());
@@ -339,7 +338,7 @@ public class TaskController {
 
     @Operation(summary = "任务失败上报")
     @PostMapping("/failTask")
-    public Result<String> failTask(String deviceToken, String imageUrl) {
+    public Result<String> failTask(String deviceToken, String type, String imageUrl) {
         Result<String> result = new Result<>();
 
         var account = dynamicInfo.getLockTaskList().get(deviceToken).keySet().iterator().next();
@@ -352,9 +351,11 @@ public class TaskController {
                 .setDetail("")
                 .setImageUrl(imageUrl)
                 .setFrom(deviceToken)
+                .setServer(account.getServer())
                 .setName(account.getName())
                 .setPassword(account.getPassword())
                 .setTime(LocalDateTime.now());
+
         logController.addLog(logEntity, deviceToken);
 
         var map = dynamicInfo.getLockTaskList().get(deviceToken);
@@ -362,6 +363,10 @@ public class TaskController {
                 (accountEntity, localDateTime) -> dynamicInfo.getFreeTaskList().add(accountEntity)
         );
         dynamicInfo.getLockTaskList().remove(deviceToken);
+
+        if (account.getTaskType().equals("rogue") && type.equals("lineBusy")) {
+            dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
+        }
 
         result.setCode(200)
                 .setMsg("success")
@@ -375,6 +380,21 @@ public class TaskController {
     @PostMapping("/tempAddTask")
     public Result<String> tempAddTask(@RequestBody AccountEntity accountEntity) {
         Result<String> result = new Result<>();
+
+        Iterator<AccountEntity> iterator = dynamicInfo.getFreeTaskList().iterator();
+
+        Long minIndex = 0L;
+
+        while (iterator.hasNext()) {
+            AccountEntity account = iterator.next();
+            if (minIndex > account.getId()) {
+                minIndex = account.getId();
+            }
+        }
+
+        minIndex--;
+
+        accountEntity.setId(minIndex);
 
         dynamicInfo.getFreeTaskList().add(0, accountEntity);
 

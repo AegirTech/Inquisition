@@ -36,7 +36,7 @@ public class AccountEntity {
     String password;//密码
 
     @Schema(description = "服务器类型")
-    Integer server;//服务器类型 0:官服 1:B服
+    Long server;//服务器类型 0:官服 1:B服
 
     @Schema(description = "任务类型")
     String taskType;//任务类型
