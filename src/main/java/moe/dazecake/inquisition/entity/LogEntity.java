@@ -43,6 +43,9 @@ public class LogEntity {
     @TableField(value = "`from`")
     String from;
 
+    @Schema(description = "服务器")
+    Long server;
+
     @Schema(description = "用户名")
     String name;
 
