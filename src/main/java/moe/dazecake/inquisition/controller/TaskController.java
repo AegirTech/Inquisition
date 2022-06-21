@@ -7,9 +7,11 @@ import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
+import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Result;
 import moe.dazecake.inquisition.util.TimeUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -30,6 +32,15 @@ public class TaskController {
 
     @Resource
     private AccountMapper accountMapper;
+
+    @Resource
+    EmailServiceImpl emailService;
+
+    @Value("${spring.mail.to}")
+    String to;
+
+    @Value("${spring.mail.enable}")
+    boolean enableMail;
 
     @Operation(summary = "获取任务")
     @GetMapping("/getTask")
@@ -326,6 +337,16 @@ public class TaskController {
                 .setTime(LocalDateTime.now());
         logController.addLog(logEntity, deviceToken);
 
+        if (account.getTaskType().equals("rogue") && enableMail) {
+            //发送邮件通知
+            String msg = "<p>肉鸽任务已完成<p>\n" +
+                    "<p>用户名称: " + account.getName() + "<p>\n" +
+                    "<p>用户账号: " + account.getAccount() + "<p>\n" +
+                    "<p>服务器: " + account.getServer() + "<p>\n" +
+                    "<img src=\"" + imageUrl + "\" alt=\"screenshots\">";
+            emailService.sendHtmlMail(to, "肉鸽任务完成", msg);
+        }
+
         //移除队列
         dynamicInfo.getLockTaskList().remove(deviceToken);
 
@@ -404,20 +425,18 @@ public class TaskController {
     @Login
     @Operation(summary = "临时移除任务")
     @PostMapping("/tempRemoveTask")
-    public Result<String> tempRemoveTask(Integer id) {
+    public Result<String> tempRemoveTask(Long id) {
         Result<String> result = new Result<>();
 
-        int index = 0;
         var iterator = dynamicInfo.getFreeTaskList().iterator();
         while (iterator.hasNext()) {
-            iterator.next();
-            if (index == id) {
+            var account = iterator.next();
+            if (Objects.equals(account.getId(), id)) {
                 iterator.remove();
                 return result.setCode(200)
                         .setMsg("success")
                         .setData(null);
             }
-            index++;
         }
 
 

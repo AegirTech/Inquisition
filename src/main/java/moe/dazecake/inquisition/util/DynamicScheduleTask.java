@@ -8,6 +8,7 @@ import moe.dazecake.inquisition.entity.DeviceEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
+import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -37,8 +38,17 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
     @Resource
     LogController logController;
 
+    @Resource
+    EmailServiceImpl emailService;
+
     @Value("${cron}")
     String cron;
+
+    @Value("${spring.mail.to}")
+    String to;
+
+    @Value("${spring.mail.enable}")
+    boolean enableMail;
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
@@ -90,27 +100,48 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
         taskRegistrar.addTriggerTask(
                 () -> dynamicInfo.getCounter().forEach(
                         (token, num) -> {
-                            if (num == 0) {
+                            if (num > 0 || num > -60 && num < 0) {
+                                --num;
+                                dynamicInfo.getCounter().put(token, num);
+                            } else if (num == 0) {
                                 dynamicInfo.getDeviceStatusMap().put(token, 0);
                                 log.warn("设备离线: " + token);
+
+                                var device = deviceMapper.selectOne(
+                                        Wrappers.<DeviceEntity>lambdaQuery()
+                                                .eq(DeviceEntity::getDeviceToken, token)
+                                );
 
                                 //记录日志
                                 LogEntity logEntity = new LogEntity();
                                 logEntity.setLevel("WARN")
                                         .setTaskType("system")
                                         .setTitle("设备离线")
-                                        .setDetail("设备token: " + token)
+                                        .setDetail("设备名称: " + device.getDeviceName() + "\n" +
+                                                "设备token: " + device.getDeviceToken() + "\n"
+                                        )
                                         .setFrom(token)
                                         .setTime(LocalDateTime.now());
                                 logController.addLog(logEntity, "system");
 
                                 dynamicInfo.getCounter().put(token, -1);
+                            } else if (num == -60) {
+                                if (enableMail) {
+                                    var device = deviceMapper.selectOne(
+                                            Wrappers.<DeviceEntity>lambdaQuery()
+                                                    .eq(DeviceEntity::getDeviceToken, token)
+                                    );
 
-                            } else {
-                                if (num > 0) {
-                                    --num;
-                                    dynamicInfo.getCounter().put(token, num);
+                                    //邮件通知
+                                    String emailStr = "设备名称: " + device.getDeviceName() + "\n"
+                                            + "设备token: " + device.getDeviceToken() + "\n"
+                                            + "时间: " + LocalDateTime.now() + "\n";
+
+                                    emailService.sendSimpleMail(to, "设备离线", emailStr);
                                 }
+
+                                //更新设备状态
+                                dynamicInfo.getCounter().put(token, -61);
                             }
                         }
                 ),
