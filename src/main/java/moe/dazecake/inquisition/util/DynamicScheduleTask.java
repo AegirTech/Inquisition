@@ -41,13 +41,13 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
     @Resource
     EmailServiceImpl emailService;
 
-    @Value("${cron}")
+    @Value("${cron:'0 0 4,12,20 * * ?'}")
     String cron;
 
     @Value("${spring.mail.to}")
     String to;
 
-    @Value("${spring.mail.enable}")
+    @Value("${spring.mail.enable:false}")
     boolean enableMail;
 
     @Override

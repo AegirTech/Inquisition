@@ -39,7 +39,7 @@ public class TaskController {
     @Value("${spring.mail.to}")
     String to;
 
-    @Value("${spring.mail.enable}")
+    @Value("${spring.mail.enable:false}")
     boolean enableMail;
 
     @Operation(summary = "获取任务")
