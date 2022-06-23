@@ -37,10 +37,13 @@ public class LogController {
             logMapper.insert(logEntity);
             return null;
         } else {
-            var device = deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery().eq(DeviceEntity::getDeviceToken, deviceToken));
+            var device = deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
+                    .eq(DeviceEntity::getDeviceToken, deviceToken));
 
             if (device != null) {
-                logEntity.setTime(LocalDateTime.now());
+                logEntity.setFrom(deviceToken)
+                        .setTime(LocalDateTime.now());
+
                 logMapper.insert(logEntity);
 
                 result.setCode(200)
@@ -86,7 +89,8 @@ public class LogController {
         result.setData(new ArrayList<>());
 
         //降序分页查找
-        var data = logMapper.selectPage(new Page<>(current, size), Wrappers.<LogEntity>lambdaQuery().orderByDesc(LogEntity::getId));
+        var data = logMapper.selectPage(new Page<>(current, size), Wrappers.<LogEntity>lambdaQuery()
+                .orderByDesc(LogEntity::getId));
         result.setCode(200)
                 .setMsg("success")
                 .getData()
