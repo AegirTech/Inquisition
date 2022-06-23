@@ -40,7 +40,7 @@ public class LogController {
             var device = deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
                     .eq(DeviceEntity::getDeviceToken, deviceToken));
 
-            if (device != null) {
+            if (device != null && logEntity.getTitle() != null) {
                 logEntity.setFrom(deviceToken)
                         .setTime(LocalDateTime.now());
 
