@@ -259,7 +259,6 @@ public class TaskController {
 
             }
 
-            System.out.println(i);
             //检查是已经遍历完整个列表
             if (i == dynamicInfo.getFreeTaskList().size()) {
                 //没有可用的任务

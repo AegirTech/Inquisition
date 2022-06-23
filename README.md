@@ -37,22 +37,53 @@
 
 ### 后端部署
 
+#### 编译
+
+```shell
+gradlew bootJar
+```
+
+
+
+#### 配置文件
+
 ```yaml
-# yaml配置
+# yaml配置，请在jar包同级目录创建 application.yml 
 
 # 启动端口
 server:
   port: 2000
-  
-# 数据库连接配置 Mysql 8+
+  # 启用证书
+  ssl:
+    key-store: /xxx/xxx/xxx.keystore
+    key-store-type: PKCS12
+    key-store-password: xxxxxx
+    enabled: false
+    
 spring:
+  # 数据库连接配置 Mysql 8+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/arklights?characterEncoding=UTF-8
     username: root
     password: 123456
-    
+  # 邮箱推送配置
+  mail:
+    enable: true
+    host: smtp.qq.com
+    port: 465
+    protocol: smtps
+    username: xxxxx@qq.com
+    # 部分邮箱password为授权码 如qq邮箱
+    password: xxxxxx
+    from: xxxxx@qq.com
+    to: xxxxx@qq.com
 # 每日任务刷新cron表达式
 cron: '0 0 4,12,20 * * ?'
+
+# sql日志
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
 ```
 

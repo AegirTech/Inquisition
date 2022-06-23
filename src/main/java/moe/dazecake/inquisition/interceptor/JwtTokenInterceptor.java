@@ -23,7 +23,6 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
         if (token != null && token.length() > 7) {
             token = token.substring(7);
         }
-        System.out.println(token);
 
         HandlerMethod method = (HandlerMethod) handler;
 

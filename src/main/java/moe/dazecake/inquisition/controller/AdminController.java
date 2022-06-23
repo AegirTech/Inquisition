@@ -29,7 +29,6 @@ public class AdminController {
     @PostMapping("/adminLogin")
     public Result<HashMap<String, String>> adminLogin(String username, String password) {
         Result<HashMap<String, String>> result = new Result<>();
-        System.out.println(Encoder.MD5(password + salt));
 
         if (username == null || password == null) {
             return result.setCode(403)
