@@ -300,18 +300,20 @@ public class TaskController {
             }
 
             dynamicInfo.getLockTaskList().put(deviceToken, accountEntityLocalDateTimeHashMap);
-            result.setData(account);
+
+            //记录日志
+            logController.addLog(logEntity, deviceToken);
+
+            return result.setCode(200)
+                    .setMsg("success")
+                    .setData(account);
+
         } else {
-            result.setData(null);
+            return result.setCode(200)
+                    .setMsg("success")
+                    .setData(null);
+
         }
-
-        //记录日志
-        logController.addLog(logEntity, deviceToken);
-
-        result.setCode(200)
-                .setMsg("success");
-
-        return result;
     }
 
     @Operation(summary = "完成任务上报")
