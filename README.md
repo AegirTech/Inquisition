@@ -1,51 +1,38 @@
 # Inquisition 审判庭
 明日方舟速通云控后端
 
-## API文档
+## 如何使用
 
-部署后[访问](http://127.0.0.1:2000/swagger-ui/index.htm)
+> **警告: 本项目正处于 Fast Moving 阶段。任何数据库结构变化和API变动将不会提前通知。强烈建议您等待 release 版本。若执意运行，请确保自己拥有一定的纠错能力并友善的提出issue，我们将很乐意为您解答。**
 
-## TODO
+### 数据库配置
 
-- [x] 心跳协议
-- [x] Task拉取
-- [x] ~~多设备管理~~ 负载均衡
-- [x] Admin管理
-- [x] 日志
-- [ ] 前端实现 --> 当前开发
-- [ ] 截图获取
-- [ ] User管理
-- [x] 通知
+```sql
+# 请使用 Mysql8
+# 创建数据库
+CREATE DATABASE inquisition;
+# 选择数据库
+USE inquisition;
+# 运行 sql
+SOURCE https://fastly.jsdelivr.net/gh/AegirTech/Inquisition/main/sql/arklights.sql
+# 写入 admin 记录 其中password的加密为 MD5(明文密码+arklightscloud)
+# 例如创建一个用户名为root 密码为123456的管理员账号
+INSERT INTO `admin`(`id`, `user_name`, `password`, `permission`, `notice`, `delete`) VALUES (1, 'root', '7966fd2201810e386e8407feaf09b4ea', 'root', '{}', 0);
+```
 
-## 低优先度TODO
-- [ ] CDK
-
-## 业务流程
-
-### 设备部署
-
-1. [deviceToken申请](http://127.0.0.1:2000/swagger-ui/index.html#/%E8%AE%BE%E5%A4%87%E6%8E%A5%E5%8F%A3/addDevice)
-2. 终端deviceToken部署
-
-#### 终端业务流程
-
-1. [心跳](http://127.0.0.1:2000/swagger-ui/index.html#/%E5%BF%83%E8%B7%B3%E6%8E%A5%E5%8F%A3/postHeartBeat)
-2. [获取任务](http://127.0.0.1:2000/swagger-ui/index.html#/%E4%BB%BB%E5%8A%A1%E6%8E%A5%E5%8F%A3/getTask)
-3. [任务完成上报](http://127.0.0.1:2000/swagger-ui/index.html#/%E4%BB%BB%E5%8A%A1%E6%8E%A5%E5%8F%A3/completeTask)
-4. [任务失败上报](http://127.0.0.1:2000/swagger-ui/index.html#/%E4%BB%BB%E5%8A%A1%E6%8E%A5%E5%8F%A3/failTask)
-5. [手动日志上报](http://127.0.0.1:2000/swagger-ui/index.html#/%E6%97%A5%E5%BF%97%E6%8E%A5%E5%8F%A3/addLog) （已由后端处理部分任务日志）
-
-### 后端部署
-
-#### 编译
+### 编译
 
 ```shell
-gradlew bootJar
+git clone https://github.com/AegirTech/Inquisition.git
+cd Inquisition
+./gradlew bootJar # 编译jar包至./build/libs
+cp ./build/libs/xxx.jar ./
+java -jar xxx.jar # 请使用java 11+
 ```
 
 
 
-#### 配置文件
+### 配置文件
 
 ```yaml
 # yaml配置，请在jar包同级目录创建 application.yml 
@@ -87,3 +74,26 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
 ```
 
+### 前端部署
+
+请确保已经部署证书开启https，后访问 [http://aegirtech.com](http://aegirtech.com/) 填写后端地址并登陆即可
+
+## API文档
+
+部署后[访问](http://127.0.0.1:2000/swagger-ui/index.htm)
+
+## TODO
+
+- [x] 心跳协议
+- [x] Task拉取
+- [x] ~~多设备管理~~ 负载均衡
+- [x] Admin管理
+- [x] 日志
+- [ ] 前端实现 --> 当前开发
+- [ ] 截图获取
+- [ ] User管理
+- [x] 通知
+
+## 低优先度TODO
+
+- [ ] CDK
