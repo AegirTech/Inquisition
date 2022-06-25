@@ -13,8 +13,8 @@
 CREATE DATABASE inquisition;
 # 选择数据库
 USE inquisition;
-# 运行 sql
-SOURCE https://fastly.jsdelivr.net/gh/AegirTech/Inquisition@main/sql/arklights.sql
+# 运行 sql file 位于仓库中sql文件夹内
+SOURCE /xxx/xxx/arklights.sql
 # 写入 admin 记录 其中password的加密为 MD5(明文密码+arklightscloud)
 # 例如创建一个用户名为root 密码为123456的管理员账号
 INSERT INTO `admin`(`id`, `user_name`, `password`, `permission`, `notice`, `delete`) VALUES (1, 'root', '7966fd2201810e386e8407feaf09b4ea', 'root', '{}', 0);
