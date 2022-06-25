@@ -14,7 +14,7 @@ CREATE DATABASE inquisition;
 # 选择数据库
 USE inquisition;
 # 运行 sql
-SOURCE https://fastly.jsdelivr.net/gh/AegirTech/Inquisition/main/sql/arklights.sql
+SOURCE https://fastly.jsdelivr.net/gh/AegirTech/Inquisition@main/sql/arklights.sql
 # 写入 admin 记录 其中password的加密为 MD5(明文密码+arklightscloud)
 # 例如创建一个用户名为root 密码为123456的管理员账号
 INSERT INTO `admin`(`id`, `user_name`, `password`, `permission`, `notice`, `delete`) VALUES (1, 'root', '7966fd2201810e386e8407feaf09b4ea', 'root', '{}', 0);
@@ -51,7 +51,7 @@ spring:
   # 数据库连接配置 Mysql 8+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/arklights?characterEncoding=UTF-8
+    url: jdbc:mysql://127.0.0.1:3306/inquisition?characterEncoding=UTF-8
     username: root
     password: 123456
   # 邮箱推送配置
@@ -80,7 +80,7 @@ mybatis-plus:
 
 ## API文档
 
-部署后[访问](http://127.0.0.1:2000/swagger-ui/index.htm)
+部署后[访问](http://127.0.0.1:2000/swagger-ui/index.html)
 
 ## TODO
 
