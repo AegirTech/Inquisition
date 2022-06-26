@@ -209,7 +209,7 @@ public class TaskController {
                             accessFlag = false;
                         }
                         break;
-                    case 7:
+                    case 0:
                         if (account.getActive().getSunday().isEnable()) {
 
                             if (account.getActive().getSunday().getDetail().isEmpty()) {
