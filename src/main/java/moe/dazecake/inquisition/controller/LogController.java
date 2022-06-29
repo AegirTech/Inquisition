@@ -98,4 +98,30 @@ public class LogController {
 
         return result;
     }
+
+    @Login
+    @Operation(summary = "搜索日志")
+    @GetMapping("/searchLog")
+    public Result<ArrayList<LogEntity>> searchLog(String key, Long current, Long size) {
+        Result<ArrayList<LogEntity>> result = new Result<>();
+        result.setData(new ArrayList<>());
+
+        //模糊搜索
+        var data = logMapper.selectPage(new Page<>(current, size), Wrappers.<LogEntity>lambdaQuery()
+                .like(LogEntity::getTitle, key)
+                .or()
+                .like(LogEntity::getDetail, key)
+                .or()
+                .like(LogEntity::getName, key)
+                .or()
+                .like(LogEntity::getAccount, key)
+                .orderByDesc(LogEntity::getId)
+        );
+        result.setCode(200)
+                .setMsg("success")
+                .getData()
+                .addAll(data.getRecords());
+
+        return result;
+    }
 }
