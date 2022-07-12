@@ -1,11 +1,12 @@
 plugins {
+    id 'java'
     id 'org.springframework.boot' version '2.7.0'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-    id 'java'
+    id("com.bmuschko.docker-spring-boot-application") version "6.7.0"
 }
 
 group = 'moe.dazecake'
-version = '0.0.1-SNAPSHOT'
+version = '0.1.0'
 sourceCompatibility = '11'
 
 configurations {
@@ -15,21 +16,22 @@ configurations {
 }
 
 repositories {
+    mavenLocal()
     maven {url 'https://maven.aliyun.com/nexus/content/groups/public/'}
     mavenCentral()
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'mysql:mysql-connector-java'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    implementation 'com.baomidou:mybatis-plus-boot-starter:3.5.1'
-    implementation 'org.springdoc:springdoc-openapi-ui:1.6.8'
-    implementation 'com.auth0:java-jwt:3.19.1'
-    implementation 'commons-codec:commons-codec:1.15'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket:2.7.0'
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools:2.7.0'
+    runtimeOnly 'mysql:mysql-connector-java:8.0.29'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.7.0'
+    implementation 'com.baomidou:mybatis-plus-boot-starter:3.5.2'
+    implementation 'org.springdoc:springdoc-openapi-ui:1.6.9'
+    implementation 'com.auth0:java-jwt:3.19.2'
+    implementation 'commons-codec:commons-codec:20041127.091804'
     implementation 'com.google.code.gson:gson:2.9.0'
     implementation 'org.springframework.boot:spring-boot-starter-mail:2.7.0'
 }
