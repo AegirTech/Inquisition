@@ -1,3 +1,30 @@
+server:
+  port: 2000
+  ssl:
+    key-store: "xxx"
+    key-store-type: PKCS12
+    key-store-password: "xxx"
+    enabled: false
+
 spring:
-  profiles:
-    active: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/inquisition?useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC
+    username: root
+    password: 123456
+  mail:
+    enable: false
+    host: smtp.qq.com
+    port: 465
+    protocol: smtps
+    username: "xxx@qq.com"
+    password: "xxx"
+    from: "xxx@qq.com"
+    to: "xxx@qq.com"
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+cron: '0 0 4,12,20 * * ?'
