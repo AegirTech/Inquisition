@@ -107,6 +107,9 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                 dynamicInfo.getDeviceStatusMap().put(token, 0);
                                 log.warn("设备离线: " + token);
 
+                                dynamicInfo.getCounter().put(token, -1);
+                            } else if (num == -60) {
+                                //重连超时提示
                                 var device = deviceMapper.selectOne(
                                         Wrappers.<DeviceEntity>lambdaQuery()
                                                 .eq(DeviceEntity::getDeviceToken, token)
@@ -124,14 +127,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                         .setTime(LocalDateTime.now());
                                 logController.addLog(logEntity, "system");
 
-                                dynamicInfo.getCounter().put(token, -1);
-                            } else if (num == -60) {
                                 if (enableMail) {
-                                    var device = deviceMapper.selectOne(
-                                            Wrappers.<DeviceEntity>lambdaQuery()
-                                                    .eq(DeviceEntity::getDeviceToken, token)
-                                    );
-
                                     //邮件通知
                                     String emailStr = "设备名称: " + device.getDeviceName() + "\n"
                                             + "设备token: " + device.getDeviceToken() + "\n"
