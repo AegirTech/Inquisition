@@ -1,30 +1,32 @@
 server:
-  port: 2000
+  port: 2000 # 端口
   ssl:
     key-store: "xxx"
     key-store-type: PKCS12
     key-store-password: "xxx"
-    enabled: false
+    enabled: false # 启用ssl
 
 spring:
+  # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://inquisition-mysql:3306/inquisition?useSSL=false&characterEncoding=UTF-8&serverTimezone=UTC
     username: root
     password: 123456
   mail:
-    enable: false
-    host: smtp.qq.com
-    port: 465
-    protocol: smtps
-    username: "xxx@qq.com"
-    password: "xxx"
-    from: "xxx@qq.com"
-    to: "xxx@qq.com"
+    enable: false # 启用邮件发送
+    host: smtp.qq.com # 邮件服务器地址
+    port: 465 # 邮件服务器端口
+    protocol: smtps # 邮件协议
+    username: "xxx@qq.com" # 邮件发送者账号
+    password: "xxx" # 邮件发送者密码 (部分邮箱如QQ邮箱使用授权码)
+    from: "xxx@qq.com" # 邮件发送者邮箱
+    to: "xxx@qq.com" # 邮件接收者邮箱
 
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
+# 定时任务配置
 cron: '0 0 4,12,20 * * ?'

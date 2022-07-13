@@ -151,3 +151,46 @@ docker run -d -p 2000:2000 --name inquisition --network aegirtech-net dazecake/i
 ```
 
 如果以上测试均成功，恭喜你，你已经正确的安装了Inquisition与其所需依赖的数据库
+
+## 进阶
+
+### 前端部署
+
+单纯的后端部署完成后无法正常使用，您需要部署前端以获取图形化的操作界面
+
+Inquisition 的前端实现为 [IberiaEye 伊比利亚之眼](https://github.com/AegirTech/IberiaEye)，由于主要贡献者近期生活事务繁忙，`master`分支开发暂时被搁置，您可以使用由 [DazeCake](https://github.com/DazeCake) 开发的`element-plus`分支，该分支基于`Vue3 + Vite + TypeScript + Element-Plus`开发，较为简陋的前端实现，无移动端适配，仅用于开发调试，强烈不建议应用于生产环境。主要维护版本请查看`master`分支。
+
+前往部署 [IberiaEye-element-plus](https://github.com/AegirTech/IberiaEye/tree/element-plus)
+
+### 自定义配置
+
+默认的docker容器使用默认配置，如果您需要开启邮件推送或修改其他任意设置，需要进行[目录挂载](https://docker.easydoc.net/doc/81170005/cCewZWoN/kze7f0ZR)
+
+创建自定义配置文件 [配置文件参考](https://github.com/AegirTech/Inquisition/blob/main/src/main/resources/application.yml)
+
+```shell
+vim /usr/local/inquisition/application.yml
+```
+
+编辑并保存，停止原先运行的容器，增加启动参数
+
+```shell
+docker run -d -p 2000:2000 --name inquisition --network aegirtech-net dazecake/inquisition:latest \
+-v /usr/local/inquisition/application.yml:/application.yml
+```
+
+此时 Inquisition 将以自定义配置运行
+
+### 升级
+
+由于docker官方并为`latest`标签分配特殊定义，本地的latest版本和远程版本可能不一致。您需要手动删除本地容器才能拉取新版本
+
+```shell
+# 删除本地旧版本容器
+docker stop inquisition
+docker rmi inquisition:latest
+
+# 重新拉取最新版本并运行
+docker run -d -p 2000:2000 --name inquisition --network aegirtech-net dazecake/inquisition:latest
+```
+
