@@ -169,28 +169,26 @@ Inquisition 的前端实现为 [IberiaEye 伊比利亚之眼](https://github.com
 创建自定义配置文件 [配置文件参考](https://github.com/AegirTech/Inquisition/blob/main/src/main/resources/application.yml)
 
 ```shell
-vim /usr/local/inquisition/application.yml
+vim /usr/local/inquisition/config/application.yml
 ```
 
 编辑并保存，停止原先运行的容器，增加启动参数
 
 ```shell
-docker run -d -p 2000:2000 --name inquisition --network aegirtech-net dazecake/inquisition:latest \
--v /usr/local/inquisition/application.yml:/application.yml
+docker run -d -p 2000:2000 --name inquisition --network aegirtech-net \
+-v /usr/local/inquisition/config:/config \
+dazecake/inquisition:latest
 ```
 
 此时 Inquisition 将以自定义配置运行
 
 ### 升级
 
-由于docker官方并为`latest`标签分配特殊定义，本地的latest版本和远程版本可能不一致。您需要手动删除本地容器才能拉取新版本
-
 ```shell
-# 删除本地旧版本容器
-docker stop inquisition
-docker rmi inquisition:latest
+# 更新容器
+docker pull dazecake/inquisition:latest
 
-# 重新拉取最新版本并运行
+# 重新运行 (或增加启动参数)
 docker run -d -p 2000:2000 --name inquisition --network aegirtech-net dazecake/inquisition:latest
 ```
 
