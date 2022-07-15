@@ -25,51 +25,6 @@ public class AccountController {
     @Resource
     AccountMapper accountMapper;
 
-    @Operation(summary = "创建我的账号")
-    @PostMapping("/createAccount")
-    public Result<String> createAccount(String cdk, @RequestBody AccountEntity accountEntity) {
-        Result<String> result = new Result<>();
-
-        // TODO: 2022/7/15 判断cdk是否有效
-
-        accountEntity.setId(0L);
-        accountMapper.insert(accountEntity);
-        return result.setCode(200).setMsg("success").setData(null);
-    }
-
-    @Operation(summary = "登陆我的账号")
-    @PostMapping("/userLogin")
-    public Result<HashMap<String, String>> userLogin(String username, String password) {
-        Result<HashMap<String, String>> result = new Result<>();
-
-        if (username == null || password == null) {
-            return result.setCode(403)
-                    .setMsg("username or password is null")
-                    .setData(null);
-        }
-
-        var account = accountMapper.selectOne(
-                Wrappers.<AccountEntity>lambdaQuery()
-                        .eq(AccountEntity::getAccount, username)
-                        .eq(AccountEntity::getPassword, password)
-        );
-
-        if (account != null) {
-            return result.setCode(200)
-                    .setMsg("login success")
-                    .setData(new HashMap<>() {
-                        {
-                            put("token", JWTUtils.generateTokenForUser(account));
-                        }
-                    });
-        } else {
-            return result.setCode(404)
-                    .setMsg("Account does not exist")
-                    .setData(null);
-        }
-    }
-
-
     @Login
     @Operation(summary = "增加账号")
     @PostMapping("/addAccount")
@@ -126,24 +81,6 @@ public class AccountController {
         return result;
     }
 
-    @UserLogin
-    @Operation(summary = "查询自己的账号")
-    @GetMapping("/showMyAccount")
-    public Result<AccountEntity> showMyAccount(@RequestHeader("Authorization") String token) {
-        Result<AccountEntity> result = new Result<>();
-        result.setData(new AccountEntity());
-
-        var account = accountMapper.selectOne(
-                Wrappers.<AccountEntity>lambdaQuery()
-                        .eq(AccountEntity::getId, JWTUtils.getId(token))
-        );
-        result.setCode(200)
-                .setMsg("success")
-                .setData(account);
-
-        return result;
-    }
-
     @Login
     @Operation(summary = "更新账号")
     @PostMapping("/updateAccount")
@@ -154,37 +91,6 @@ public class AccountController {
         if (account != null) {
             account = accountEntity;
             account.setId(id);
-            accountMapper.updateById(account);
-
-            result.setCode(200)
-                    .setMsg("success");
-
-        } else {
-            result.setCode(403)
-                    .setMsg("Unable to update a non-existent account");
-
-        }
-        result.setData(null);
-        return result;
-    }
-
-    @UserLogin
-    @Operation(summary = "更新自己的账号")
-    @PostMapping("/updateMyAccount")
-    public Result<String> updateMyAccount(@RequestHeader("Authorization") String token,
-                                          @RequestBody AccountEntity accountEntity) {
-        Result<String> result = new Result<>();
-
-        var account = accountMapper.selectOne(
-                Wrappers.<AccountEntity>lambdaQuery()
-                        .eq(AccountEntity::getId, JWTUtils.getId(token))
-        );
-        if (account != null) {
-            LocalDateTime expireTime = account.getExpireTime();
-            account = accountEntity;
-            account.setId(JWTUtils.getId(token));
-            account.setExpireTime(expireTime);
-
             accountMapper.updateById(account);
 
             result.setCode(200)

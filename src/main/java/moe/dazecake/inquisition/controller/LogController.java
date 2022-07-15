@@ -101,25 +101,6 @@ public class LogController {
         return result;
     }
 
-    @UserLogin
-    @Operation(summary = "查询我的日志")
-    @GetMapping("/showMyLog")
-    public Result<ArrayList<LogEntity>> showMyLog(@RequestHeader("Authorization") String token, Long current, Long size) {
-        Result<ArrayList<LogEntity>> result = new Result<>();
-        result.setData(new ArrayList<>());
-
-        //降序分页查找
-        var data = logMapper.selectPage(new Page<>(current, size), Wrappers.<LogEntity>lambdaQuery()
-                .eq(LogEntity::getAccount, JWTUtils.getUsername(token))
-                .orderByDesc(LogEntity::getId));
-        result.setCode(200)
-                .setMsg("success")
-                .getData()
-                .addAll(data.getRecords());
-
-        return result;
-    }
-
     @Login
     @Operation(summary = "搜索日志")
     @GetMapping("/searchLog")
