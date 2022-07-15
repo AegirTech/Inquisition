@@ -47,7 +47,7 @@ public class AdminController {
                     .setMsg("login success")
                     .setData(new HashMap<>() {
                         {
-                            put("token", JWTUtils.generateToken(admin));
+                            put("token", JWTUtils.generateTokenForAdmin(admin));
                         }
                     });
         } else {

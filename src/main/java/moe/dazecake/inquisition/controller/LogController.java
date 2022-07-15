@@ -5,10 +5,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
+import moe.dazecake.inquisition.annotation.UserLogin;
 import moe.dazecake.inquisition.entity.DeviceEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
+import moe.dazecake.inquisition.util.JWTUtils;
 import moe.dazecake.inquisition.util.Result;
 import org.springframework.web.bind.annotation.*;
 
@@ -90,6 +92,25 @@ public class LogController {
 
         //降序分页查找
         var data = logMapper.selectPage(new Page<>(current, size), Wrappers.<LogEntity>lambdaQuery()
+                .orderByDesc(LogEntity::getId));
+        result.setCode(200)
+                .setMsg("success")
+                .getData()
+                .addAll(data.getRecords());
+
+        return result;
+    }
+
+    @UserLogin
+    @Operation(summary = "查询我的日志")
+    @GetMapping("/showMyLog")
+    public Result<ArrayList<LogEntity>> showMyLog(@RequestHeader("Authorization") String token, Long current, Long size) {
+        Result<ArrayList<LogEntity>> result = new Result<>();
+        result.setData(new ArrayList<>());
+
+        //降序分页查找
+        var data = logMapper.selectPage(new Page<>(current, size), Wrappers.<LogEntity>lambdaQuery()
+                .eq(LogEntity::getAccount, JWTUtils.getUsername(token))
                 .orderByDesc(LogEntity::getId));
         result.setCode(200)
                 .setMsg("success")
