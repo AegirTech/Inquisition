@@ -20,6 +20,7 @@ public class JWTUtils {
         builder.withClaim("id", adminEntity.getId())
                 .withClaim("username", adminEntity.getUserName())
                 .withClaim("permission", adminEntity.getPermission())
+                .withClaim("type", "admin")
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION));
         return builder.sign(Algorithm.HMAC256(SECRET));
     }
@@ -28,6 +29,7 @@ public class JWTUtils {
         JWTCreator.Builder builder = JWT.create();
         builder.withClaim("id", accountEntity.getId())
                 .withClaim("username", accountEntity.getAccount())
+                .withClaim("type", "user")
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION));
         return builder.sign(Algorithm.HMAC256(SECRET));
     }
@@ -53,6 +55,11 @@ public class JWTUtils {
     public static String getUsername(String token) {
         assert token != null;
         return JWT.decode(token.substring(7)).getClaim("username").asString();
+    }
+
+    public static String getType(String token) {
+        assert token != null;
+        return JWT.decode(token).getClaim("type").asString();
     }
 }
 

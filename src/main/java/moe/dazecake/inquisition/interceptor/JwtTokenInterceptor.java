@@ -11,12 +11,14 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Objects;
 
 @Component
 public class JwtTokenInterceptor implements HandlerInterceptor {
 
     @Override
-    public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) {
+    public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,
+                             @NotNull Object handler) {
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }
@@ -31,7 +33,8 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
         //管理员登陆验证
         var login = method.getMethod().getAnnotation(Login.class);
         if (login != null) {
-            if (JWTUtils.verifyToken(token)) {
+            if (JWTUtils.verifyToken(token) && Objects.equals(JWTUtils.getType(Objects.requireNonNull(token)),
+                    "admin")) {
                 return true;
             } else {
                 response.setStatus(401);
@@ -42,7 +45,8 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
         //用户登陆验证
         var userLogin = method.getMethod().getAnnotation(UserLogin.class);
         if (userLogin != null) {
-            if (JWTUtils.verifyToken(token)) {
+            if (JWTUtils.verifyToken(token) && Objects.equals(JWTUtils.getType(Objects.requireNonNull(token)),
+                    "user")) {
                 return true;
             } else {
                 response.setStatus(401);
