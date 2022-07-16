@@ -31,6 +31,7 @@ public class CDKController {
         ArrayList<CDKEntity> newCDKList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             newCDKList.add(CDKEntity.builder()
+                    .id(0L)
                     .cdk(RandomStringUtils.randomAlphabetic(32))
                     .type(type)
                     .param(param)

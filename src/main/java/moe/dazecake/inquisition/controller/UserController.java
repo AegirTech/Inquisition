@@ -121,9 +121,11 @@ public class UserController {
                         .eq(AccountEntity::getId, JWTUtils.getId(token))
         );
         if (account != null) {
+            String taskType = account.getTaskType();
             LocalDateTime expireTime = account.getExpireTime();
             account = accountEntity;
             account.setId(JWTUtils.getId(token));
+            account.setTaskType(taskType);
             account.setExpireTime(expireTime);
 
             accountMapper.updateById(account);
