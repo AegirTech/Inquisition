@@ -34,6 +34,19 @@ CREATE TABLE `admin`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
+-- Table structure for cdk
+-- ----------------------------
+DROP TABLE IF EXISTS `cdk`;
+CREATE TABLE `cdk`  (
+  `id` int(0) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `cdk` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `param` int(0) NULL DEFAULT NULL,
+  `used` int(0) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
 -- Table structure for device
 -- ----------------------------
 DROP TABLE IF EXISTS `device`;

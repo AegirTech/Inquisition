@@ -97,7 +97,7 @@ docker exec -it inquisition-mysql bash
 获取数据库初始化的 sql 文件
 
 ```shell
-cd ~ && curl -o inquisition.sql https://raw.fastgit.org/AegirTech/Inquisition/main/sql/arklights.sql
+cd ~ && curl -o inquisition.sql https://raw.fastgit.org/AegirTech/Inquisition/main/sql/inquisition.sql
 ```
 
 进入MySQL命令行，提示输入密码，默认密码为`123456`
