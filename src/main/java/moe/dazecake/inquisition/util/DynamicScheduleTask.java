@@ -181,7 +181,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                         log.info("已处理超时任务数: " + exceedMap.size());
                     }
                 },
-                triggerContext -> new CronTrigger("* 0/5 * * * ?").nextExecutionTime(triggerContext)
+                triggerContext -> new CronTrigger("0 0/5 * * * ?").nextExecutionTime(triggerContext)
         );
         //设备过期检测
         taskRegistrar.addTriggerTask(
@@ -210,7 +210,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                             }
                     );
                 },
-                triggerContext -> new CronTrigger("* 0/10 * * * ?").nextExecutionTime(triggerContext)
+                triggerContext -> new CronTrigger("0 0/10 * * * ?").nextExecutionTime(triggerContext)
         );
         //设备载入刷新
         taskRegistrar.addTriggerTask(
@@ -230,7 +230,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                             }
                     );
                 },
-                triggerContext -> new CronTrigger("* 0/5 * * * ?").nextExecutionTime(triggerContext)
+                triggerContext -> new CronTrigger("0 0/5 * * * ? ").nextExecutionTime(triggerContext)
         );
     }
 }
