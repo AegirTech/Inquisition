@@ -187,17 +187,18 @@ public class UserController {
         );
         if (account != null) {
             activateCDK(account, cdkEntity);
-            System.out.println(account);
             accountMapper.updateById(account);
         }
         return result.setCode(200).setMsg("success").setData(null);
     }
 
     private void activateCDK(AccountEntity accountEntity, CDKEntity cdkEntity) {
+        if (accountEntity.getExpireTime().isBefore(LocalDateTime.now())) {
+            accountEntity.setExpireTime(LocalDateTime.now());
+        }
         switch (cdkEntity.getType()) {
             case "daily":
                 accountEntity.setExpireTime(accountEntity.getExpireTime().plusDays(cdkEntity.getParam()));
-                System.out.println(accountEntity.getExpireTime());
                 break;
             case "rouge_level":
                 accountEntity.setExpireTime(accountEntity.getExpireTime().plusDays(2));
