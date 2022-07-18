@@ -187,6 +187,7 @@ public class UserController {
         );
         if (account != null) {
             activateCDK(account, cdkEntity);
+            System.out.println(account);
             accountMapper.updateById(account);
         }
         return result.setCode(200).setMsg("success").setData(null);
@@ -195,14 +196,15 @@ public class UserController {
     private void activateCDK(AccountEntity accountEntity, CDKEntity cdkEntity) {
         switch (cdkEntity.getType()) {
             case "daily":
-                accountEntity.setExpireTime(LocalDateTime.now().plusDays(cdkEntity.getParam()));
+                accountEntity.setExpireTime(accountEntity.getExpireTime().plusDays(cdkEntity.getParam()));
+                System.out.println(accountEntity.getExpireTime());
                 break;
             case "rouge_level":
-                accountEntity.setExpireTime(LocalDateTime.now().plusDays(2));
+                accountEntity.setExpireTime(accountEntity.getExpireTime().plusDays(2));
                 accountEntity.getConfig().getRogue().setLevel(cdkEntity.getParam());
                 break;
             case "rogue_coin":
-                accountEntity.setExpireTime(LocalDateTime.now().plusDays(2));
+                accountEntity.setExpireTime(accountEntity.getExpireTime().plusDays(2));
                 accountEntity.getConfig().getRogue().setCoin(cdkEntity.getParam());
                 break;
             default:
