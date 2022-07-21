@@ -18,9 +18,9 @@ Inquisition 是一款基于 [ArkLights](https://github.com/tkkcc/ArkLights) 开�
 - [x] 日志
 - [ ] 前端实现 --> [伊比利亚之眼](https://github.com/AegirTech/IberiaEye)
 - [ ] 截图获取
-- [ ] User管理
+- [x] User管理
 - [x] 通知
 
 ## 低优先度TODO
 
-- [ ] CDK
+- [x] CDK
