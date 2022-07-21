@@ -38,7 +38,7 @@ public class AdminController {
 
         var admin = adminMapper.selectOne(
                 Wrappers.<AdminEntity>lambdaQuery()
-                        .eq(AdminEntity::getUserName, username)
+                        .eq(AdminEntity::getUsername, username)
                         .eq(AdminEntity::getPassword, Encoder.MD5(password + salt))
         );
 

@@ -18,7 +18,7 @@ public class JWTUtils {
     public static String generateTokenForAdmin(AdminEntity adminEntity) {
         JWTCreator.Builder builder = JWT.create();
         builder.withClaim("id", adminEntity.getId())
-                .withClaim("username", adminEntity.getUserName())
+                .withClaim("username", adminEntity.getUsername())
                 .withClaim("permission", adminEntity.getPermission())
                 .withClaim("type", "admin")
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION));
