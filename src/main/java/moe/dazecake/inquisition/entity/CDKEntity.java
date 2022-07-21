@@ -29,6 +29,9 @@ public class CDKEntity {
     @Schema(description = "参数")
     Integer param;
 
+    @Schema(description = "tag")
+    String tag;
+
     @Schema(description = "是否使用")
     Integer used;
 }

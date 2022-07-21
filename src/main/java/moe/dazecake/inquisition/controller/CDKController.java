@@ -27,7 +27,7 @@ public class CDKController {
     @Login
     @Operation(summary = "批量创建cdk")
     @PostMapping("/createCDK")
-    public Result<ArrayList<CDKEntity>> createCDK(String type, Integer param, int count) {
+    public Result<ArrayList<CDKEntity>> createCDK(String type, Integer param, String tag, int count) {
         ArrayList<CDKEntity> newCDKList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             newCDKList.add(CDKEntity.builder()
@@ -35,6 +35,7 @@ public class CDKController {
                     .cdk(RandomStringUtils.randomAlphabetic(32))
                     .type(type)
                     .param(param)
+                    .tag(tag)
                     .used(0)
                     .build());
         }
@@ -43,12 +44,24 @@ public class CDKController {
     }
 
     @Login
-    @Operation(summary = "检查库存cdk")
-    @GetMapping("/checkCDK")
-    public Result<ArrayList<CDKEntity>> checkCDK(String type) {
+    @Operation(summary = "通过类型检查库存cdk")
+    @GetMapping("/checkCDKByType")
+    public Result<ArrayList<CDKEntity>> checkCDKByType(String type) {
         ArrayList<CDKEntity> cdkList = (ArrayList<CDKEntity>) cdkMapper.selectList(
                 Wrappers.<CDKEntity>lambdaQuery()
                         .eq(CDKEntity::getType, type)
+                        .eq(CDKEntity::getUsed, 0)
+        );
+        return new Result<>(200, "success", cdkList);
+    }
+
+    @Login
+    @Operation(summary = "通过tag检查库存cdk")
+    @GetMapping("/checkCDKByTag")
+    public Result<ArrayList<CDKEntity>> checkCDKByTag(String tag) {
+        ArrayList<CDKEntity> cdkList = (ArrayList<CDKEntity>) cdkMapper.selectList(
+                Wrappers.<CDKEntity>lambdaQuery()
+                        .eq(CDKEntity::getTag, tag)
                         .eq(CDKEntity::getUsed, 0)
         );
         return new Result<>(200, "success", cdkList);
