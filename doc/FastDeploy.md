@@ -88,38 +88,6 @@ docker run -p 3306:3306 --name inquisition-mysql \
 --default_authentication_plugin=mysql_native_password
 ```
 
-成功运行以后我们进入交互式命令行进行基础配置
-
-```shell
-docker exec -it inquisition-mysql bash
-```
-
-获取数据库初始化的 sql 文件
-
-```shell
-cd ~ && curl -o inquisition.sql https://raw.fastgit.org/AegirTech/Inquisition/main/sql/inquisition.sql
-```
-
-进入MySQL命令行，提示输入密码，默认密码为`123456`
-
-```shell
-mysql -u root -p
-```
-
-成功进入命令行以后，我们输入以下sql语句来初始化数据库
-
-```sql
-CREATE DATABASE inquisition;
-
-USE inquisition;
-
-SOURCE /root/inquisition.sql;
-
-INSERT INTO `admin`(`id`, `username`, `password`, `permission`, `notice`, `delete`) VALUES (1, 'root', '7966fd2201810e386e8407feaf09b4ea', 'root', '{}', 0);
-```
-
-成功运行后，我们可以按`Ctrl + D`来退出MySQL命令行，再按一次`Ctrl + D`来退出容器
-
 至此，数据库配置已经全部完成
 
 ## Inquisition安装
@@ -185,6 +153,10 @@ dazecake/inquisition:latest
 ### 升级
 
 ```shell
+# 停止并删除旧容器
+docker stop inquisition
+docker rm inquisition
+
 # 更新容器
 docker pull dazecake/inquisition:latest
 
