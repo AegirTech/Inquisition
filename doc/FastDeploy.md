@@ -115,7 +115,7 @@ USE inquisition;
 
 SOURCE /root/inquisition.sql;
 
-INSERT INTO `admin`(`id`, `user_name`, `password`, `permission`, `notice`, `delete`) VALUES (1, 'root', '7966fd2201810e386e8407feaf09b4ea', 'root', '{}', 0);
+INSERT INTO `admin`(`id`, `username`, `password`, `permission`, `notice`, `delete`) VALUES (1, 'root', '7966fd2201810e386e8407feaf09b4ea', 'root', '{}', 0);
 ```
 
 成功运行后，我们可以按`Ctrl + D`来退出MySQL命令行，再按一次`Ctrl + D`来退出容器
