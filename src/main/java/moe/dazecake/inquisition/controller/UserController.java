@@ -2,17 +2,24 @@ package moe.dazecake.inquisition.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.zjiecode.wxpusher.client.WxPusher;
+import com.zjiecode.wxpusher.client.bean.CreateQrcodeReq;
+import com.zjiecode.wxpusher.client.bean.CreateQrcodeResp;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.UserLogin;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.CDKEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
+import moe.dazecake.inquisition.entity.NoticeEntitySet.NoticeEntity;
+import moe.dazecake.inquisition.entity.NoticeEntitySet.WXUID;
+import moe.dazecake.inquisition.entity.NoticeEntitySet.WechatCallbackEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.CDKMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
 import moe.dazecake.inquisition.util.JWTUtils;
 import moe.dazecake.inquisition.util.Result;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -33,6 +40,12 @@ public class UserController {
 
     @Resource
     CDKMapper cdkMapper;
+
+    @Value("${wx-pusher.app-token}")
+    String appToken;
+
+    @Value("${wx-pusher.enable}")
+    boolean enableWxPusher;
 
     @Operation(summary = "创建我的账号")
     @PostMapping("/createUser")
@@ -145,7 +158,8 @@ public class UserController {
     @UserLogin
     @Operation(summary = "查询我的日志")
     @GetMapping("/showMyLog")
-    public Result<ArrayList<LogEntity>> showMyLog(@RequestHeader("Authorization") String token, Long current, Long size) {
+    public Result<ArrayList<LogEntity>> showMyLog(@RequestHeader("Authorization") String token, Long current,
+                                                  Long size) {
         Result<ArrayList<LogEntity>> result = new Result<>();
         result.setData(new ArrayList<>());
 
@@ -191,6 +205,58 @@ public class UserController {
         }
         return result.setCode(200).setMsg("success").setData(null);
     }
+
+    @UserLogin
+    @Operation(summary = "获取微信推送二维码")
+    @GetMapping("/getWechatQRCode")
+    public Result<String> getWechatQRCode(@RequestHeader("Authorization") String token) {
+        Result<String> result = new Result<>();
+        if (enableWxPusher) {
+            var account = accountMapper.selectOne(
+                    Wrappers.<AccountEntity>lambdaQuery()
+                            .eq(AccountEntity::getId, JWTUtils.getId(token))
+            );
+            if (account == null) {
+                result.setCode(403);
+                result.setMsg("账号不存在");
+                return result;
+            }
+            CreateQrcodeReq createQrcodeReq = new CreateQrcodeReq();
+            createQrcodeReq.setAppToken(appToken);
+            createQrcodeReq.setExtra(String.valueOf(JWTUtils.getId(token)));
+            createQrcodeReq.setValidTime(3600);
+            var qrcode = WxPusher.createAppTempQrcode(createQrcodeReq);
+            if (qrcode.isSuccess()) {
+                return result.setCode(200).setMsg("success").setData(qrcode.getData().getUrl());
+            } else {
+                return result.setCode(403).setMsg("获取二维码失败");
+            }
+        }else {
+            return result.setCode(403).setMsg("未开启微信推送");
+        }
+    }
+
+    @Operation(summary = "获取微信推送回调")
+    @PostMapping("/getWechatCallback")
+    public void getWechatCallback(@RequestBody WechatCallbackEntity wechatCallback) {
+        if (enableWxPusher) {
+            AccountEntity accountEntity = accountMapper.selectById(wechatCallback.getData().getExtra());
+            if (accountEntity != null) {
+                var noticeEntity = accountEntity.getNotice();
+                if (noticeEntity == null) {
+                    noticeEntity = new NoticeEntity();
+                }
+                if (noticeEntity.getWxUID() == null) {
+                    noticeEntity.setWxUID(new WXUID());
+                }
+                noticeEntity.getWxUID().setText(wechatCallback.getData().getUid());
+                noticeEntity.getWxUID().setEnable(true);
+                accountEntity.setNotice(noticeEntity);
+                accountMapper.updateById(accountEntity);
+            }
+        }
+    }
+
 
     private void activateCDK(AccountEntity accountEntity, CDKEntity cdkEntity) {
         if (accountEntity.getExpireTime().isBefore(LocalDateTime.now())) {

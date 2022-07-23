@@ -44,3 +44,7 @@ mybatis-plus:
 
 # 定时任务配置
 cron: '0 0 4,12,20 * * ?'
+
+wx-pusher:
+  enable: false
+  app-token: xxxxxxx

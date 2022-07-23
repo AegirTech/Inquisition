@@ -35,6 +35,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-mail:2.7.0'
     implementation 'com.gitee.sunchenbin.mybatis.actable:mybatis-enhance-actable:1.5.0.RELEASE'
     implementation 'com.alibaba:druid-spring-boot-starter:1.2.11'
+    implementation 'com.zjiecode:wxpusher-java-sdk:2.1.4'
 }
 
 tasks.named('test') {

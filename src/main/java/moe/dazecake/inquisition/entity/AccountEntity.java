@@ -17,6 +17,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import moe.dazecake.inquisition.entity.ActivationDateSet.ActivationDate;
 import moe.dazecake.inquisition.entity.ConfigEntitySet.ConfigEntity;
+import moe.dazecake.inquisition.entity.NoticeEntitySet.NoticeEntity;
 
 import java.time.LocalDateTime;
 
@@ -65,6 +66,11 @@ public class AccountEntity {
     @Schema(description = "激活时间")
     @TableField(typeHandler = GsonTypeHandler.class)
     ActivationDate active;
+
+    @Column(name = "notice", comment = "通知", type = MySqlTypeConstant.JSON)
+    @Schema(description = "通知")
+    @TableField(typeHandler = GsonTypeHandler.class)
+    NoticeEntity notice;
 
     @Column(name = "expire_time", comment = "过期时间")
     @Schema(description = "过期时间")
