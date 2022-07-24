@@ -1,6 +1,7 @@
 package moe.dazecake.inquisition.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.zjiecode.wxpusher.client.bean.Message;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
@@ -8,6 +9,7 @@ import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
+import moe.dazecake.inquisition.service.impl.WXPusherServiceImpl;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Result;
 import moe.dazecake.inquisition.util.TimeUtil;
@@ -35,6 +37,9 @@ public class TaskController {
 
     @Resource
     EmailServiceImpl emailService;
+
+    @Resource
+    WXPusherServiceImpl wxPusherService;
 
     @Value("${spring.mail.to}")
     String to;
@@ -304,6 +309,16 @@ public class TaskController {
             //记录日志
             logController.addLog(logEntity, deviceToken);
 
+            //微信推送
+            System.out.println(account);
+            if (account.getNotice().getWxUID().getEnable()) {
+                wxPusherService.push(Message.CONTENT_TYPE_MD,
+                        "# 开始作战\n\n" +
+                                "请勿顶号，强行顶号将导致本轮轮空",
+                        account.getNotice().getWxUID().getText(),
+                        null);
+            }
+
             return result.setCode(200)
                     .setMsg("success")
                     .setData(account);
@@ -337,6 +352,16 @@ public class TaskController {
                 .setPassword(account.getPassword())
                 .setTime(LocalDateTime.now());
         logController.addLog(logEntity, deviceToken);
+
+        //微信推送
+        System.out.println(account);
+        if (account.getNotice().getWxUID().getEnable()) {
+            wxPusherService.push(Message.CONTENT_TYPE_MD,
+                    "# 作战完成\n\n" +
+                            "可登陆控制面板查看作战详情",
+                    account.getNotice().getWxUID().getText(),
+                    null);
+        }
 
         if (account.getTaskType().equals("rogue") && enableMail) {
             //发送邮件通知
@@ -388,6 +413,16 @@ public class TaskController {
 
         if (account.getTaskType().equals("rogue") && type.equals("lineBusy")) {
             dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
+        }
+
+        //微信推送
+        System.out.println(account);
+        if (account.getNotice().getWxUID().getEnable()) {
+            wxPusherService.push(Message.CONTENT_TYPE_MD,
+                    "# 作战失败\n\n" +
+                            "可登陆控制面板查看作战详情",
+                    account.getNotice().getWxUID().getText(),
+                    null);
         }
 
         result.setCode(200)

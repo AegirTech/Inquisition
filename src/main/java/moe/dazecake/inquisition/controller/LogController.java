@@ -5,12 +5,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
-import moe.dazecake.inquisition.annotation.UserLogin;
 import moe.dazecake.inquisition.entity.DeviceEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
-import moe.dazecake.inquisition.util.JWTUtils;
 import moe.dazecake.inquisition.util.Result;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,6 +54,8 @@ public class LogController {
                         .setMsg("fail")
                         .setData(null);
             }
+
+
         }
 
         return result;
