@@ -67,6 +67,7 @@ public class UserController {
         cdkMapper.updateById(cdkEntity);
 
         accountEntity.setId(0L);
+        accountEntity.setExpireTime(LocalDateTime.now());
         activateCDK(accountEntity, cdkEntity);
         accountMapper.insert(accountEntity);
         return result.setCode(200).setMsg("success").setData(null);
