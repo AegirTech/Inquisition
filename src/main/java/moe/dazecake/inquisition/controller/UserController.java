@@ -315,6 +315,33 @@ public class UserController {
         }
     }
 
+    @UserLogin
+    @Operation(summary = "获取通知状态")
+    @GetMapping("/getNoticeStatus")
+    public Result<NoticeEntity> getNoticeStatus(@RequestHeader("Authorization") String token) {
+        Result<NoticeEntity> result = new Result<>();
+        var account = accountMapper.selectOne(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getId, JWTUtils.getId(token))
+        );
+
+        if (account.getNotice() == null) {
+            account.setNotice(new NoticeEntity());
+            account.getNotice().getWxUID().setEnable(false);
+            account.getNotice().getWxUID().setText("");
+            account.getNotice().getMail().setEnable(false);
+            account.getNotice().getMail().setText("");
+            account.getNotice().getQq().setEnable(false);
+            account.getNotice().getQq().setText("");
+            accountMapper.updateById(account);
+        }
+
+        result.setCode(200);
+        result.setMsg("success");
+        result.setData(account.getNotice());
+        return result;
+    }
+
 
     private void activateCDK(AccountEntity accountEntity, CDKEntity cdkEntity) {
         if (accountEntity.getExpireTime().isBefore(LocalDateTime.now())) {

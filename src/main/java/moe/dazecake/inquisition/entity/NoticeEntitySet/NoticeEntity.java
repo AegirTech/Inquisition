@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NoticeEntity {
-    private WXUID wxUID;
-    private QQ qq;
-    private Mail mail;
+    private WXUID wxUID = new WXUID();
+    private QQ qq = new QQ();
+    private Mail mail = new Mail();
 }
