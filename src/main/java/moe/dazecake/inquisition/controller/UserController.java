@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.zjiecode.wxpusher.client.WxPusher;
 import com.zjiecode.wxpusher.client.bean.CreateQrcodeReq;
-import com.zjiecode.wxpusher.client.bean.CreateQrcodeResp;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.UserLogin;
@@ -17,20 +16,29 @@ import moe.dazecake.inquisition.entity.NoticeEntitySet.WechatCallbackEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.CDKMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
+import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.JWTUtils;
 import moe.dazecake.inquisition.util.Result;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.support.CronExpression;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Tag(name = "用户接口")
 @ResponseBody
 @RestController
 public class UserController {
+
+    @Resource
+    DynamicInfo dynamicInfo;
 
     @Resource
     AccountMapper accountMapper;
@@ -46,6 +54,9 @@ public class UserController {
 
     @Value("${wx-pusher.enable}")
     boolean enableWxPusher;
+
+    @Value("${cron:'0 0 4,12,20 * * ?'}")
+    String cron;
 
     @Operation(summary = "创建我的账号")
     @PostMapping("/createUser")
@@ -177,6 +188,52 @@ public class UserController {
     }
 
     @UserLogin
+    @Operation(summary = "查询我状态")
+    @GetMapping("/showMyStatus")
+    public Result<HashMap<String, String>> showMyStatus(@RequestHeader("Authorization") String token) {
+        Result<HashMap<String, String>> result = new Result<>();
+        result.setData(new HashMap<>());
+
+        var id = JWTUtils.getId(token);
+        AtomicBoolean flag = new AtomicBoolean(false);
+        AtomicInteger index = new AtomicInteger(0);
+
+        dynamicInfo.getFreeTaskList().forEach(
+                it -> {
+                    if (Objects.equals(it.getId(), id)) {
+                        flag.set(true);
+                        if (index.get() != 0) {
+                            result.getData().put("msg", "前方还有" + index + "个账号");
+                        } else {
+                            result.getData().put("msg", "等待空闲设备作战，请勿顶号");
+                        }
+                    }
+                    index.getAndIncrement();
+                }
+        );
+
+        dynamicInfo.getLockTaskList().forEach(
+                (key, value) -> value.forEach(
+                        (account, time) -> {
+                            if (Objects.equals(account.getId(), id)) {
+                                flag.set(true);
+                                result.getData().put("msg", "正在作战中，请勿顶号");
+                            }
+                        }
+                )
+        );
+
+        if (!flag.get()) {
+            LocalDateTime nextTime = CronExpression.parse(cron).next(LocalDateTime.now());
+            assert nextTime != null;
+            String nextTimeStr = nextTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+            result.getData().put("msg", "空闲中,下一轮作战将于" + nextTimeStr + "开始");
+        }
+
+        return result;
+    }
+
+    @UserLogin
     @Operation(summary = "使用CDK")
     @PostMapping("/useCDK")
     public Result<String> useCDK(@RequestHeader("Authorization") String token, String cdk) {
@@ -232,7 +289,7 @@ public class UserController {
             } else {
                 return result.setCode(403).setMsg("获取二维码失败");
             }
-        }else {
+        } else {
             return result.setCode(403).setMsg("未开启微信推送");
         }
     }
