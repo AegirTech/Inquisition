@@ -47,6 +47,9 @@ public class TaskController {
     @Value("${spring.mail.enable:false}")
     boolean enableMail;
 
+    @Value("${wx-pusher.enable}")
+    boolean enableWxPusher;
+
     @Operation(summary = "获取任务")
     @GetMapping("/getTask")
     public Result<AccountEntity> getTask(String deviceToken) {
@@ -310,13 +313,18 @@ public class TaskController {
             logController.addLog(logEntity, deviceToken);
 
             //微信推送
-            System.out.println(account);
-            if (account.getNotice().getWxUID().getEnable()) {
+            if (enableWxPusher && account.getNotice().getWxUID().getEnable()) {
                 wxPusherService.push(Message.CONTENT_TYPE_MD,
                         "# 开始作战\n\n" +
                                 "请勿顶号，强行顶号将导致本轮轮空",
                         account.getNotice().getWxUID().getText(),
                         null);
+            }
+
+            //邮件推送
+            if (enableMail && account.getNotice().getMail().getEnable()) {
+                emailService.sendSimpleMail(account.getNotice().getMail().getText(), "开始作战",
+                        "请勿顶号，强行顶号将导致本轮轮空");
             }
 
             return result.setCode(200)
@@ -354,13 +362,18 @@ public class TaskController {
         logController.addLog(logEntity, deviceToken);
 
         //微信推送
-        System.out.println(account);
-        if (account.getNotice().getWxUID().getEnable()) {
+        if (enableWxPusher && account.getNotice().getWxUID().getEnable()) {
             wxPusherService.push(Message.CONTENT_TYPE_MD,
                     "# 作战完成\n\n" +
                             "可登陆控制面板查看作战详情",
                     account.getNotice().getWxUID().getText(),
                     null);
+        }
+
+        //邮件推送
+        if (enableMail && account.getNotice().getMail().getEnable()) {
+            emailService.sendSimpleMail(account.getNotice().getMail().getText(), "作战完成",
+                    "可登陆控制面板查看作战详情");
         }
 
         if (account.getTaskType().equals("rogue") && enableMail) {
@@ -416,13 +429,18 @@ public class TaskController {
         }
 
         //微信推送
-        System.out.println(account);
-        if (account.getNotice().getWxUID().getEnable()) {
+        if (enableWxPusher && account.getNotice().getWxUID().getEnable()) {
             wxPusherService.push(Message.CONTENT_TYPE_MD,
                     "# 作战失败\n\n" +
                             "可登陆控制面板查看作战详情",
                     account.getNotice().getWxUID().getText(),
                     null);
+        }
+
+        //邮件推送
+        if (enableMail && account.getNotice().getMail().getEnable()) {
+            emailService.sendSimpleMail(account.getNotice().getMail().getText(), "作战失败",
+                    "可登陆控制面板查看作战详情");
         }
 
         result.setCode(200)
