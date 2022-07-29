@@ -1,6 +1,7 @@
 package moe.dazecake.inquisition.util;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.zjiecode.wxpusher.client.bean.Message;
 import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.controller.LogController;
 import moe.dazecake.inquisition.entity.AccountEntity;
@@ -9,6 +10,7 @@ import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
+import moe.dazecake.inquisition.service.impl.WXPusherServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -18,6 +20,7 @@ import org.springframework.scheduling.support.CronTrigger;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -41,6 +44,9 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
     @Resource
     EmailServiceImpl emailService;
 
+    @Resource
+    WXPusherServiceImpl wxPusherService;
+
     @Value("${cron:'0 0 4,12,20 * * ?'}")
     String cron;
 
@@ -49,6 +55,9 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
 
     @Value("${spring.mail.enable:false}")
     boolean enableMail;
+
+    @Value("${wx-pusher.enable}")
+    boolean enableWxPusher;
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
@@ -231,6 +240,40 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                     );
                 },
                 triggerContext -> new CronTrigger("0 0/5 * * * ? ").nextExecutionTime(triggerContext)
+        );
+        //账号过期检测
+        taskRegistrar.addTriggerTask(
+                () -> {
+                    log.info("账号过期检测");
+                    var finalTime = LocalDateTime.now().plusDays(7);
+                    var accountList = accountMapper.selectList(null);
+                    accountList.forEach(
+                            (account) -> {
+                                if (finalTime.isAfter(account.getExpireTime()) && LocalDateTime.now()
+                                        .isBefore(account.getExpireTime()) && account.getDelete() == 0) {
+                                    var msg = "您的托管账号将于" + account.getExpireTime()
+                                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "过期，记得及时续费哦。";
+
+                                    //邮件推送
+                                    if (enableMail && account.getNotice().getMail().getEnable()) {
+                                        emailService.sendSimpleMail(account.getNotice().getMail().getText(),
+                                                "【明日方舟】托管续费提醒",
+                                                msg);
+                                    }
+
+                                    //微信推送
+                                    if (enableWxPusher && account.getNotice().getWxUID().getEnable()) {
+                                        wxPusherService.push(Message.CONTENT_TYPE_MD,
+                                                msg,
+                                                account.getNotice().getWxUID().getText(),
+                                                null
+                                        );
+                                    }
+                                }
+                            }
+                    );
+                },
+                triggerContext -> new CronTrigger("0 0 20 * * ?").nextExecutionTime(triggerContext)
         );
     }
 }
