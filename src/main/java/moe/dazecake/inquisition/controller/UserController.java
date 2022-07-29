@@ -91,7 +91,7 @@ public class UserController {
 
         if (username == null || password == null) {
             return result.setCode(403)
-                    .setMsg("username or password is null")
+                    .setMsg("账号或密码为空")
                     .setData(null);
         }
 
@@ -103,7 +103,7 @@ public class UserController {
 
         if (account != null) {
             return result.setCode(200)
-                    .setMsg("login success")
+                    .setMsg("登陆成功")
                     .setData(new HashMap<>() {
                         {
                             put("token", JWTUtils.generateTokenForUser(account));
@@ -111,7 +111,7 @@ public class UserController {
                     });
         } else {
             return result.setCode(404)
-                    .setMsg("Account does not exist")
+                    .setMsg("账号或密码错误")
                     .setData(null);
         }
     }
