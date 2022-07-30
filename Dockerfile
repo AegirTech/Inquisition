@@ -6,4 +6,4 @@ COPY src/main/resources/application.yml /config/application.yml
 
 EXPOSE 2000
 
-CMD java -jar /Inquisition.jar
+CMD java -jar -Duser.timezone=Asia/Shanghai /Inquisition.jar

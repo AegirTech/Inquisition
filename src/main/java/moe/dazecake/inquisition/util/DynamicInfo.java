@@ -69,11 +69,6 @@ public class DynamicInfo {
                 }
         );
 
-        freeTaskList = (ArrayList<AccountEntity>) accountMapper.selectList(
-                Wrappers.<AccountEntity>lambdaQuery()
-                        .eq(AccountEntity::getDelete, 0)
-                        .ge(AccountEntity::getExpireTime,LocalDateTime.now()));
-
     }
 
 }

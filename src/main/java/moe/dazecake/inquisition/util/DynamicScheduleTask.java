@@ -56,7 +56,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
     @Value("${spring.mail.enable:false}")
     boolean enableMail;
 
-    @Value("${wx-pusher.enable}")
+    @Value("${wx-pusher.enable:false}")
     boolean enableWxPusher;
 
     @Override
