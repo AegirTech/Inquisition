@@ -9,6 +9,8 @@ Inquisition 是一款基于 [ArkLights](https://github.com/tkkcc/ArkLights) 开�
 
 请参考 [快速部署](doc/FastDeploy.md) 文档
 
+又或者，使用官方的付费 [在线托管服务](http://ark.aegirtech.com/) ，此服务将会提供最优先甚至领先于release版本的服务。
+
 ## TODO
 
 - [x] 心跳协议
