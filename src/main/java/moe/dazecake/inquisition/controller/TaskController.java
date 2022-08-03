@@ -172,14 +172,24 @@ public class TaskController {
     public Result<String> tempAddTask(@RequestBody AccountEntity accountEntity) {
         Result<String> result = new Result<>();
 
-        Iterator<AccountEntity> iterator = dynamicInfo.getFreeTaskList().iterator();
+        Iterator<AccountEntity> freeList = dynamicInfo.getFreeTaskList().iterator();
+        Iterator<HashMap<AccountEntity, LocalDateTime>> lockList = dynamicInfo.getLockTaskList().values().iterator();
 
         Long minIndex = 0L;
 
-        while (iterator.hasNext()) {
-            AccountEntity account = iterator.next();
+        while (freeList.hasNext()) {
+            AccountEntity account = freeList.next();
             if (minIndex > account.getId()) {
                 minIndex = account.getId();
+            }
+        }
+
+        while (lockList.hasNext()) {
+            HashMap<AccountEntity, LocalDateTime> map = lockList.next();
+            for (AccountEntity account : map.keySet()) {
+                if (minIndex > account.getId()) {
+                    minIndex = account.getId();
+                }
             }
         }
 
@@ -189,7 +199,9 @@ public class TaskController {
 
         dynamicInfo.getFreeTaskList().add(0, accountEntity);
 
-        return result;
+        return result.setCode(200)
+                .setMsg("success")
+                .setData(null);
     }
 
     @Login
