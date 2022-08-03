@@ -236,7 +236,8 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void log(String deviceToken, AccountEntity account) {
+    public void log(String deviceToken, AccountEntity account, String level, String title,
+                    String content, String imgUrl) {
         LogEntity logEntity = new LogEntity();
         String type = "";
         if (Objects.equals(account.getTaskType(), "daily")) {
@@ -247,13 +248,13 @@ public class TaskServiceImpl implements TaskService {
 
         String detail =
                 "[" + type + "] [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) + "] " + type +
-                        "任务开始";
+                        content;
 
-        logEntity.setLevel("INFO")
+        logEntity.setLevel(level)
                 .setTaskType(account.getTaskType())
-                .setTitle("任务开始")
+                .setTitle(title)
                 .setDetail(detail)
-                .setImageUrl(null)
+                .setImageUrl(imgUrl)
                 .setFrom(deviceToken)
                 .setServer(account.getServer())
                 .setName(account.getName())
@@ -264,20 +265,45 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void messagePush(AccountEntity account) {
+    public void messagePush(AccountEntity account, String title, String content) {
         //微信推送
         if (enableWxPusher && account.getNotice().getWxUID().getEnable()) {
             wxPusherService.push(Message.CONTENT_TYPE_MD,
-                    "# 开始作战\n\n" +
-                            "请勿顶号，强行顶号将导致本轮轮空",
+                    "# " + title + "\n\n" +
+                            content,
                     account.getNotice().getWxUID().getText(),
                     null);
         }
 
         //邮件推送
         if (enableMail && account.getNotice().getMail().getEnable()) {
-            emailService.sendSimpleMail(account.getNotice().getMail().getText(), "开始作战",
-                    "请勿顶号，强行顶号将导致本轮轮空");
+            emailService.sendSimpleMail(account.getNotice().getMail().getText(), title,
+                    content);
+        }
+    }
+
+    @Override
+    public void errorHandle(AccountEntity account,String deviceToken, String type) {
+
+        switch (type) {
+            case ("lineBusy"): {
+                dynamicInfo.getLockTaskList().get(deviceToken).forEach(
+                        (accountEntity, localDateTime) -> dynamicInfo.getFreeTaskList().add(accountEntity)
+                );
+                dynamicInfo.getLockTaskList().remove(deviceToken);
+                dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
+                break;
+            }
+            case ("accountError"): {
+                break;
+            }
+            default: {
+                dynamicInfo.getLockTaskList().get(deviceToken).forEach(
+                        (accountEntity, localDateTime) -> dynamicInfo.getFreeTaskList().add(accountEntity)
+                );
+                dynamicInfo.getLockTaskList().remove(deviceToken);
+                break;
+            }
         }
     }
 }

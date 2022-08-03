@@ -1,7 +1,6 @@
 package moe.dazecake.inquisition.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.zjiecode.wxpusher.client.bean.Message;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
@@ -10,10 +9,8 @@ import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
 import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
-import moe.dazecake.inquisition.service.impl.WXPusherServiceImpl;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Result;
-import moe.dazecake.inquisition.util.TimeUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,9 +37,6 @@ public class TaskController {
     EmailServiceImpl emailService;
 
     @Resource
-    WXPusherServiceImpl wxPusherService;
-
-    @Resource
     TaskServiceImpl taskService;
 
     @Value("${spring.mail.to}")
@@ -50,9 +44,6 @@ public class TaskController {
 
     @Value("${spring.mail.enable:false}")
     boolean enableMail;
-
-    @Value("${wx-pusher.enable}")
-    boolean enableWxPusher;
 
     @Operation(summary = "获取任务")
     @GetMapping("/getTask")
@@ -101,10 +92,10 @@ public class TaskController {
             taskService.lockTask(deviceToken, account);
 
             //记录日志
-            taskService.log(deviceToken, account);
+            taskService.log(deviceToken, account, "INFO", "任务开始", "任务开始", null);
 
             //推送消息
-            taskService.messagePush(account);
+            taskService.messagePush(account, "任务开始", "请勿强行顶号，强行顶号将导致轮空");
 
             return result.setCode(200)
                     .setMsg("success")
@@ -126,34 +117,12 @@ public class TaskController {
         var account = dynamicInfo.getLockTaskList().get(deviceToken).keySet().iterator().next();
 
         //记录日志
-        LogEntity logEntity = new LogEntity();
-        logEntity.setLevel("INFO")
-                .setTaskType(account.getTaskType())
-                .setTitle("任务完成")
-                .setDetail("")
-                .setImageUrl(imageUrl)
-                .setFrom(deviceToken)
-                .setServer(account.getServer())
-                .setName(account.getName())
-                .setPassword(account.getPassword())
-                .setTime(LocalDateTime.now());
-        logController.addLog(logEntity, deviceToken);
+        taskService.log(deviceToken, account, "INFO", "任务完成", "任务完成", imageUrl);
 
-        //微信推送
-        if (enableWxPusher && account.getNotice().getWxUID().getEnable()) {
-            wxPusherService.push(Message.CONTENT_TYPE_MD,
-                    "# 作战完成\n\n" +
-                            "可登陆控制面板查看作战详情",
-                    account.getNotice().getWxUID().getText(),
-                    null);
-        }
+        //推送消息
+        taskService.messagePush(account, "任务完成", "任务完成，可登陆面板查看作战结果");
 
-        //邮件推送
-        if (enableMail && account.getNotice().getMail().getEnable()) {
-            emailService.sendSimpleMail(account.getNotice().getMail().getText(), "作战完成",
-                    "可登陆控制面板查看作战详情");
-        }
-
+        //管理员推送消息推送
         if (account.getTaskType().equals("rogue") && enableMail) {
             //发送邮件通知
             String msg = "<p>肉鸽任务已完成<p>\n" +
@@ -182,44 +151,13 @@ public class TaskController {
         var account = dynamicInfo.getLockTaskList().get(deviceToken).keySet().iterator().next();
 
         //记录日志
-        LogEntity logEntity = new LogEntity();
-        logEntity.setLevel("WARN")
-                .setTaskType(account.getTaskType())
-                .setTitle("任务失败")
-                .setDetail("")
-                .setImageUrl(imageUrl)
-                .setFrom(deviceToken)
-                .setServer(account.getServer())
-                .setName(account.getName())
-                .setPassword(account.getPassword())
-                .setTime(LocalDateTime.now());
+        taskService.log(deviceToken, account, "WARN", "任务失败", "任务失败,请登陆面板查看失败原因", imageUrl);
 
-        logController.addLog(logEntity, deviceToken);
+        //异常处理
+        taskService.errorHandle(account, deviceToken, type);
 
-        var map = dynamicInfo.getLockTaskList().get(deviceToken);
-        map.forEach(
-                (accountEntity, localDateTime) -> dynamicInfo.getFreeTaskList().add(accountEntity)
-        );
-        dynamicInfo.getLockTaskList().remove(deviceToken);
-
-        if (account.getTaskType().equals("rogue") && type.equals("lineBusy")) {
-            dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
-        }
-
-        //微信推送
-        if (enableWxPusher && account.getNotice().getWxUID().getEnable()) {
-            wxPusherService.push(Message.CONTENT_TYPE_MD,
-                    "# 作战失败\n\n" +
-                            "可登陆控制面板查看作战详情",
-                    account.getNotice().getWxUID().getText(),
-                    null);
-        }
-
-        //邮件推送
-        if (enableMail && account.getNotice().getMail().getEnable()) {
-            emailService.sendSimpleMail(account.getNotice().getMail().getText(), "作战失败",
-                    "可登陆控制面板查看作战详情");
-        }
+        //推送消息
+        taskService.messagePush(account, "任务失败", "任务失败，请登陆面板查看失败原因");
 
         result.setCode(200)
                 .setMsg("success")
@@ -270,7 +208,6 @@ public class TaskController {
                         .setData(null);
             }
         }
-
 
         return result.setCode(404)
                 .setMsg("not found")
@@ -373,8 +310,6 @@ public class TaskController {
     @PostMapping("/forceUnlockOneTask")
     public Result<String> forceUnlockOneTask(String deviceToken) {
         if (dynamicInfo.getLockTaskList().get(deviceToken) != null) {
-            dynamicInfo.getFreeTaskList()
-                    .add(dynamicInfo.getLockTaskList().get(deviceToken).keySet().iterator().next());
             dynamicInfo.getLockTaskList().remove(deviceToken);
 
             //记录日志
@@ -403,10 +338,6 @@ public class TaskController {
     @PostMapping("/forceUnlockTaskList")
     public Result<String> forceUnlockTaskList() {
         if (dynamicInfo.getLockTaskList().size() != 0) {
-            dynamicInfo.getLockTaskList().forEach(
-                    (deviceToken, map) -> dynamicInfo.getFreeTaskList().add(map.keySet().iterator().next()
-                    )
-            );
             dynamicInfo.getLockTaskList().clear();
 
             //记录日志
@@ -428,4 +359,5 @@ public class TaskController {
                     .setData(null);
         }
     }
+
 }

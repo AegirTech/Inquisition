@@ -9,8 +9,10 @@ public interface TaskService {
 
     void lockTask(String deviceToken, AccountEntity account);
 
-    void log(String deviceToken, AccountEntity account);
+    void log(String deviceToken, AccountEntity account, String level, String title, String content, String imgUrl);
 
-    void messagePush(AccountEntity account);
+    void messagePush(AccountEntity account, String title, String content);
+
+    void errorHandle(AccountEntity account, String deviceToken, String type);
 
 }
