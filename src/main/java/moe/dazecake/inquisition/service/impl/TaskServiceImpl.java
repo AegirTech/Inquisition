@@ -2,8 +2,10 @@ package moe.dazecake.inquisition.service.impl;
 
 import com.zjiecode.wxpusher.client.bean.Message;
 import moe.dazecake.inquisition.controller.LogController;
+import moe.dazecake.inquisition.controller.UserController;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
+import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.service.TaskService;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.TimeUtil;
@@ -31,6 +33,12 @@ public class TaskServiceImpl implements TaskService {
 
     @Resource
     WXPusherServiceImpl wxPusherService;
+
+    @Resource
+    HttpServiceImpl httpService;
+
+    @Resource
+    AccountMapper accountMapper;
 
     @Value("${spring.mail.enable:false}")
     boolean enableMail;
@@ -285,10 +293,11 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void errorHandle(AccountEntity account,String deviceToken, String type) {
+    public void errorHandle(AccountEntity account, String deviceToken, String type) {
 
         switch (type) {
             case ("lineBusy"): {
+                //归还并冻结
                 dynamicInfo.getLockTaskList().get(deviceToken).forEach(
                         (accountEntity, localDateTime) -> dynamicInfo.getFreeTaskList().add(accountEntity)
                 );
@@ -297,9 +306,32 @@ public class TaskServiceImpl implements TaskService {
                 break;
             }
             case ("accountError"): {
-                break;
+                if (account.getServer() == 0) {
+                    if (!httpService.isOfficialAccountWork(account.getAccount(), account.getPassword())) {
+                        forceClearTask(account);
+                        account.setFreeze(1);
+                        accountMapper.updateById(account);
+                    }else {
+                        dynamicInfo.getLockTaskList().get(deviceToken).forEach(
+                                (accountEntity, localDateTime) -> dynamicInfo.getFreeTaskList().add(accountEntity)
+                        );
+                        dynamicInfo.getLockTaskList().remove(deviceToken);
+                    }
+                } else if (account.getServer() == 1) {
+                    if (!httpService.isBiliAccountWork(account.getAccount(), account.getPassword())) {
+                        forceClearTask(account);
+                        account.setFreeze(1);
+                        accountMapper.updateById(account);
+                    }else {
+                        dynamicInfo.getLockTaskList().get(deviceToken).forEach(
+                                (accountEntity, localDateTime) -> dynamicInfo.getFreeTaskList().add(accountEntity)
+                        );
+                        dynamicInfo.getLockTaskList().remove(deviceToken);
+                    }
+                }
             }
             default: {
+                //归还
                 dynamicInfo.getLockTaskList().get(deviceToken).forEach(
                         (accountEntity, localDateTime) -> dynamicInfo.getFreeTaskList().add(accountEntity)
                 );
@@ -307,5 +339,24 @@ public class TaskServiceImpl implements TaskService {
                 break;
             }
         }
+    }
+
+    @Override
+    public void forceClearTask(AccountEntity account) {
+        //清除等待队列
+        dynamicInfo.getFreeTaskList().remove(account);
+
+        //清除上锁队列
+        dynamicInfo.getLockTaskList()
+                .forEach((deviceToken, accountEntityLocalDateTimeHashMap) -> accountEntityLocalDateTimeHashMap.forEach((accountEntity, localDateTime) -> {
+                    if (accountEntity.getId().equals(account.getId())) {
+                        dynamicInfo.getLockTaskList().remove(deviceToken);
+                        //塞入停机队列
+                        dynamicInfo.getHaltList().add(deviceToken);
+                    }
+                }));
+
+        //清除冻结队列
+        dynamicInfo.getFreezeTaskList().remove(account.getId());
     }
 }

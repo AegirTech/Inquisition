@@ -49,6 +49,10 @@ public class AccountEntity {
     @Schema(description = "密码")
     String password;//密码
 
+    @Column(name = "freeze", comment = "冻结")
+    @Schema(description = "冻结")
+    Integer freeze;//冻结
+
     @Column(name = "server", comment = "服务器类型")
     @Schema(description = "服务器类型")
     Long server;//服务器类型 0:官服 1:B服

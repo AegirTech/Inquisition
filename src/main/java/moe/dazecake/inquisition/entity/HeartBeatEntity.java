@@ -13,6 +13,13 @@ import lombok.NoArgsConstructor;
 @Schema(description = "心跳")
 public class HeartBeatEntity {
 
+    /**
+     * 状态码
+     * 0:离线
+     * 1:在线
+     * 1001:日常
+     * 1002:肉鸽
+     */
     @Schema(description = "状态")
     Integer status;//状态
 

@@ -41,7 +41,7 @@ public class DynamicInfo {
 
     HashMap<Long, LocalDateTime> freezeTaskList = new HashMap<>();
 
-    HashMap<String, ArrayList<HashMap<Integer, String>>> operateList = new HashMap<>();
+    ArrayList<String> haltList = new ArrayList<>();
 
     HashMap<String, Integer> counter = new HashMap<>();
 

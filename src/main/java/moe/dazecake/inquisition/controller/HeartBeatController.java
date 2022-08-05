@@ -34,6 +34,11 @@ public class HeartBeatController {
             result.setCode(201);
         }
 
+        //停机检查
+        if (dynamicInfo.getHaltList().contains(heartBeat.getDeviceToken())) {
+            result.setCode(500);
+        }
+
         result.setMsg("success");
         result.setData(null);
         return result;
