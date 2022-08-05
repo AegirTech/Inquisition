@@ -8,6 +8,7 @@ import moe.dazecake.inquisition.service.TaskService;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.TimeUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
 
+@Service
 public class TaskServiceImpl implements TaskService {
 
     @Resource
