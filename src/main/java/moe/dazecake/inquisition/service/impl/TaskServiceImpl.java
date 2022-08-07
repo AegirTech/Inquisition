@@ -2,7 +2,6 @@ package moe.dazecake.inquisition.service.impl;
 
 import com.zjiecode.wxpusher.client.bean.Message;
 import moe.dazecake.inquisition.controller.LogController;
-import moe.dazecake.inquisition.controller.UserController;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
@@ -308,18 +307,31 @@ public class TaskServiceImpl implements TaskService {
                         dynamicInfo.getFreeTaskList().add(account);
                         dynamicInfo.getLockTaskList().remove(deviceToken);
                     } else {
-                        forceClearTask(account);
+                        forceHaltTask(account);
                         account.setFreeze(1);
                         accountMapper.updateById(account);
+                        messagePush(account, "账号异常", "您的账号密码有误，请在面板更新正确的账号密码，否则托管将无法继续进行");
                     }
                 } else if (account.getServer() == 1) {
                     if (httpService.isBiliAccountWork(account.getAccount(), account.getPassword())) {
-                        dynamicInfo.getFreeTaskList().add(account);
-                        dynamicInfo.getLockTaskList().remove(deviceToken);
+                        if (account.getBLimitDevice().size() <= 2) {
+                            forceHaltTask(account);
+                            account.setFreeze(1);
+                            account.setBLimit(0);
+                            account.getBLimitDevice().clear();
+                            accountMapper.updateById(account);
+                            messagePush(account, "账号异常", "您近期登陆的设备较多，已被B服限制登陆，请立即修改密码并于面板更新密码,否则托管将无法继续进行");
+                        } else {
+                            account.setBLimit(1);
+                            accountMapper.updateById(account);
+                            dynamicInfo.getFreeTaskList().add(account);
+                            dynamicInfo.getLockTaskList().remove(deviceToken);
+                        }
                     } else {
-                        forceClearTask(account);
+                        forceHaltTask(account);
                         account.setFreeze(1);
                         accountMapper.updateById(account);
+                        messagePush(account, "账号异常", "您的账号密码有误，请在面板更新正确的账号密码，否则托管将无法继续进行");
                     }
                 }
             }
@@ -333,7 +345,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void forceClearTask(AccountEntity account) {
+    public void forceHaltTask(AccountEntity account) {
         //清除等待队列
         dynamicInfo.getFreeTaskList().remove(account);
 

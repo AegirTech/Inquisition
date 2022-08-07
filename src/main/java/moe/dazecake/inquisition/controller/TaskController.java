@@ -71,6 +71,12 @@ public class TaskController {
                     continue;
                 }
 
+                //B服限制检查
+                if (account.getBLimit() == 1 && !account.getBLimitDevice().contains(deviceToken)) {
+                    iterator.remove();
+                    continue;
+                }
+
                 //冻结判断，不处于冻结状态则返回任务
                 if (!taskService.checkFreeze(account)) {
                     break;
@@ -115,6 +121,12 @@ public class TaskController {
 
 
         var account = dynamicInfo.getLockTaskList().get(deviceToken).keySet().iterator().next();
+
+        //检查B服限制新增设备
+        if (account.getServer() == 1 && account.getBLimit() == 0 && !account.getBLimitDevice().contains(deviceToken)) {
+            account.getBLimitDevice().add(deviceToken);
+            accountMapper.updateById(account);
+        }
 
         //记录日志
         taskService.log(deviceToken, account, "INFO", "任务完成", "任务完成", imageUrl);

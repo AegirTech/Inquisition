@@ -20,6 +20,7 @@ import moe.dazecake.inquisition.entity.ConfigEntitySet.ConfigEntity;
 import moe.dazecake.inquisition.entity.NoticeEntitySet.NoticeEntity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Data
 @NoArgsConstructor
@@ -75,6 +76,15 @@ public class AccountEntity {
     @Schema(description = "通知")
     @TableField(typeHandler = GsonTypeHandler.class)
     NoticeEntity notice;
+
+    @Column(name = "b_limit", comment = "B服限制")
+    @Schema(description = "B服限制")
+    Integer bLimit;//B服限制
+
+    @Column(name = "b_limit_device", comment = "B服限制设备")
+    @Schema(description = "B服限制设备")
+    @TableField(typeHandler = GsonTypeHandler.class)
+    ArrayList<String> bLimitDevice;//B服限制设备
 
     @Column(name = "expire_time", comment = "过期时间")
     @Schema(description = "过期时间")

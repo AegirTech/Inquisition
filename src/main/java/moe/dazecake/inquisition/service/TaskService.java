@@ -15,6 +15,6 @@ public interface TaskService {
 
     void errorHandle(AccountEntity account, String deviceToken, String type);
 
-    void forceClearTask(AccountEntity account);
+    void forceHaltTask(AccountEntity account);
 
 }
