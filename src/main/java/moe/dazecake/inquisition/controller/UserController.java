@@ -16,6 +16,7 @@ import moe.dazecake.inquisition.entity.NoticeEntitySet.WechatCallbackEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.CDKMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
+import moe.dazecake.inquisition.service.impl.HttpServiceImpl;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.JWTUtils;
 import moe.dazecake.inquisition.util.Result;
@@ -49,6 +50,9 @@ public class UserController {
     @Resource
     CDKMapper cdkMapper;
 
+    @Resource
+    HttpServiceImpl httpService;
+
     @Value("${wx-pusher.app-token}")
     String appToken;
 
@@ -72,6 +76,18 @@ public class UserController {
             result.setCode(403);
             result.setMsg("CDK已使用");
             return result;
+        }
+
+        if (accountEntity.getServer() == 0) {
+            if (!httpService.isOfficialAccountWork(accountEntity.getAccount(), accountEntity.getPassword())) {
+                return result.setCode(403).setMsg("账号或密码错误，注册需要填写的账号就是游戏账号！");
+            }
+        } else if (accountEntity.getServer() == 1) {
+            if (!httpService.isBiliAccountWork(accountEntity.getAccount(), accountEntity.getPassword())) {
+                return result.setCode(403).setMsg("账号或密码错误，注册需要填写的账号就是游戏账号！");
+            }
+        }else {
+            return result.setCode(403).setMsg("未知的服务器类型");
         }
 
         cdkEntity.setUsed(1);
@@ -165,6 +181,46 @@ public class UserController {
         }
         result.setData(null);
         return result;
+    }
+
+    @UserLogin
+    @Operation(summary = "更新账号密码")
+    @PostMapping("/updateAccountAndPassword")
+    public Result<String> updateAccountAndPassword(@RequestHeader("Authorization") String token,
+                                                   String account, String password, Long server) {
+        Result<String> result = new Result<>();
+        var accountEntity = accountMapper.selectOne(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getId, JWTUtils.getId(token))
+        );
+        if (server == 0) {
+            if (httpService.isOfficialAccountWork(account, password)) {
+                accountEntity.setAccount(account);
+                accountEntity.setPassword(password);
+                accountEntity.setServer(server);
+                accountMapper.updateById(accountEntity);
+            } else {
+                result.setCode(403)
+                        .setMsg("验证失败，账号或密码错误");
+                return result;
+            }
+        } else if (server == 1) {
+            if (httpService.isBiliAccountWork(account, password)) {
+                accountEntity.setAccount(account);
+                accountEntity.setPassword(password);
+                accountEntity.setServer(server);
+                accountEntity.setFreeze(0);
+                accountMapper.updateById(accountEntity);
+            } else {
+                result.setCode(403)
+                        .setMsg("验证失败，账号或密码错误");
+                return result;
+            }
+        }
+
+        return result.setCode(200)
+                .setMsg("success")
+                .setData(null);
     }
 
     @UserLogin
