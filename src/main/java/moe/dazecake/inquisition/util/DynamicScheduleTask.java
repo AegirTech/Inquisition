@@ -10,6 +10,7 @@ import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
+import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
 import moe.dazecake.inquisition.service.impl.WXPusherServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -47,6 +48,9 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
     @Resource
     WXPusherServiceImpl wxPusherService;
 
+    @Resource
+    TaskServiceImpl taskService;
+
     @Value("${cron:'0 0 4,12,20 * * ?'}")
     String cron;
 
@@ -65,16 +69,35 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
         taskRegistrar.addTriggerTask(
                 () -> {
                     log.info("正在刷新任务列表: " + LocalDateTime.now().toLocalTime());
-                    if (dynamicInfo.getFreeTaskList().isEmpty()) {
-                        dynamicInfo.getFreeTaskList().addAll(
-                                accountMapper.selectList(
-                                        Wrappers.<AccountEntity>lambdaQuery()
-                                                .eq(AccountEntity::getDelete, 0)
-                                                .eq(AccountEntity::getTaskType, "daily")
-                                                .ge(AccountEntity::getExpireTime, LocalDateTime.now())
-                                )
-                        );
+                    if (!dynamicInfo.getFreeTaskList().isEmpty()) {
+                        //无daily任务，追加
+                        var hasDaily = false;
+                        for (var accountEntity : dynamicInfo.getFreeTaskList()) {
+                            if (accountEntity.getTaskType().equals("daily")) {
+                                hasDaily = true;
+                                break;
+                            }
+                        }
+                        if (hasDaily) {
+                            emailService.sendSimpleMail(to, "设备数量不足警告",
+                                    "设备数量不足，造成了最多可能 " + dynamicInfo.getFreeTaskList().size() +
+                                            " 个任务被强制清除，请注意及时增加设备");
+                            //清除所有daily任务
+                            dynamicInfo.getFreeTaskList()
+                                    .removeIf(accountEntity -> accountEntity.getTaskType().equals("daily"));
+                        }
                     }
+                    accountMapper.selectList(
+                            Wrappers.<AccountEntity>lambdaQuery()
+                                    .eq(AccountEntity::getDelete, 0)
+                                    .eq(AccountEntity::getFreeze, 0)
+                                    .eq(AccountEntity::getTaskType, "daily")
+                                    .ge(AccountEntity::getExpireTime, LocalDateTime.now())
+                    ).forEach(accountEntity -> {
+                        if (taskService.checkActivationTime(accountEntity)) {
+                            dynamicInfo.getFreeTaskList().add(accountEntity);
+                        }
+                    });
 
                     //记录日志
                     LogEntity logEntity = new LogEntity();

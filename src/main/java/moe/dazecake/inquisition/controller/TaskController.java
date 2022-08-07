@@ -60,14 +60,14 @@ public class TaskController {
         //任务上锁
         if (!dynamicInfo.getFreeTaskList().isEmpty()) {
             AccountEntity account = new AccountEntity();
-            int i;
 
             //检查任务是否达到下发标准
-            for (i = 0; i < dynamicInfo.getFreeTaskList().size(); i++) {
-                account = dynamicInfo.getFreeTaskList().get(i);
-
+            var iterator = dynamicInfo.getFreeTaskList().iterator();
+            while (iterator.hasNext()) {
+                account = iterator.next();
                 //时间检查，不在激活区间则跳转到下一个判断
                 if (!taskService.checkActivationTime(account)) {
+                    iterator.remove();
                     continue;
                 }
 
@@ -78,15 +78,12 @@ public class TaskController {
             }
 
             //检查是已经遍历完整个列表
-            if (i == dynamicInfo.getFreeTaskList().size()) {
+            if (!iterator.hasNext()) {
                 //没有可用的任务
                 return result.setCode(200)
                         .setMsg("success")
                         .setData(null);
             }
-
-            //移出等待队列
-            dynamicInfo.getFreeTaskList().remove(account);
 
             //任务上锁，同时分配强制超时期限
             taskService.lockTask(deviceToken, account);
@@ -96,6 +93,9 @@ public class TaskController {
 
             //推送消息
             taskService.messagePush(account, "任务开始", "请勿强行顶号，强行顶号将导致轮空");
+
+            //移出等待队列
+            iterator.remove();
 
             return result.setCode(200)
                     .setMsg("success")
@@ -295,6 +295,7 @@ public class TaskController {
                 accountMapper.selectList(
                         Wrappers.<AccountEntity>lambdaQuery()
                                 .eq(AccountEntity::getDelete, 0)
+                                .eq(AccountEntity::getFreeze, 0)
                                 .eq(AccountEntity::getTaskType, "daily")
                                 .ge(AccountEntity::getExpireTime, LocalDateTime.now())
                 )

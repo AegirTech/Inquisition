@@ -297,44 +297,35 @@ public class TaskServiceImpl implements TaskService {
 
         switch (type) {
             case ("lineBusy"): {
-                //归还并冻结
-                dynamicInfo.getLockTaskList().get(deviceToken).forEach(
-                        (accountEntity, localDateTime) -> dynamicInfo.getFreeTaskList().add(accountEntity)
-                );
+                dynamicInfo.getFreeTaskList().add(account);
                 dynamicInfo.getLockTaskList().remove(deviceToken);
                 dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
                 break;
             }
             case ("accountError"): {
                 if (account.getServer() == 0) {
-                    if (!httpService.isOfficialAccountWork(account.getAccount(), account.getPassword())) {
+                    if (httpService.isOfficialAccountWork(account.getAccount(), account.getPassword())) {
+                        dynamicInfo.getFreeTaskList().add(account);
+                        dynamicInfo.getLockTaskList().remove(deviceToken);
+                    } else {
                         forceClearTask(account);
                         account.setFreeze(1);
                         accountMapper.updateById(account);
-                    }else {
-                        dynamicInfo.getLockTaskList().get(deviceToken).forEach(
-                                (accountEntity, localDateTime) -> dynamicInfo.getFreeTaskList().add(accountEntity)
-                        );
-                        dynamicInfo.getLockTaskList().remove(deviceToken);
                     }
                 } else if (account.getServer() == 1) {
-                    if (!httpService.isBiliAccountWork(account.getAccount(), account.getPassword())) {
+                    if (httpService.isBiliAccountWork(account.getAccount(), account.getPassword())) {
+                        dynamicInfo.getFreeTaskList().add(account);
+                        dynamicInfo.getLockTaskList().remove(deviceToken);
+                    } else {
                         forceClearTask(account);
                         account.setFreeze(1);
                         accountMapper.updateById(account);
-                    }else {
-                        dynamicInfo.getLockTaskList().get(deviceToken).forEach(
-                                (accountEntity, localDateTime) -> dynamicInfo.getFreeTaskList().add(accountEntity)
-                        );
-                        dynamicInfo.getLockTaskList().remove(deviceToken);
                     }
                 }
             }
             default: {
                 //归还
-                dynamicInfo.getLockTaskList().get(deviceToken).forEach(
-                        (accountEntity, localDateTime) -> dynamicInfo.getFreeTaskList().add(accountEntity)
-                );
+                dynamicInfo.getFreeTaskList().add(account);
                 dynamicInfo.getLockTaskList().remove(deviceToken);
                 break;
             }
