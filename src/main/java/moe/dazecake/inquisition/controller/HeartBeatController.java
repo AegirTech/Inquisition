@@ -39,8 +39,16 @@ public class HeartBeatController {
             result.setCode(500);
         }
 
-        result.setMsg("success");
-        result.setData(null);
-        return result;
+        return result.setCode(200).setMsg("success");
+    }
+
+    @Operation(summary = "完成停机上报")
+    @PostMapping("/haltComplete")
+    public Result<String> postHaltComplete(@RequestBody HeartBeatEntity heartBeat) {
+        Result<String> result = new Result<>();
+
+        dynamicInfo.getHaltList().remove(heartBeat.getDeviceToken());
+
+        return result.setCode(200).setMsg("success");
     }
 }
