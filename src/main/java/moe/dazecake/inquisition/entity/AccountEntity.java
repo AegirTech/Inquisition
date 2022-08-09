@@ -86,6 +86,10 @@ public class AccountEntity {
     @TableField(typeHandler = GsonTypeHandler.class)
     ArrayList<String> bLimitDevice;//B服限制设备
 
+    @Column(name = "refresh", comment = "剩余刷新次数")
+    @Schema(description = "剩余刷新次数")
+    Integer refresh;//剩余刷新次数
+
     @Column(name = "expire_time", comment = "过期时间")
     @Schema(description = "过期时间")
     LocalDateTime expireTime;//过期时间

@@ -298,5 +298,21 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                 },
                 triggerContext -> new CronTrigger("0 0 20 * * ?").nextExecutionTime(triggerContext)
         );
+        //每日刷新次数更新
+        taskRegistrar.addTriggerTask(
+                () -> {
+                    log.info("每日刷新次数更新");
+                    var accountList = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
+                            .eq(AccountEntity::getRefresh, 0)
+                    );
+                    accountList.forEach(
+                            (account) -> {
+                                account.setRefresh(1);
+                                accountMapper.updateById(account);
+                            }
+                    );
+                },
+                triggerContext -> new CronTrigger("0 0 0 * * ?").nextExecutionTime(triggerContext)
+        );
     }
 }

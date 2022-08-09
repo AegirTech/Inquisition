@@ -104,4 +104,27 @@ public class AccountController {
         result.setData(null);
         return result;
     }
+
+    @Login
+    @Operation(summary = "重置刷新次数")
+    @PostMapping("/resetRefresh")
+    public Result<String> resetRefresh(Long id) {
+        Result<String> result = new Result<>();
+
+        var account = accountMapper.selectById(id);
+        if (account != null) {
+            account.setRefresh(1);
+            accountMapper.updateById(account);
+
+            result.setCode(200)
+                    .setMsg("success");
+
+        } else {
+            result.setCode(403)
+                    .setMsg("Unable to update a non-existent account");
+
+        }
+        result.setData(null);
+        return result;
+    }
 }

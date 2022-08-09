@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -86,7 +87,7 @@ public class UserController {
             if (!httpService.isBiliAccountWork(accountEntity.getAccount(), accountEntity.getPassword())) {
                 return result.setCode(403).setMsg("账号或密码错误，注册需要填写的账号就是游戏账号！");
             }
-        }else {
+        } else {
             return result.setCode(403).setMsg("未知的服务器类型");
         }
 
@@ -251,6 +252,13 @@ public class UserController {
         result.setData(new HashMap<>());
 
         var id = JWTUtils.getId(token);
+
+        if ((accountMapper.selectById(id).getFreeze() == 1)) {
+            result.setCode(200)
+                    .setMsg("账号已被冻结，若需继续托管请先解冻");
+            return result;
+        }
+
         AtomicBoolean flag = new AtomicBoolean(false);
         AtomicInteger index = new AtomicInteger(0);
 
@@ -398,6 +406,98 @@ public class UserController {
         return result;
     }
 
+    @UserLogin
+    @Operation(summary = "强制停止作战")
+    @PostMapping("/forceHalt")
+    public Result<String> forceHalt(@RequestHeader("Authorization") String token) {
+        Result<String> result = new Result<>();
+        Long id = JWTUtils.getId(token);
+
+        var freeListIterator = dynamicInfo.getFreeTaskList().iterator();
+        while (freeListIterator.hasNext()) {
+            var freeTask = freeListIterator.next();
+            if (freeTask.getId().equals(id)) {
+                freeListIterator.remove();
+                break;
+            }
+        }
+
+        dynamicInfo.getLockTaskList().forEach(
+                (deviceToken, lockTask) -> lockTask.forEach(
+                        (account, time) -> {
+                            if (account.getId().equals(id)) {
+                                dynamicInfo.getHaltList().add(deviceToken);
+                                dynamicInfo.getLockTaskList().remove(deviceToken);
+                            }
+                        }
+                )
+        );
+
+        dynamicInfo.getFreezeTaskList().remove(id);
+
+        return result.setCode(200).setMsg("执行成功");
+    }
+
+    @UserLogin
+    @Operation(summary = "插队")
+    @PostMapping("/insertQueue")
+    public Result<String> insertQueue(@RequestHeader("Authorization") String token) {
+        Result<String> result = new Result<>();
+        Long id = JWTUtils.getId(token);
+
+        var freeListIterator = dynamicInfo.getFreeTaskList().iterator();
+        while (freeListIterator.hasNext()) {
+            var freeTask = freeListIterator.next();
+            if (freeTask.getId().equals(id)) {
+                freeListIterator.remove();
+                dynamicInfo.getFreeTaskList().add(0, freeTask);
+                return result.setCode(200).setMsg("插队成功");
+            }
+        }
+
+        return result.setCode(200).setMsg("不在排队队列中，无法插队");
+    }
+
+    @UserLogin
+    @Operation(summary = "立即开始作战")
+    @PostMapping("/startNow")
+    public Result<String> startNow(@RequestHeader("Authorization") String token) {
+        Result<String> result = new Result<>();
+        Long id = JWTUtils.getId(token);
+        AccountEntity account = accountMapper.selectById(id);
+        if (account.getRefresh() < 1) {
+            return result.setCode(200).setMsg("今日刷新次数已达上线，明天再来看看吧");
+        }
+        for (AccountEntity freeTask : dynamicInfo.getFreeTaskList()) {
+            if (freeTask.getId().equals(id)) {
+                return result.setCode(200).setMsg("已经在排队中");
+            }
+        }
+        for (HashMap<AccountEntity, LocalDateTime> value : dynamicInfo.getLockTaskList().values()) {
+            for (AccountEntity accountEntity : value.keySet()) {
+                if (accountEntity.getId().equals(id)) {
+                    return result.setCode(200).setMsg("已经在作战中");
+                }
+            }
+        }
+
+        account.setRefresh(account.getRefresh() - 1);
+        accountMapper.updateById(account);
+        dynamicInfo.getFreeTaskList().add(0, account);
+
+        return result.setCode(200).setMsg("立即开始作战成功，等待分配作战服务器");
+    }
+
+    @UserLogin
+    @Operation(summary = "获取刷新次数")
+    @GetMapping("/getRefresh")
+    public Result<Integer> getRefresh(@RequestHeader("Authorization") String token) {
+        Result<Integer> result = new Result<>();
+        Long id = JWTUtils.getId(token);
+        AccountEntity account = accountMapper.selectById(id);
+        result.setCode(200).setMsg("success").setData(account.getRefresh());
+        return result;
+    }
 
     private void activateCDK(AccountEntity accountEntity, CDKEntity cdkEntity) {
         if (accountEntity.getExpireTime().isBefore(LocalDateTime.now())) {

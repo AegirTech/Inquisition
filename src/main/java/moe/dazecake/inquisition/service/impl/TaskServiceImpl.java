@@ -353,9 +353,8 @@ public class TaskServiceImpl implements TaskService {
         dynamicInfo.getLockTaskList()
                 .forEach((deviceToken, accountEntityLocalDateTimeHashMap) -> accountEntityLocalDateTimeHashMap.forEach((accountEntity, localDateTime) -> {
                     if (accountEntity.getId().equals(account.getId())) {
-                        dynamicInfo.getLockTaskList().remove(deviceToken);
-                        //塞入停机队列
                         dynamicInfo.getHaltList().add(deviceToken);
+                        dynamicInfo.getLockTaskList().remove(deviceToken);
                     }
                 }));
 
