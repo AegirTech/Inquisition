@@ -213,7 +213,6 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public boolean checkFreeze(AccountEntity account) {
         if (dynamicInfo.getFreezeTaskList().containsKey(account.getId())) {
-
             //检测是否结束冻结
             if (dynamicInfo.getFreezeTaskList().get(account.getId()).isBefore(LocalDateTime.now())) {
                 dynamicInfo.getFreezeTaskList().remove(account.getId());
@@ -350,13 +349,20 @@ public class TaskServiceImpl implements TaskService {
         dynamicInfo.getFreeTaskList().remove(account);
 
         //清除上锁队列
-        dynamicInfo.getLockTaskList()
-                .forEach((deviceToken, accountEntityLocalDateTimeHashMap) -> accountEntityLocalDateTimeHashMap.forEach((accountEntity, localDateTime) -> {
-                    if (accountEntity.getId().equals(account.getId())) {
-                        dynamicInfo.getHaltList().add(deviceToken);
-                        dynamicInfo.getLockTaskList().remove(deviceToken);
-                    }
-                }));
+        var flag = false;
+        for (String deviceToken : dynamicInfo.getLockTaskList().keySet()) {
+            for (AccountEntity accountEntity : dynamicInfo.getLockTaskList().get(deviceToken).keySet()) {
+                if (accountEntity.getId().equals(account.getId())) {
+                    dynamicInfo.getHaltList().add(deviceToken);
+                    dynamicInfo.getLockTaskList().remove(deviceToken);
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag) {
+                break;
+            }
+        }
 
         //清除冻结队列
         dynamicInfo.getFreezeTaskList().remove(account.getId());

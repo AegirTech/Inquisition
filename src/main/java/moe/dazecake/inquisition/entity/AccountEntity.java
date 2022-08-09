@@ -18,7 +18,6 @@ import lombok.NoArgsConstructor;
 import moe.dazecake.inquisition.entity.ActivationDateSet.ActivationDate;
 import moe.dazecake.inquisition.entity.ConfigEntitySet.ConfigEntity;
 import moe.dazecake.inquisition.entity.NoticeEntitySet.NoticeEntity;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -81,7 +80,7 @@ public class AccountEntity {
     @Schema(description = "B服限制")
     Integer bLimit;//B服限制
 
-    @Column(name = "b_limit_device", comment = "B服限制设备")
+    @Column(name = "b_limit_device", comment = "B服限制设备", type = MySqlTypeConstant.JSON)
     @Schema(description = "B服限制设备")
     @TableField(typeHandler = GsonTypeHandler.class)
     ArrayList<String> bLimitDevice;//B服限制设备

@@ -63,6 +63,7 @@ public class TaskController {
 
             //检查任务是否达到下发标准
             var iterator = dynamicInfo.getFreeTaskList().iterator();
+            var hit = false;
             while (iterator.hasNext()) {
                 account = iterator.next();
                 //时间检查，不在激活区间则跳转到下一个判断
@@ -73,21 +74,21 @@ public class TaskController {
 
                 //B服限制检查
                 if (account.getBLimit() == 1 && !account.getBLimitDevice().contains(deviceToken)) {
-                    iterator.remove();
                     continue;
                 }
 
                 //冻结判断，不处于冻结状态则返回任务
                 if (!taskService.checkFreeze(account)) {
+                    hit = true;
                     break;
                 }
             }
 
             //检查是已经遍历完整个列表
-            if (!iterator.hasNext()) {
+            if (!hit) {
                 //没有可用的任务
                 return result.setCode(200)
-                        .setMsg("success")
+                        .setMsg("没有可用任务")
                         .setData(null);
             }
 
@@ -103,13 +104,14 @@ public class TaskController {
             //移出等待队列
             iterator.remove();
 
+
             return result.setCode(200)
                     .setMsg("success")
                     .setData(account);
 
         } else {
             return result.setCode(200)
-                    .setMsg("success")
+                    .setMsg("待分配队列为空")
                     .setData(null);
         }
     }
