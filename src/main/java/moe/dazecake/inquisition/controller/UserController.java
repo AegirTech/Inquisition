@@ -298,8 +298,7 @@ public class UserController {
         var id = JWTUtils.getId(token);
 
         if ((accountMapper.selectById(id).getFreeze() == 1)) {
-            result.setCode(200)
-                    .setMsg("账号已被冻结，若需继续托管请先解冻");
+            result.setCode(200).getData().put("msg", "账号已被冻结，若需继续托管请先解冻");
             return result;
         }
 
@@ -510,7 +509,7 @@ public class UserController {
         Long id = JWTUtils.getId(token);
         AccountEntity account = accountMapper.selectById(id);
         if (account.getRefresh() < 1) {
-            return result.setCode(200).setMsg("今日刷新次数已达上线，明天再来看看吧");
+            return result.setCode(403).setMsg("今日刷新次数已达上线，明天再来看看吧");
         }
         for (AccountEntity freeTask : dynamicInfo.getFreeTaskList()) {
             if (freeTask.getId().equals(id)) {
