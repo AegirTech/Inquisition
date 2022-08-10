@@ -225,6 +225,50 @@ public class UserController {
     }
 
     @UserLogin
+    @Operation(summary = "冻结我的账号")
+    @PostMapping("/freezeMyAccount")
+    public Result<String> freezeMyAccount(@RequestHeader("Authorization") String token) {
+        Result<String> result = new Result<>();
+        var account = accountMapper.selectOne(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getId, JWTUtils.getId(token))
+        );
+        if (account != null) {
+            account.setFreeze(1);
+            accountMapper.updateById(account);
+            result.setCode(200)
+                    .setMsg("success");
+        } else {
+            result.setCode(403)
+                    .setMsg("Unable to freeze a non-existent account");
+        }
+        result.setData(null);
+        return result;
+    }
+
+    @UserLogin
+    @Operation(summary = "解冻我的账号")
+    @PostMapping("/unfreezeMyAccount")
+    public Result<String> unfreezeMyAccount(@RequestHeader("Authorization") String token) {
+        Result<String> result = new Result<>();
+        var account = accountMapper.selectOne(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getId, JWTUtils.getId(token))
+        );
+        if (account != null) {
+            account.setFreeze(0);
+            accountMapper.updateById(account);
+            result.setCode(200)
+                    .setMsg("success");
+        } else {
+            result.setCode(403)
+                    .setMsg("Unable to unfreeze a non-existent account");
+        }
+        result.setData(null);
+        return result;
+    }
+
+    @UserLogin
     @Operation(summary = "查询我的日志")
     @GetMapping("/showMyLog")
     public Result<ArrayList<LogEntity>> showMyLog(@RequestHeader("Authorization") String token, Long current,
