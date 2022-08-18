@@ -60,10 +60,10 @@ public class DynamicInfo {
         var devices = deviceMapper.selectList(
                 Wrappers.<DeviceEntity>lambdaQuery()
                         .eq(DeviceEntity::getDelete, 0)
-                        .ge(DeviceEntity::getExpireTime,LocalDateTime.now())
+                        .ge(DeviceEntity::getExpireTime, LocalDateTime.now())
         );
         devices.forEach(
-                device-> {
+                device -> {
                     deviceStatusMap.put(device.getDeviceToken(), 0);
                     counter.put(device.getDeviceToken(), 1);
                 }
