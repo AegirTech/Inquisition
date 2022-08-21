@@ -45,6 +45,8 @@ public class DynamicInfo {
 
     HashMap<String, Integer> counter = new HashMap<>();
 
+    HashMap<Long, String> pccLock = new HashMap<>();
+
     public void initInfo() {
 
         //检查admin表是否有数据

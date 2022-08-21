@@ -96,6 +96,7 @@ public class UserController {
 
         accountEntity.setId(0L);
         accountEntity.setExpireTime(LocalDateTime.now());
+        accountEntity.setRefresh(1);
         activateCDK(accountEntity, cdkEntity);
         accountMapper.insert(accountEntity);
         return result.setCode(200).setMsg("success").setData(null);
@@ -465,16 +466,13 @@ public class UserController {
             }
         }
 
-        dynamicInfo.getLockTaskList().forEach(
-                (deviceToken, lockTask) -> lockTask.forEach(
-                        (account, time) -> {
-                            if (account.getId().equals(id)) {
-                                dynamicInfo.getHaltList().add(deviceToken);
-                                dynamicInfo.getLockTaskList().remove(deviceToken);
-                            }
-                        }
-                )
-        );
+        for (String deviceToken : dynamicInfo.getLockTaskList().keySet()) {
+            if (dynamicInfo.getLockTaskList().get(deviceToken).keySet().iterator().next().getId().equals(id)) {
+                dynamicInfo.getHaltList().add(deviceToken);
+                dynamicInfo.getLockTaskList().remove(deviceToken);
+                break;
+            }
+        }
 
         dynamicInfo.getFreezeTaskList().remove(id);
 

@@ -39,7 +39,7 @@ public class HeartBeatController {
             result.setCode(500);
         }
 
-        return result.setCode(200).setMsg("success");
+        return result.setMsg("success");
     }
 
     @Operation(summary = "完成停机上报")
