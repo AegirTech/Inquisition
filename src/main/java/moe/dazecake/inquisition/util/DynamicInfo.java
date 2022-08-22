@@ -47,6 +47,10 @@ public class DynamicInfo {
 
     HashMap<Long, String> pccLock = new HashMap<>();
 
+    HashMap<Long,Integer> userSanList = new HashMap<>();
+
+    HashMap<Long,Integer> userMaxSanList = new HashMap<>();
+
     public void initInfo() {
 
         //检查admin表是否有数据

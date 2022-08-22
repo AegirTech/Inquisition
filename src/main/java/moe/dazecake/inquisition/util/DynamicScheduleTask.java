@@ -23,6 +23,7 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -128,6 +129,40 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                 },
                 triggerContext -> new CronTrigger(cron).nextExecutionTime(triggerContext)
         );
+        //理智刷新
+        taskRegistrar.addTriggerTask(
+                () -> {
+                    log.info("正在刷新用户理智: " + LocalDateTime.now().toLocalTime());
+                    for (Long id : dynamicInfo.getUserSanList().keySet()) {
+                        dynamicInfo.getUserSanList().put(id, dynamicInfo.getUserSanList().get(id) + 1);
+                        if (dynamicInfo.getUserSanList().get(id) == dynamicInfo.getUserMaxSanList().get(id) - 10) {
+                            taskService.messagePush(accountMapper.selectById(id), "作战预告", "您的账号最快将在30" +
+                                    "分钟后开始作战，若您当前仍在线，请注意合理把握时间，避免被强制下线\n\n" +
+                                    "若您需要轮空本次作战，请前往面板-->设置-->冻结，手动冻结账号来进行轮空\n\n" +
+                                    "当前理智: " +
+                                    dynamicInfo.getUserSanList().get(id) +
+                                    "/" +
+                                    dynamicInfo.getUserMaxSanList().get(id) + "\n\n" +
+                                    "(可能存在误差，仅供参考)");
+                        } else if (dynamicInfo.getUserSanList().get(id) >= dynamicInfo.getUserMaxSanList()
+                                .get(id) - 5) {
+                            var freeDeviceNum = 0;
+                            for (String deviceToken : dynamicInfo.getDeviceStatusMap().keySet()) {
+                                if (dynamicInfo.getDeviceStatusMap().get(deviceToken) == 1) {
+                                    freeDeviceNum++;
+                                }
+                            }
+                            if (freeDeviceNum > 0) {
+                                dynamicInfo.getFreeTaskList().add(accountMapper.selectById(id));
+                            }
+                        } else if (Objects.equals(dynamicInfo.getUserSanList().get(id), dynamicInfo.getUserMaxSanList()
+                                .get(id))) {
+                            dynamicInfo.getFreeTaskList().add(accountMapper.selectById(id));
+                        }
+                    }
+                },
+                triggerContext -> new CronTrigger("* 0/6 * * * ?").nextExecutionTime(triggerContext)
+        );
         //设备离线监控
         taskRegistrar.addTriggerTask(
                 () -> dynamicInfo.getCounter().forEach(
@@ -192,6 +227,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                     );
                     exceedMap.forEach(
                             (token, account) -> {
+                                dynamicInfo.getHaltList().add(token);
                                 dynamicInfo.getLockTaskList().remove(token);
                                 dynamicInfo.getFreeTaskList().add(account);
 
