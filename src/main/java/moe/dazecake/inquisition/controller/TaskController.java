@@ -116,6 +116,9 @@ public class TaskController {
             iterator.remove();
             dynamicInfo.getPccLock().remove(account.getId());
 
+            //理智归零
+            dynamicInfo.getUserSanList().put(account.getId(), 0);
+
 
             return result.setCode(200)
                     .setMsg("success")

@@ -24,7 +24,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Configuration
@@ -52,9 +51,6 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
     @Resource
     TaskServiceImpl taskService;
 
-    @Value("${cron:'0 0 4,12,20 * * ?'}")
-    String cron;
-
     @Value("${spring.mail.to}")
     String to;
 
@@ -66,69 +62,6 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
-        //每日任务刷新
-        taskRegistrar.addTriggerTask(
-                () -> {
-                    log.info("正在刷新任务列表: " + LocalDateTime.now().toLocalTime());
-                    if (!dynamicInfo.getFreeTaskList().isEmpty()) {
-                        //无daily任务，追加
-                        var hasDaily = false;
-                        for (var accountEntity : dynamicInfo.getFreeTaskList()) {
-                            if (accountEntity.getTaskType().equals("daily")) {
-                                hasDaily = true;
-                                break;
-                            }
-                        }
-                        if (hasDaily) {
-                            emailService.sendSimpleMail(to, "设备数量不足警告",
-                                    "设备数量不足，造成了最多可能 " + dynamicInfo.getFreeTaskList().size() +
-                                            " 个任务被强制清除，请注意及时增加设备");
-                            //清除所有daily任务
-                            dynamicInfo.getFreeTaskList()
-                                    .removeIf(accountEntity -> accountEntity.getTaskType().equals("daily"));
-                        }
-                    }
-                    accountMapper.selectList(
-                            Wrappers.<AccountEntity>lambdaQuery()
-                                    .eq(AccountEntity::getDelete, 0)
-                                    .eq(AccountEntity::getFreeze, 0)
-                                    .eq(AccountEntity::getTaskType, "daily")
-                                    .ge(AccountEntity::getExpireTime, LocalDateTime.now())
-                    ).forEach(accountEntity -> {
-                        if (taskService.checkActivationTime(accountEntity)) {
-                            dynamicInfo.getFreeTaskList().add(accountEntity);
-                        }
-                    });
-
-                    //记录日志
-                    LogEntity logEntity = new LogEntity();
-                    AtomicReference<String> detail = new AtomicReference<>("");
-                    if (dynamicInfo.getFreeTaskList().isEmpty()) {
-                        detail.set("有 " + dynamicInfo.getFreeTaskList().size() + " 个任务尚未完成\n");
-                        dynamicInfo.getFreeTaskList().forEach(
-                                accountEntity -> detail.set((detail +
-                                        accountEntity.getTaskType() +
-                                        "\t" +
-                                        accountEntity.getServer()).equals("0") ? "官服" : "B服" +
-                                        "\t" +
-                                        accountEntity.getAccount()
-                                )
-                        );
-                    } else {
-                        detail.set("已刷新 " + dynamicInfo.getFreeTaskList().size() + " 个任务\n");
-                    }
-
-                    logEntity.setLevel("INFO")
-                            .setTaskType("system")
-                            .setTitle("任务列表刷新")
-                            .setDetail(detail.get())
-                            .setFrom("system")
-                            .setTime(LocalDateTime.now());
-                    logController.addLog(logEntity, "system");
-
-                },
-                triggerContext -> new CronTrigger(cron).nextExecutionTime(triggerContext)
-        );
         //理智刷新
         taskRegistrar.addTriggerTask(
                 () -> {
@@ -154,10 +87,12 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                             }
                             if (freeDeviceNum > 0) {
                                 dynamicInfo.getFreeTaskList().add(accountMapper.selectById(id));
+                                dynamicInfo.getUserSanList().put(id, 0);
                             }
                         } else if (Objects.equals(dynamicInfo.getUserSanList().get(id), dynamicInfo.getUserMaxSanList()
                                 .get(id))) {
                             dynamicInfo.getFreeTaskList().add(accountMapper.selectById(id));
+                            dynamicInfo.getUserSanList().put(id, 0);
                         }
                     }
                 },

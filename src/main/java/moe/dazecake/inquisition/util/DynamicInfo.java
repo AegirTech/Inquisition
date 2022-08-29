@@ -74,6 +74,15 @@ public class DynamicInfo {
                     counter.put(device.getDeviceToken(), 1);
                 }
         );
+        for (AccountEntity account : accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
+                .eq(AccountEntity::getDelete, 0)
+                .eq(AccountEntity::getFreeze, 0)
+                .eq(AccountEntity::getTaskType, "daily")
+                .ge(AccountEntity::getExpireTime, LocalDateTime.now())
+        )) {
+            userSanList.put(account.getId(), 0);
+            userMaxSanList.put(account.getId(), 135);
+        }
 
     }
 
