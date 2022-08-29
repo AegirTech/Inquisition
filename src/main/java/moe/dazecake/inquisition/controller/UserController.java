@@ -21,7 +21,6 @@ import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.JWTUtils;
 import moe.dazecake.inquisition.util.Result;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.support.CronExpression;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -29,7 +28,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,9 +58,6 @@ public class UserController {
     @Value("${wx-pusher.enable}")
     boolean enableWxPusher;
 
-    @Value("${cron:'0 0 4,12,20 * * ?'}")
-    String cron;
-
     @Operation(summary = "创建我的账号")
     @PostMapping("/createUser")
     public Result<String> createUser(String cdk, @RequestBody AccountEntity accountEntity) {
@@ -79,26 +74,39 @@ public class UserController {
             return result;
         }
 
+        cdkEntity.setUsed(1);
+        cdkMapper.updateById(cdkEntity);
+
         if (accountEntity.getServer() == 0) {
             if (!httpService.isOfficialAccountWork(accountEntity.getAccount(), accountEntity.getPassword())) {
+                cdkEntity.setUsed(0);
+                cdkMapper.updateById(cdkEntity);
                 return result.setCode(403).setMsg("账号或密码错误，注册需要填写的账号就是游戏账号！");
             }
         } else if (accountEntity.getServer() == 1) {
             if (!httpService.isBiliAccountWork(accountEntity.getAccount(), accountEntity.getPassword())) {
+                cdkEntity.setUsed(0);
+                cdkMapper.updateById(cdkEntity);
                 return result.setCode(403).setMsg("账号或密码错误，注册需要填写的账号就是游戏账号！");
             }
         } else {
+            cdkEntity.setUsed(0);
+            cdkMapper.updateById(cdkEntity);
             return result.setCode(403).setMsg("未知的服务器类型");
         }
-
-        cdkEntity.setUsed(1);
-        cdkMapper.updateById(cdkEntity);
 
         accountEntity.setId(0L);
         accountEntity.setExpireTime(LocalDateTime.now());
         accountEntity.setRefresh(1);
         activateCDK(accountEntity, cdkEntity);
         accountMapper.insert(accountEntity);
+        var account = accountMapper.selectOne(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getAccount, accountEntity.getAccount())
+                        .eq(AccountEntity::getPassword, accountEntity.getPassword())
+        );
+        dynamicInfo.getUserSanList().put(account.getId(), 135);
+        dynamicInfo.getUserMaxSanList().put(account.getId(), 135);
         return result.setCode(200).setMsg("success").setData(null);
     }
 
@@ -237,6 +245,7 @@ public class UserController {
         if (account != null) {
             account.setFreeze(1);
             accountMapper.updateById(account);
+            dynamicInfo.getUserSanList().remove(account.getId());
             result.setCode(200)
                     .setMsg("success");
         } else {
@@ -259,6 +268,8 @@ public class UserController {
         if (account != null) {
             account.setFreeze(0);
             accountMapper.updateById(account);
+            dynamicInfo.getUserSanList().put(account.getId(), 115);
+            dynamicInfo.getUserMaxSanList().put(account.getId(), 135);
             result.setCode(200)
                     .setMsg("success");
         } else {
@@ -332,10 +343,13 @@ public class UserController {
         );
 
         if (!flag.get()) {
-            LocalDateTime nextTime = CronExpression.parse(cron).next(LocalDateTime.now());
-            assert nextTime != null;
+//            LocalDateTime nextTime = CronExpression.parse(cron).next(LocalDateTime.now());
+            var san = dynamicInfo.getUserSanList().get(id);
+            var maxSan = dynamicInfo.getUserMaxSanList().get(id);
+            LocalDateTime nextTime = LocalDateTime.now()
+                    .plusMinutes((maxSan - san) * 6L);
             String nextTimeStr = nextTime.format(DateTimeFormatter.ofPattern("HH:mm"));
-            result.getData().put("msg", "空闲中,下一轮作战将于" + nextTimeStr + "开始");
+            result.getData().put("msg", "理智: " + san + "/" + maxSan + " 下一轮作战最迟将于" + nextTimeStr + "开始");
         }
 
         return result;
@@ -525,6 +539,7 @@ public class UserController {
         account.setRefresh(account.getRefresh() - 1);
         accountMapper.updateById(account);
         dynamicInfo.getFreeTaskList().add(0, account);
+        dynamicInfo.getUserSanList().put(id, 0);
 
         return result.setCode(200).setMsg("立即开始作战成功，等待分配作战服务器");
     }
