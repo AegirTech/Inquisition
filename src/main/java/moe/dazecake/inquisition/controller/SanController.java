@@ -28,4 +28,13 @@ public class SanController {
         dynamicInfo.getUserMaxSanList().put(id, maxSan);
         return result.setCode(200).setMsg("success");
     }
+
+    @Operation(summary = "强制修改理智")
+    @PostMapping("/reSetSan")
+    public Result<String> reSetSan(Integer san, Integer maxSan, Long id) {
+        Result<String> result = new Result<>();
+        dynamicInfo.getUserSanList().put(id, san);
+        dynamicInfo.getUserMaxSanList().put(id, maxSan);
+        return result.setCode(200).setMsg("success");
+    }
 }

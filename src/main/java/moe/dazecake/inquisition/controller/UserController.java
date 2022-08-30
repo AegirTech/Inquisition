@@ -355,6 +355,19 @@ public class UserController {
     }
 
     @UserLogin
+    @Operation(summary = "查询当前理智")
+    @GetMapping("/showMySan")
+    public Result<String> showMySan(@RequestHeader("Authorization") String token) {
+        Result<String> result = new Result<>();
+
+        var id = JWTUtils.getId(token);
+
+        return result.setCode(200)
+                .setMsg("success")
+                .setData(dynamicInfo.getUserSanList().get(id) + "/" + dynamicInfo.getUserMaxSanList().get(id));
+    }
+
+    @UserLogin
     @Operation(summary = "使用CDK")
     @PostMapping("/useCDK")
     public Result<String> useCDK(@RequestHeader("Authorization") String token, String cdk) {
