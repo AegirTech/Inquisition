@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
+import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
 import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
@@ -51,10 +52,12 @@ public class TaskController {
         Result<AccountEntity> result = new Result<>();
 
         //重复请求检查
-        if (dynamicInfo.getLockTaskList().containsKey(deviceToken)) {
-            return result.setCode(201)
-                    .setMsg("success")
-                    .setData(dynamicInfo.getLockTaskList().get(deviceToken).keySet().iterator().next());
+        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
+            if (lockTask.getDeviceToken().equals(deviceToken)) {
+                return result.setCode(201)
+                        .setMsg("success")
+                        .setData(lockTask.getAccount());
+            }
         }
 
         //任务上锁
@@ -137,7 +140,9 @@ public class TaskController {
         Result<String> result = new Result<>();
 
 
-        var account = dynamicInfo.getLockTaskList().get(deviceToken).keySet().iterator().next();
+        var account =
+                dynamicInfo.getLockTaskList().stream().filter(e -> e.getDeviceToken().equals(deviceToken)).findFirst()
+                        .orElseThrow().getAccount();
 
         //检查B服限制新增设备
         if (account.getServer() == 1 && account.getBLimit() == 0 && !account.getBLimitDevice().contains(deviceToken)) {
@@ -163,7 +168,7 @@ public class TaskController {
         }
 
         //移除队列
-        dynamicInfo.getLockTaskList().remove(deviceToken);
+        dynamicInfo.getLockTaskList().removeIf(lockTask -> lockTask.getDeviceToken().equals(deviceToken));
 
         result.setCode(200)
                 .setMsg("success")
@@ -177,7 +182,9 @@ public class TaskController {
     public Result<String> failTask(String deviceToken, String type, String imageUrl) {
         Result<String> result = new Result<>();
 
-        var account = dynamicInfo.getLockTaskList().get(deviceToken).keySet().iterator().next();
+        var account = dynamicInfo.getLockTaskList().stream().filter(e -> e.getDeviceToken().equals(deviceToken))
+                .findFirst()
+                .orElseThrow().getAccount();
 
         //记录日志
         taskService.log(deviceToken, account, "WARN", "任务失败", "任务失败,请登陆面板查看失败原因", imageUrl);
@@ -201,24 +208,17 @@ public class TaskController {
     public Result<String> tempAddTask(@RequestBody AccountEntity accountEntity) {
         Result<String> result = new Result<>();
 
-        Iterator<AccountEntity> freeList = dynamicInfo.getFreeTaskList().iterator();
-        Iterator<HashMap<AccountEntity, LocalDateTime>> lockList = dynamicInfo.getLockTaskList().values().iterator();
-
         Long minIndex = 0L;
 
-        while (freeList.hasNext()) {
-            AccountEntity account = freeList.next();
+        for (AccountEntity account : dynamicInfo.getFreeTaskList()) {
             if (minIndex > account.getId()) {
                 minIndex = account.getId();
             }
         }
 
-        while (lockList.hasNext()) {
-            HashMap<AccountEntity, LocalDateTime> map = lockList.next();
-            for (AccountEntity account : map.keySet()) {
-                if (minIndex > account.getId()) {
-                    minIndex = account.getId();
-                }
+        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
+            if (minIndex > lockTask.getAccount().getId()) {
+                minIndex = lockTask.getAccount().getId();
             }
         }
 
@@ -288,18 +288,9 @@ public class TaskController {
     @Login
     @Operation(summary = "查询已分配任务列表")
     @GetMapping("/showLockTaskList")
-    public Result<HashMap<String, HashMap<String, Object>>> showLockTaskList() {
-        Result<HashMap<String, HashMap<String, Object>>> result = new Result<>();
-        result.setData(new HashMap<>());
-        dynamicInfo.getLockTaskList().forEach(
-                (deviceToken, infoMap) -> infoMap.forEach(
-                        (accountEntity, localDateTime) -> {
-                            result.getData().put(deviceToken, new HashMap<>());
-                            result.getData().get(deviceToken).put("account", accountEntity);
-                            result.getData().get(deviceToken).put("time", localDateTime);
-                        }
-                )
-        );
+    public Result<ArrayList<LockTask>> showLockTaskList() {
+        Result<ArrayList<LockTask>> result = new Result<>();
+        result.setData(dynamicInfo.getLockTaskList());
 
         return result.setCode(200)
                 .setMsg("success");
@@ -351,9 +342,7 @@ public class TaskController {
     @Operation(summary = "立即强制释放一设备的上锁任务")
     @PostMapping("/forceUnlockOneTask")
     public Result<String> forceUnlockOneTask(String deviceToken) {
-        if (dynamicInfo.getLockTaskList().get(deviceToken) != null) {
-            dynamicInfo.getLockTaskList().remove(deviceToken);
-
+        if (dynamicInfo.getLockTaskList().removeIf(lockTask -> lockTask.getDeviceToken().equals(deviceToken))) {
             //记录日志
             LogEntity logEntity = new LogEntity();
             logEntity.setLevel("INFO")

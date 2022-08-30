@@ -16,7 +16,7 @@ import java.sql.Statement;
 @Configuration
 @Primary
 public class DatabaseInitConfig {
-    private Logger log = LoggerFactory.getLogger(DatabaseInitConfig.class);
+    private final Logger log = LoggerFactory.getLogger(DatabaseInitConfig.class);
 
     @Value("${spring.datasource.url}")
     private String datasourceUrl;

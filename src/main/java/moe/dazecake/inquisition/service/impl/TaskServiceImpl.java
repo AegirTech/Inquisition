@@ -4,6 +4,7 @@ import com.zjiecode.wxpusher.client.bean.Message;
 import moe.dazecake.inquisition.controller.LogController;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
+import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.service.TaskService;
 import moe.dazecake.inquisition.util.DynamicInfo;
@@ -15,7 +16,6 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Objects;
 
 @Service
@@ -231,16 +231,19 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void lockTask(String deviceToken, AccountEntity account) {
         LocalDateTime localDateTime = LocalDateTime.now();
-        HashMap<AccountEntity, LocalDateTime> accountEntityLocalDateTimeHashMap = new HashMap<>();
+        var lockTask = new LockTask();
+        lockTask.setDeviceToken(deviceToken);
         switch (account.getTaskType()) {
             case "daily":
-                accountEntityLocalDateTimeHashMap.put(account, localDateTime.plusHours(2));
+                lockTask.setAccount(account);
+                lockTask.setExpirationTime(localDateTime.plusHours(2));
                 break;
             case "rogue":
-                accountEntityLocalDateTimeHashMap.put(account, localDateTime.plusHours(48));
+                lockTask.setAccount(account);
+                lockTask.setExpirationTime(localDateTime.plusHours(48));
                 break;
         }
-        dynamicInfo.getLockTaskList().put(deviceToken, accountEntityLocalDateTimeHashMap);
+        dynamicInfo.getLockTaskList().add(lockTask);
     }
 
     @Override
@@ -296,7 +299,7 @@ public class TaskServiceImpl implements TaskService {
         switch (type) {
             case ("lineBusy"): {
                 dynamicInfo.getFreeTaskList().add(account);
-                dynamicInfo.getLockTaskList().remove(deviceToken);
+                dynamicInfo.getLockTaskList().removeIf(e -> e.getDeviceToken().equals(deviceToken));
                 dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
                 break;
             }
@@ -304,7 +307,7 @@ public class TaskServiceImpl implements TaskService {
                 if (account.getServer() == 0) {
                     if (httpService.isOfficialAccountWork(account.getAccount(), account.getPassword())) {
                         dynamicInfo.getFreeTaskList().add(account);
-                        dynamicInfo.getLockTaskList().remove(deviceToken);
+                        dynamicInfo.getLockTaskList().removeIf(e -> e.getDeviceToken().equals(deviceToken));
                     } else {
                         forceHaltTask(account);
                         account.setFreeze(1);
@@ -324,7 +327,7 @@ public class TaskServiceImpl implements TaskService {
                             account.setBLimit(1);
                             accountMapper.updateById(account);
                             dynamicInfo.getFreeTaskList().add(account);
-                            dynamicInfo.getLockTaskList().remove(deviceToken);
+                            dynamicInfo.getLockTaskList().removeIf(e -> e.getDeviceToken().equals(deviceToken));
                         }
                     } else {
                         forceHaltTask(account);
@@ -337,7 +340,7 @@ public class TaskServiceImpl implements TaskService {
             default: {
                 //归还
                 dynamicInfo.getFreeTaskList().add(account);
-                dynamicInfo.getLockTaskList().remove(deviceToken);
+                dynamicInfo.getLockTaskList().removeIf(e -> e.getDeviceToken().equals(deviceToken));
                 break;
             }
         }
@@ -349,17 +352,10 @@ public class TaskServiceImpl implements TaskService {
         dynamicInfo.getFreeTaskList().remove(account);
 
         //清除上锁队列
-        var flag = false;
-        for (String deviceToken : dynamicInfo.getLockTaskList().keySet()) {
-            for (AccountEntity accountEntity : dynamicInfo.getLockTaskList().get(deviceToken).keySet()) {
-                if (accountEntity.getId().equals(account.getId())) {
-                    dynamicInfo.getHaltList().add(deviceToken);
-                    dynamicInfo.getLockTaskList().remove(deviceToken);
-                    flag = true;
-                    break;
-                }
-            }
-            if (flag) {
+        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
+            if (lockTask.getAccount().getId().equals(account.getId())) {
+                dynamicInfo.getHaltList().add(lockTask.getDeviceToken());
+                dynamicInfo.getLockTaskList().remove(lockTask);
                 break;
             }
         }

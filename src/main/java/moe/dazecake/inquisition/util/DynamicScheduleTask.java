@@ -7,6 +7,7 @@ import moe.dazecake.inquisition.controller.LogController;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.DeviceEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
+import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
@@ -22,7 +23,6 @@ import org.springframework.scheduling.support.CronTrigger;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.Objects;
 
 @Slf4j
@@ -67,36 +67,39 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                 () -> {
                     log.info("正在刷新用户理智: " + LocalDateTime.now().toLocalTime());
                     for (Long id : dynamicInfo.getUserSanList().keySet()) {
-                        dynamicInfo.getUserSanList().put(id, dynamicInfo.getUserSanList().get(id) + 1);
-                        if (dynamicInfo.getUserSanList().get(id) == dynamicInfo.getUserMaxSanList().get(id) - 10) {
-                            taskService.messagePush(accountMapper.selectById(id), "作战预告", "您的账号最快将在30" +
-                                    "分钟后开始作战，若您当前仍在线，请注意合理把握时间，避免被强制下线\n\n" +
-                                    "若您需要轮空本次作战，请前往面板-->设置-->冻结，手动冻结账号来进行轮空\n\n" +
-                                    "当前理智: " +
-                                    dynamicInfo.getUserSanList().get(id) +
-                                    "/" +
-                                    dynamicInfo.getUserMaxSanList().get(id) + "\n\n" +
-                                    "(可能存在误差，仅供参考)");
-                        } else if (dynamicInfo.getUserSanList().get(id) >= dynamicInfo.getUserMaxSanList()
-                                .get(id) - 5) {
-                            var freeDeviceNum = 0;
-                            for (String deviceToken : dynamicInfo.getDeviceStatusMap().keySet()) {
-                                if (dynamicInfo.getDeviceStatusMap().get(deviceToken) == 1) {
-                                    freeDeviceNum++;
+                        if (dynamicInfo.getLockTaskList().stream().noneMatch(e -> e.getAccount().getId().equals(id))) {
+                            dynamicInfo.getUserSanList().put(id, dynamicInfo.getUserSanList().get(id) + 1);
+                            if (dynamicInfo.getUserSanList().get(id) == dynamicInfo.getUserMaxSanList().get(id) - 10) {
+                                taskService.messagePush(accountMapper.selectById(id), "作战预告", "您的账号最快将在30" +
+                                        "分钟后开始作战，若您当前仍在线，请注意合理把握时间，避免被强制下线\n\n" +
+                                        "若您需要轮空本次作战，请前往面板-->设置-->冻结，手动冻结账号来进行轮空\n\n" +
+                                        "当前理智: " +
+                                        dynamicInfo.getUserSanList().get(id) +
+                                        "/" +
+                                        dynamicInfo.getUserMaxSanList().get(id) + "\n\n" +
+                                        "(可能存在误差，仅供参考)");
+                            } else if (dynamicInfo.getUserSanList().get(id) >= dynamicInfo.getUserMaxSanList()
+                                    .get(id) - 5) {
+                                var freeDeviceNum = 0;
+                                for (String deviceToken : dynamicInfo.getDeviceStatusMap().keySet()) {
+                                    if (dynamicInfo.getDeviceStatusMap().get(deviceToken) == 1) {
+                                        freeDeviceNum++;
+                                    }
                                 }
-                            }
-                            if (freeDeviceNum > 0) {
+                                if (freeDeviceNum > 0) {
+                                    dynamicInfo.getFreeTaskList().add(accountMapper.selectById(id));
+                                    dynamicInfo.getUserSanList().put(id, 0);
+                                }
+                            } else if (Objects.equals(dynamicInfo.getUserSanList()
+                                    .get(id), dynamicInfo.getUserMaxSanList()
+                                    .get(id))) {
                                 dynamicInfo.getFreeTaskList().add(accountMapper.selectById(id));
                                 dynamicInfo.getUserSanList().put(id, 0);
                             }
-                        } else if (Objects.equals(dynamicInfo.getUserSanList().get(id), dynamicInfo.getUserMaxSanList()
-                                .get(id))) {
-                            dynamicInfo.getFreeTaskList().add(accountMapper.selectById(id));
-                            dynamicInfo.getUserSanList().put(id, 0);
                         }
                     }
                 },
-                triggerContext -> new CronTrigger("* 0/6 * * * ?").nextExecutionTime(triggerContext)
+                triggerContext -> new CronTrigger("0 */6 * * * *").nextExecutionTime(triggerContext)
         );
         //设备离线监控
         taskRegistrar.addTriggerTask(
@@ -150,38 +153,29 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                 () -> {
                     log.info("任务超时检测");
                     LocalDateTime nowTime = LocalDateTime.now();
-                    HashMap<String, AccountEntity> exceedMap = new HashMap<>();
-                    dynamicInfo.getLockTaskList().forEach(
-                            (token, map) -> map.forEach(
-                                    (account, time) -> {
-                                        if (nowTime.isAfter(time)) {
-                                            exceedMap.put(token, account);
-                                        }
-                                    }
-                            )
-                    );
-                    exceedMap.forEach(
-                            (token, account) -> {
-                                dynamicInfo.getHaltList().add(token);
-                                dynamicInfo.getLockTaskList().remove(token);
-                                dynamicInfo.getFreeTaskList().add(account);
+                    int num = 0;
+                    for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
+                        if (lockTask.getExpirationTime().isBefore(nowTime)) {
+                            //记录日志
+                            LogEntity logEntity = new LogEntity();
+                            logEntity.setLevel("WARN")
+                                    .setTaskType(lockTask.getAccount().getTaskType())
+                                    .setTitle("任务超时")
+                                    .setDetail("")
+                                    .setFrom(lockTask.getDeviceToken())
+                                    .setName(lockTask.getAccount().getName())
+                                    .setPassword(lockTask.getAccount().getPassword())
+                                    .setTime(LocalDateTime.now());
+                            logController.addLog(logEntity, "system");
 
-                                //记录日志
-                                LogEntity logEntity = new LogEntity();
-                                logEntity.setLevel("WARN")
-                                        .setTaskType(account.getTaskType())
-                                        .setTitle("任务超时")
-                                        .setDetail("")
-                                        .setFrom(token)
-                                        .setName(account.getName())
-                                        .setPassword(account.getPassword())
-                                        .setTime(LocalDateTime.now());
-                                logController.addLog(logEntity, "system");
-
-                            }
-                    );
-                    if (exceedMap.size() > 0) {
-                        log.info("已处理超时任务数: " + exceedMap.size());
+                            dynamicInfo.getHaltList().add(lockTask.getDeviceToken());
+                            dynamicInfo.getFreeTaskList().add(lockTask.getAccount());
+                            dynamicInfo.getLockTaskList().remove(lockTask);
+                            num++;
+                        }
+                    }
+                    if (num > 0) {
+                        log.info("已处理超时任务数: " + num);
                     }
                 },
                 triggerContext -> new CronTrigger("0 0/5 * * * ?").nextExecutionTime(triggerContext)

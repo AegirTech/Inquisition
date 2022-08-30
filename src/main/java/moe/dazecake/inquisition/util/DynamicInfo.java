@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.AdminEntity;
 import moe.dazecake.inquisition.entity.DeviceEntity;
+import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.AdminMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
@@ -37,7 +38,7 @@ public class DynamicInfo {
 
     ArrayList<AccountEntity> freeTaskList = new ArrayList<>();
 
-    HashMap<String, HashMap<AccountEntity, LocalDateTime>> lockTaskList = new HashMap<>();
+    ArrayList<LockTask> lockTaskList = new ArrayList<>();
 
     HashMap<Long, LocalDateTime> freezeTaskList = new HashMap<>();
 

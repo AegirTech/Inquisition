@@ -21,7 +21,9 @@ public class SanController {
     @PostMapping("/sanReport")
     public Result<String> SanReport(Integer san, Integer maxSan, String deviceToken) {
         Result<String> result = new Result<>();
-        var id = dynamicInfo.getLockTaskList().get(deviceToken).keySet().iterator().next().getId();
+        var id =
+                dynamicInfo.getLockTaskList().stream().filter(e -> e.getDeviceToken().equals(deviceToken)).findFirst()
+                        .orElseThrow().getAccount().getId();
         dynamicInfo.getUserSanList().put(id, san);
         dynamicInfo.getUserMaxSanList().put(id, maxSan);
         return result.setCode(200).setMsg("success");

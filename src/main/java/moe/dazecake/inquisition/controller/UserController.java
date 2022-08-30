@@ -13,6 +13,7 @@ import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.entity.NoticeEntitySet.NoticeEntity;
 import moe.dazecake.inquisition.entity.NoticeEntitySet.WXUID;
 import moe.dazecake.inquisition.entity.NoticeEntitySet.WechatCallbackEntity;
+import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.CDKMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
@@ -332,14 +333,12 @@ public class UserController {
         );
 
         dynamicInfo.getLockTaskList().forEach(
-                (key, value) -> value.forEach(
-                        (account, time) -> {
-                            if (Objects.equals(account.getId(), id)) {
-                                flag.set(true);
-                                result.getData().put("msg", "正在作战中，请勿顶号");
-                            }
-                        }
-                )
+                lockTask -> {
+                    if (Objects.equals(lockTask.getAccount().getId(), id)) {
+                        flag.set(true);
+                        result.getData().put("msg", "正在作战中，请勿顶号");
+                    }
+                }
         );
 
         if (!flag.get()) {
@@ -480,10 +479,10 @@ public class UserController {
             }
         }
 
-        for (String deviceToken : dynamicInfo.getLockTaskList().keySet()) {
-            if (dynamicInfo.getLockTaskList().get(deviceToken).keySet().iterator().next().getId().equals(id)) {
-                dynamicInfo.getHaltList().add(deviceToken);
-                dynamicInfo.getLockTaskList().remove(deviceToken);
+        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
+            if (lockTask.getAccount().getId().equals(id)) {
+                dynamicInfo.getHaltList().add(lockTask.getDeviceToken());
+                dynamicInfo.getLockTaskList().remove(lockTask);
                 break;
             }
         }
@@ -528,11 +527,10 @@ public class UserController {
                 return result.setCode(200).setMsg("已经在排队中");
             }
         }
-        for (HashMap<AccountEntity, LocalDateTime> value : dynamicInfo.getLockTaskList().values()) {
-            for (AccountEntity accountEntity : value.keySet()) {
-                if (accountEntity.getId().equals(id)) {
-                    return result.setCode(200).setMsg("已经在作战中");
-                }
+
+        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
+            if (lockTask.getAccount().getId().equals(id)) {
+                return result.setCode(200).setMsg("已经在作战中");
             }
         }
 
