@@ -23,7 +23,6 @@ import org.springframework.scheduling.support.CronTrigger;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Objects;
 
 @Slf4j
 @Configuration
@@ -90,9 +89,8 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                     dynamicInfo.getFreeTaskList().add(accountMapper.selectById(id));
                                     dynamicInfo.getUserSanList().put(id, 0);
                                 }
-                            } else if (Objects.equals(dynamicInfo.getUserSanList()
-                                    .get(id), dynamicInfo.getUserMaxSanList()
-                                    .get(id))) {
+                            } else if (dynamicInfo.getUserSanList().get(id) >= dynamicInfo.getUserMaxSanList()
+                                    .get(id)) {
                                 dynamicInfo.getFreeTaskList().add(accountMapper.selectById(id));
                                 dynamicInfo.getUserSanList().put(id, 0);
                             }
