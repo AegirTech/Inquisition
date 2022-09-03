@@ -48,7 +48,7 @@ public class TaskController {
 
     @Operation(summary = "获取任务")
     @GetMapping("/getTask")
-    public Result<AccountEntity> getTask(String deviceToken) {
+    public synchronized Result<AccountEntity> getTask(String deviceToken) {
         Result<AccountEntity> result = new Result<>();
 
         //重复请求检查
@@ -70,23 +70,14 @@ public class TaskController {
             while (iterator.hasNext()) {
                 account = iterator.next();
 
-                //悲观锁
-                if (dynamicInfo.getPccLock().containsKey(account.getId())) {
-                    continue;
-                } else {
-                    dynamicInfo.getPccLock().put(account.getId(), deviceToken);
-                }
-
                 //时间检查，不在激活区间则跳转到下一个判断
                 if (!taskService.checkActivationTime(account)) {
                     iterator.remove();
-                    dynamicInfo.getPccLock().remove(account.getId());
                     continue;
                 }
 
                 //B服限制检查
                 if (account.getBLimit() == 1 && !account.getBLimitDevice().contains(deviceToken)) {
-                    dynamicInfo.getPccLock().remove(account.getId());
                     continue;
                 }
 
@@ -100,7 +91,6 @@ public class TaskController {
             //检查是已经遍历完整个列表
             if (!hit) {
                 //没有可用的任务
-                dynamicInfo.getPccLock().remove(account.getId());
                 return result.setCode(200)
                         .setMsg("没有可用任务")
                         .setData(null);
@@ -117,7 +107,6 @@ public class TaskController {
 
             //移出等待队列
             iterator.remove();
-            dynamicInfo.getPccLock().remove(account.getId());
 
             //理智归零
             dynamicInfo.getUserSanList().put(account.getId(), 0);
