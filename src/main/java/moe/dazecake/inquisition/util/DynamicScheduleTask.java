@@ -69,14 +69,26 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                         if (dynamicInfo.getLockTaskList().stream().noneMatch(e -> e.getAccount().getId().equals(id))) {
                             dynamicInfo.getUserSanList().put(id, dynamicInfo.getUserSanList().get(id) + 1);
                             if (dynamicInfo.getUserSanList().get(id) == dynamicInfo.getUserMaxSanList().get(id) - 10) {
-                                taskService.messagePush(accountMapper.selectById(id), "作战预告", "您的账号最快将在30" +
-                                        "分钟后开始作战，若您当前仍在线，请注意合理把握时间，避免被强制下线\n\n" +
-                                        "若您需要轮空本次作战，请前往面板-->设置-->冻结，手动冻结账号来进行轮空\n\n" +
-                                        "当前理智: " +
-                                        dynamicInfo.getUserSanList().get(id) +
-                                        "/" +
-                                        dynamicInfo.getUserMaxSanList().get(id) + "\n\n" +
-                                        "(可能存在误差，仅供参考)");
+                                var account = accountMapper.selectById(id);
+
+                                //过期预检
+                                if (accountMapper.selectById(id).getExpireTime()
+                                        .isAfter(LocalDateTime.now()) && account.getDelete() != 1) {
+                                    taskService.messagePush(account, "作战预告", "您的账号最快将在30" +
+                                            "分钟后开始作战，若您当前仍在线，请注意合理把握时间，避免被强制下线\n\n" +
+                                            "若您需要轮空本次作战，请前往面板-->设置-->冻结，手动冻结账号来进行轮空\n\n" +
+                                            "当前理智: " +
+                                            dynamicInfo.getUserSanList().get(id) +
+                                            "/" +
+                                            dynamicInfo.getUserMaxSanList().get(id) + "\n\n" +
+                                            "(可能存在误差，仅供参考)");
+                                } else {
+                                    taskService.messagePush(account, "到期提醒", "您的账号已到期，作战已暂停，" +
+                                            "若仍需托管请及时续费");
+                                    dynamicInfo.getUserSanList().remove(id);
+                                    dynamicInfo.getUserMaxSanList().remove(id);
+                                }
+
                             } else if (dynamicInfo.getUserSanList().get(id) >= dynamicInfo.getUserMaxSanList()
                                     .get(id) - 5) {
                                 var freeDeviceNum = 0;

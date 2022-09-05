@@ -269,8 +269,13 @@ public class UserController {
         if (account != null) {
             account.setFreeze(0);
             accountMapper.updateById(account);
-            dynamicInfo.getUserSanList().put(account.getId(), 115);
-            dynamicInfo.getUserMaxSanList().put(account.getId(), 135);
+            if (dynamicInfo.getUserMaxSanList().containsKey(account.getId())) {
+                dynamicInfo.getUserSanList().put(account.getId(),
+                        dynamicInfo.getUserMaxSanList().get(account.getId()) - 20);
+            } else {
+                dynamicInfo.getUserSanList().put(account.getId(), 80);
+                dynamicInfo.getUserMaxSanList().put(account.getId(), 100);
+            }
             result.setCode(200)
                     .setMsg("success");
         } else {
