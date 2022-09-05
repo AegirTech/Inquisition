@@ -42,7 +42,8 @@ public class RunScript implements ApplicationRunner {
         if (file.exists()) {
             log.info("检测到数据文件，正在读取...");
             Gson gson = new Gson();
-            dynamicInfo = gson.fromJson(new BufferedReader(new FileReader(file)), DynamicInfo.class);
+            dynamicInfo.load(gson.fromJson(new BufferedReader(new FileReader(file)), DynamicInfo.class));
+
             log.info("读取完成");
         } else {
             log.info("未检测到数据文件，正在初始化...");

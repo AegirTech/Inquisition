@@ -81,8 +81,11 @@ public class TaskController {
                     continue;
                 }
 
-                hit = true;
-                break;
+                //冻结判断，不处于冻结状态则返回任务
+                if (!taskService.checkFreeze(account)) {
+                    hit = true;
+                    break;
+                }
             }
 
             //检查是已经遍历完整个列表

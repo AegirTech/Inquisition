@@ -33,4 +33,15 @@ public class DynamicInfo {
 
     HashMap<Long,Integer> userMaxSanList = new HashMap<>();
 
+    public void load(DynamicInfo dynamicInfo) {
+        this.setCounter(dynamicInfo.getCounter());
+        this.setDeviceStatusMap(dynamicInfo.getDeviceStatusMap());
+        this.setFreeTaskList(dynamicInfo.getFreeTaskList());
+        this.setFreezeTaskList(dynamicInfo.getFreezeTaskList());
+        this.setHaltList(dynamicInfo.getHaltList());
+        this.setLockTaskList(dynamicInfo.getLockTaskList());
+        this.setUserMaxSanList(dynamicInfo.getUserMaxSanList());
+        this.setUserSanList(dynamicInfo.getUserSanList());
+    }
+
 }
