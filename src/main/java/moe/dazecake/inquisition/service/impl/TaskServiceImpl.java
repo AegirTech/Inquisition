@@ -312,6 +312,7 @@ public class TaskServiceImpl implements TaskService {
                         forceHaltTask(account);
                         account.setFreeze(1);
                         accountMapper.updateById(account);
+                        dynamicInfo.getUserSanList().remove(account.getId());
                         messagePush(account, "账号异常", "您的账号密码有误，请在面板更新正确的账号密码，否则托管将无法继续进行");
                     }
                 } else if (account.getServer() == 1) {
@@ -322,6 +323,7 @@ public class TaskServiceImpl implements TaskService {
                             account.setBLimit(0);
                             account.getBLimitDevice().clear();
                             accountMapper.updateById(account);
+                            dynamicInfo.getUserSanList().remove(account.getId());
                             messagePush(account, "账号异常", "您近期登陆的设备较多，已被B服限制登陆，请立即修改密码并于面板更新密码,否则托管将无法继续进行");
                         } else {
                             account.setBLimit(1);
@@ -333,13 +335,16 @@ public class TaskServiceImpl implements TaskService {
                         forceHaltTask(account);
                         account.setFreeze(1);
                         accountMapper.updateById(account);
+                        dynamicInfo.getUserSanList().remove(account.getId());
                         messagePush(account, "账号异常", "您的账号密码有误，请在面板更新正确的账号密码，否则托管将无法继续进行");
                     }
                 }
             }
             default: {
-                //归还
-                dynamicInfo.getFreeTaskList().add(account);
+                //强停
+                account.setFreeze(1);
+                accountMapper.updateById(account);
+                dynamicInfo.getUserSanList().remove(account.getId());
                 dynamicInfo.getLockTaskList().removeIf(e -> e.getDeviceToken().equals(deviceToken));
                 break;
             }
