@@ -5,10 +5,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
+import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.DeviceEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
+import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
+import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
 import moe.dazecake.inquisition.util.Result;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +29,12 @@ public class LogController {
 
     @Resource
     DeviceMapper deviceMapper;
+
+    @Resource
+    TaskServiceImpl taskService;
+
+    @Resource
+    AccountMapper accountMapper;
 
     @Operation(summary = "增加日志")
     @PostMapping("/addLog")
@@ -45,6 +54,18 @@ public class LogController {
                         .setTime(LocalDateTime.now());
 
                 logMapper.insert(logEntity);
+
+                if (logEntity.getDetail().contains("高级资深干员")) {
+                    taskService.messagePush(accountMapper.selectOne(Wrappers.<AccountEntity>lambdaQuery()
+                                    .eq(AccountEntity::getAccount, logEntity.getAccount())),
+                            "公开招募标签提醒",
+                            "恭喜你获得了高级资深干员tag，快去看看吧！");
+                } else if (logEntity.getDetail().contains("资深干员")) {
+                    taskService.messagePush(accountMapper.selectOne(Wrappers.<AccountEntity>lambdaQuery()
+                                    .eq(AccountEntity::getAccount, logEntity.getAccount())),
+                            "公开招募标签提醒",
+                            "恭喜你获得了资深干员tag，快去看看吧！");
+                }
 
                 result.setCode(200)
                         .setMsg("success")
