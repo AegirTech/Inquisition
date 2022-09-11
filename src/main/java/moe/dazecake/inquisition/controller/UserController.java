@@ -590,6 +590,7 @@ public class UserController {
             default:
                 throw new IllegalStateException("Unexpected value: " + cdkEntity.getType());
         }
+        accountEntity.setFreeze(0);
     }
 
 }

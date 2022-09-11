@@ -23,6 +23,7 @@ import org.springframework.scheduling.support.CronTrigger;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
 
 @Slf4j
 @Configuration
@@ -65,7 +66,13 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
         taskRegistrar.addTriggerTask(
                 () -> {
                     log.info("正在刷新用户理智: " + LocalDateTime.now().toLocalTime());
-                    for (Long id : dynamicInfo.getUserSanList().keySet()) {
+                    Iterator<Long> iterator = dynamicInfo.getUserSanList().keySet().iterator();
+                    while (iterator.hasNext()) {
+                        Long id = iterator.next();
+                        if (id < 0) {
+                            iterator.remove();
+                            continue;
+                        }
                         if (dynamicInfo.getLockTaskList().stream().noneMatch(e -> e.getAccount().getId().equals(id))) {
                             dynamicInfo.getUserSanList().put(id, dynamicInfo.getUserSanList().get(id) + 1);
                             if (dynamicInfo.getUserSanList().get(id) == dynamicInfo.getUserMaxSanList().get(id) - 10) {

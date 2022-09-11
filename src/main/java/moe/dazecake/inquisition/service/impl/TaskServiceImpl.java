@@ -341,11 +341,9 @@ public class TaskServiceImpl implements TaskService {
                 }
             }
             default: {
-                //强停
-                account.setFreeze(1);
-                accountMapper.updateById(account);
-                dynamicInfo.getUserSanList().remove(account.getId());
+                dynamicInfo.getFreeTaskList().add(account);
                 dynamicInfo.getLockTaskList().removeIf(e -> e.getDeviceToken().equals(deviceToken));
+                dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
                 break;
             }
         }
