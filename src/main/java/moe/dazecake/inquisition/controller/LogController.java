@@ -5,20 +5,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
-import moe.dazecake.inquisition.entity.AccountEntity;
-import moe.dazecake.inquisition.entity.DeviceEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
-import moe.dazecake.inquisition.mapper.AccountMapper;
-import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
-import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
+import moe.dazecake.inquisition.service.impl.LogServiceImpl;
 import moe.dazecake.inquisition.util.Result;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Objects;
 
 @Tag(name = "日志接口")
 @ResponseBody
@@ -28,56 +22,14 @@ public class LogController {
     LogMapper logMapper;
 
     @Resource
-    DeviceMapper deviceMapper;
-
-    @Resource
-    TaskServiceImpl taskService;
-
-    @Resource
-    AccountMapper accountMapper;
+    LogServiceImpl logService;
 
     @Operation(summary = "增加日志")
     @PostMapping("/addLog")
     public Result<String> addLog(@RequestBody LogEntity logEntity, String deviceToken) {
         Result<String> result = new Result<>();
-        logEntity.setId(0L);
 
-        if (Objects.equals(deviceToken, "system")) {
-            logMapper.insert(logEntity);
-            return null;
-        } else {
-            var device = deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
-                    .eq(DeviceEntity::getDeviceToken, deviceToken));
-
-            if (device != null && logEntity.getTitle() != null) {
-                logEntity.setFrom(deviceToken)
-                        .setTime(LocalDateTime.now());
-
-                logMapper.insert(logEntity);
-
-                if (logEntity.getDetail().contains("高级资深干员")) {
-                    taskService.messagePush(accountMapper.selectOne(Wrappers.<AccountEntity>lambdaQuery()
-                                    .eq(AccountEntity::getAccount, logEntity.getAccount())),
-                            "公开招募标签提醒",
-                            "恭喜你获得了高级资深干员tag，快去看看吧！");
-                } else if (logEntity.getDetail().contains("资深干员")) {
-                    taskService.messagePush(accountMapper.selectOne(Wrappers.<AccountEntity>lambdaQuery()
-                                    .eq(AccountEntity::getAccount, logEntity.getAccount())),
-                            "公开招募标签提醒",
-                            "恭喜你获得了资深干员tag，快去看看吧！");
-                }
-
-                result.setCode(200)
-                        .setMsg("success")
-                        .setData(null);
-            } else {
-                result.setCode(403)
-                        .setMsg("fail")
-                        .setData(null);
-            }
-
-
-        }
+        logService.addLog(logEntity, deviceToken);
 
         return result;
     }

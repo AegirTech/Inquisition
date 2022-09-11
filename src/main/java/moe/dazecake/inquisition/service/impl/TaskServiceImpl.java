@@ -1,7 +1,6 @@
 package moe.dazecake.inquisition.service.impl;
 
 import com.zjiecode.wxpusher.client.bean.Message;
-import moe.dazecake.inquisition.controller.LogController;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
@@ -25,7 +24,7 @@ public class TaskServiceImpl implements TaskService {
     DynamicInfo dynamicInfo;
 
     @Resource
-    LogController logController;
+    LogServiceImpl logService;
 
     @Resource
     EmailServiceImpl emailService;
@@ -272,7 +271,13 @@ public class TaskServiceImpl implements TaskService {
                 .setAccount(account.getAccount())
                 .setTime(LocalDateTime.now());
 
-        logController.addLog(logEntity, deviceToken);
+        if (logEntity.getDetail().contains("高级资深干员")) {
+            messagePush(account, "公开招募标签提醒", "恭喜你获得了高级资深干员tag，快去看看吧！");
+        } else if (logEntity.getDetail().contains("资深干员")) {
+            messagePush(account, "公开招募标签提醒", "恭喜你获得了资深干员tag，快去看看吧！");
+        }
+
+        logService.addLog(logEntity, deviceToken);
     }
 
     @Override
