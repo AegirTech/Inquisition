@@ -75,7 +75,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                         }
                         if (dynamicInfo.getLockTaskList().stream().noneMatch(e -> e.getAccount().getId().equals(id))) {
                             dynamicInfo.getUserSanList().put(id, dynamicInfo.getUserSanList().get(id) + 1);
-                            if (dynamicInfo.getUserSanList().get(id) == dynamicInfo.getUserMaxSanList().get(id) - 10) {
+                            if (dynamicInfo.getUserSanList().get(id) == dynamicInfo.getUserMaxSanList().get(id) - 20) {
                                 var account = accountMapper.selectById(id);
 
                                 //过期预检
@@ -97,7 +97,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                 }
 
                             } else if (dynamicInfo.getUserSanList().get(id) >= dynamicInfo.getUserMaxSanList()
-                                    .get(id) - 5) {
+                                    .get(id) - 15) {
                                 var freeDeviceNum = 0;
                                 for (String deviceToken : dynamicInfo.getDeviceStatusMap().keySet()) {
                                     if (dynamicInfo.getDeviceStatusMap().get(deviceToken) == 1) {
