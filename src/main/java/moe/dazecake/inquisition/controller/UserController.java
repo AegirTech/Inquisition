@@ -78,6 +78,15 @@ public class UserController {
         cdkEntity.setUsed(1);
         cdkMapper.updateById(cdkEntity);
 
+        if (accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
+                .eq(AccountEntity::getAccount, accountEntity.getAccount())).size() != 0) {
+            cdkEntity.setUsed(0);
+            cdkMapper.updateById(cdkEntity);
+            result.setCode(403);
+            result.setMsg("账号已存在，无法重复注册");
+            return result;
+        }
+
         if (accountEntity.getServer() == 0) {
             if (!httpService.isOfficialAccountWork(accountEntity.getAccount(), accountEntity.getPassword())) {
                 cdkEntity.setUsed(0);
