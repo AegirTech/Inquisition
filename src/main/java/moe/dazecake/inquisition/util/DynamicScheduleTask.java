@@ -23,7 +23,9 @@ import org.springframework.scheduling.support.CronTrigger;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 
 @Slf4j
 @Configuration
@@ -62,6 +64,16 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
+        //队列巡检
+        taskRegistrar.addTriggerTask(
+                () -> {
+                    log.info("正在巡检队列: " + LocalDateTime.now().toLocalTime());
+                    //检查等待队列中是否存在重复项，若存在删除多余的重复项
+                    LinkedHashSet<AccountEntity> set = new LinkedHashSet<>(dynamicInfo.freeTaskList);
+                    dynamicInfo.freeTaskList = new ArrayList<>(set);
+                },
+                triggerContext -> new CronTrigger("0 */1 * * * *").nextExecutionTime(triggerContext)
+        );
         //理智刷新
         taskRegistrar.addTriggerTask(
                 () -> {
