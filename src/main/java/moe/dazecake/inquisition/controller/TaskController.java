@@ -176,7 +176,7 @@ public class TaskController {
                 .orElseThrow().getAccount();
 
         //记录日志
-        taskService.log(deviceToken, account, "WARN", "任务失败", "任务失败,请登陆面板查看失败原因", imageUrl);
+        taskService.log(deviceToken, account, "WARN", "任务失败", "任务失败,请登陆面板查看失败原因: " + type, imageUrl);
 
         //异常处理
         taskService.errorHandle(account, deviceToken, type);

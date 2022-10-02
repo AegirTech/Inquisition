@@ -346,7 +346,7 @@ public class TaskServiceImpl implements TaskService {
                 }
             }
             default: {
-                dynamicInfo.getFreeTaskList().add(account);
+                messagePush(account, "账号异常", "您的存在异常，请立即联系管理员协助排查，否则托管将无法继续进行");
                 dynamicInfo.getLockTaskList().removeIf(e -> e.getDeviceToken().equals(deviceToken));
                 dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
                 break;
