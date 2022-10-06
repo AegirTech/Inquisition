@@ -17,6 +17,10 @@ import java.util.HashMap;
 @AllArgsConstructor
 public class DynamicInfo {
 
+    String arklightsMD5;
+
+    String arklightsBateMD5;
+
     HashMap<String, Integer> deviceStatusMap = new HashMap<>();
 
     ArrayList<AccountEntity> freeTaskList = new ArrayList<>();

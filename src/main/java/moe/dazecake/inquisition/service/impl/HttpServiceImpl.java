@@ -1,16 +1,29 @@
 package moe.dazecake.inquisition.service.impl;
 
 import com.google.gson.Gson;
+import com.qcloud.cos.COSClient;
+import com.qcloud.cos.ClientConfig;
+import com.qcloud.cos.auth.BasicCOSCredentials;
+import com.qcloud.cos.http.HttpMethodName;
+import com.qcloud.cos.model.PutObjectRequest;
+import com.qcloud.cos.region.Region;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.entity.HttpEntitySet.BiliLoginRes;
 import moe.dazecake.inquisition.entity.HttpEntitySet.BiliPerLoginRes;
 import moe.dazecake.inquisition.entity.HttpEntitySet.OfficialLoginRes;
 import moe.dazecake.inquisition.service.HttpService;
+import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Encoder;
 import okhttp3.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.crypto.Cipher;
+import java.io.*;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPublicKey;
@@ -18,6 +31,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 public class HttpServiceImpl implements HttpService {
 
@@ -102,6 +116,24 @@ public class HttpServiceImpl implements HttpService {
         return Base64.getEncoder().encodeToString(cipher.doFinal(plain.getBytes(StandardCharsets.UTF_8)));
     }
 
+    @Value("${storage.oss.enable}")
+    private boolean ossEnable;
+
+    @Value("${storage.oss.secretId}")
+    private String secretId;
+
+    @Value("${storage.oss.secretKey}")
+    private String secretKey;
+
+    @Value("${storage.oss.bucket}")
+    private String bucketName;
+
+    @Value("${storage.oss.region}")
+    private String regionName;
+
+    @Resource
+    DynamicInfo dynamicInfo;
+
     @SneakyThrows
     @Override
     public boolean isOfficialAccountWork(String phone, String password) {
@@ -138,6 +170,117 @@ public class HttpServiceImpl implements HttpService {
             return false;
         }
 
+    }
+
+    @Override
+    public String uploadFile(MultipartFile file, String md5, boolean isBate) {
+
+        COSClient cosClient = new COSClient(
+                new BasicCOSCredentials(secretId, secretKey),
+                new ClientConfig(new Region(regionName))
+        );
+
+        String scriptName;
+        String md5FileName;
+        try {
+            //脚本
+            File scriptFile = File.createTempFile(String.valueOf(System.currentTimeMillis()), ".lr");
+            file.transferTo(scriptFile);
+
+            //生成一个file并写入md5
+            File md5File = File.createTempFile(String.valueOf(System.currentTimeMillis()), ".md5");
+            FileWriter fileWriter = new FileWriter(md5File);
+            fileWriter.write(md5);
+            fileWriter.close();
+
+            if (isBate) {
+                scriptName = "script_bate.lr";
+                md5FileName = "script_bate.md5";
+            } else {
+                scriptName = "script.lr";
+                md5FileName = "script.md5";
+            }
+            // 上传至 COS
+            PutObjectRequest objectRequest = new PutObjectRequest(bucketName, scriptName, scriptFile);
+            cosClient.putObject(objectRequest);
+
+            PutObjectRequest md5Request = new PutObjectRequest(bucketName, md5FileName, md5File);
+            cosClient.putObject(md5Request);
+
+            if (isBate) {
+                dynamicInfo.setArklightsBateMD5(md5);
+            } else {
+                dynamicInfo.setArklightsMD5(md5);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            cosClient.shutdown();
+        }
+        return "上传成功";
+    }
+
+    @Override
+    public String getDownloadUrl(boolean isBate, boolean isMD5) {
+
+        COSClient cosClient = new COSClient(
+                new BasicCOSCredentials(secretId, secretKey),
+                new ClientConfig(new Region(regionName))
+        );
+
+        String key;
+
+        if (isBate) {
+            key = "script_bate.lr";
+        } else {
+            key = "script.lr";
+        }
+
+        if (isMD5) {
+            key = key.replace(".lr", ".md5");
+        }
+
+        Date expirationDate = new Date(System.currentTimeMillis() + 15 * 60 * 1000);
+
+        HttpMethodName method = HttpMethodName.GET;
+
+        URL url = cosClient.generatePresignedUrl(bucketName, key, expirationDate, method);
+
+        cosClient.shutdown();
+
+        return url.toString();
+    }
+
+    @SneakyThrows
+    @Override
+    public void updateLatestMD5() {
+
+        if (!ossEnable) {
+            return;
+        }
+
+        var url = getDownloadUrl(false, true);
+        var urlBate = getDownloadUrl(true, true);
+
+        //从url和urlBate下载md5文件并读取文件内容到dynamicInfo.arlkightsMD5和dynamicInfo.arlkightsBateMD5
+        try (var in = new BufferedReader(new InputStreamReader(new URL(url).openStream()))) {
+            var s = in.readLine();
+            dynamicInfo.setArklightsMD5(s);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try (var in = new BufferedReader(new InputStreamReader(new URL(urlBate).openStream()))) {
+            var s = in.readLine();
+            dynamicInfo.setArklightsBateMD5(s);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        log.info("更新md5成功");
+        log.info("正式版md5: " + dynamicInfo.getArklightsMD5());
+        log.info("测试版md5: " + dynamicInfo.getArklightsBateMD5());
     }
 
 }

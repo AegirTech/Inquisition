@@ -9,6 +9,7 @@ import moe.dazecake.inquisition.entity.DeviceEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.AdminMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
+import moe.dazecake.inquisition.service.impl.HttpServiceImpl;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,9 @@ public class RunScript implements ApplicationRunner {
 
     @Resource
     AdminMapper adminMapper;
+
+    @Resource
+    HttpServiceImpl httpService;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -77,6 +81,9 @@ public class RunScript implements ApplicationRunner {
                 dynamicInfo.getUserSanList().put(account.getId(), 0);
                 dynamicInfo.getUserMaxSanList().put(account.getId(), 135);
             }
+
+            httpService.updateLatestMD5();
+
             log.info("审判庭初始化完成");
         }
     }
