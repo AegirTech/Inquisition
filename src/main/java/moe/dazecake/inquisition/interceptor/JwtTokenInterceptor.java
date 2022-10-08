@@ -1,20 +1,27 @@
 package moe.dazecake.inquisition.interceptor;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import moe.dazecake.inquisition.annotation.Login;
+import moe.dazecake.inquisition.annotation.ProKey;
 import moe.dazecake.inquisition.annotation.UserLogin;
+import moe.dazecake.inquisition.entity.ProUserEntity;
+import moe.dazecake.inquisition.mapper.ProUserMapper;
 import moe.dazecake.inquisition.util.JWTUtils;
-
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Objects;
 
 @Component
 public class JwtTokenInterceptor implements HandlerInterceptor {
+
+    @Resource
+    private ProUserMapper proUserMapper;
 
     @Override
     public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,
@@ -29,6 +36,19 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
         }
 
         HandlerMethod method = (HandlerMethod) handler;
+
+        //ProKey验证
+        var proKey = method.getMethod().getAnnotation(ProKey.class);
+        if (proKey != null) {
+            var proUser = proUserMapper.selectOne(
+                    Wrappers.<ProUserEntity>lambdaQuery()
+                            .eq(ProUserEntity::getAuthorization, token)
+            );
+            if (proUser == null) {
+                response.setStatus(403);
+                return false;
+            }
+        }
 
         //管理员登陆验证
         var login = method.getMethod().getAnnotation(Login.class);

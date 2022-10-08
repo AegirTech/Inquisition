@@ -2,6 +2,8 @@ package moe.dazecake.inquisition.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import moe.dazecake.inquisition.annotation.Login;
+import moe.dazecake.inquisition.annotation.ProKey;
 import moe.dazecake.inquisition.service.impl.HttpServiceImpl;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Result;
@@ -24,6 +26,7 @@ public class DistributeController {
     @Resource
     DynamicInfo dynamicInfo;
 
+    @Login
     @Operation(summary = "上传热更新包")
     @PostMapping("/uploadHotUpdatePackage")
     public Result<String> uploadHotUpdatePackage(@RequestParam(value = "file") MultipartFile file, String md5,
@@ -47,6 +50,7 @@ public class DistributeController {
         return result;
     }
 
+    @ProKey
     @Operation(summary = "检查是否需要更新")
     @GetMapping("/checkUpdate")
     public Result<Boolean> checkUpdate(String md5, boolean isBate) {
@@ -77,6 +81,7 @@ public class DistributeController {
         return result;
     }
 
+    @ProKey
     @Operation(summary = "获取下载链接")
     @GetMapping("/getDownloadUrl")
     public Result<String> getDownloadUrl(boolean isBate) {
@@ -92,6 +97,7 @@ public class DistributeController {
                 .setMsg("success");
     }
 
+    @ProKey
     @Operation(summary = "获取文件MD5")
     @GetMapping("/getFileMD5")
     public Result<String> getFileMD5(boolean isBate) {

@@ -5,6 +5,7 @@ import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.AdminEntity;
+import moe.dazecake.inquisition.entity.ProUserEntity;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.Date;
@@ -29,6 +30,15 @@ public class JWTUtils {
         JWTCreator.Builder builder = JWT.create();
         builder.withClaim("id", accountEntity.getId())
                 .withClaim("username", accountEntity.getAccount())
+                .withClaim("type", "user")
+                .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION));
+        return builder.sign(Algorithm.HMAC256(SECRET));
+    }
+
+    public static String generateTokenForProUser(ProUserEntity proUserEntity) {
+        JWTCreator.Builder builder = JWT.create();
+        builder.withClaim("id", proUserEntity.getId())
+                .withClaim("username", proUserEntity.getUsername())
                 .withClaim("type", "user")
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION));
         return builder.sign(Algorithm.HMAC256(SECRET));
