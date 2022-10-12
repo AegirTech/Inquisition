@@ -228,11 +228,9 @@ public class TaskController {
     public Result<String> tempRemoveTask(Long id) {
         Result<String> result = new Result<>();
 
-        var iterator = dynamicInfo.getFreeTaskList().iterator();
-        while (iterator.hasNext()) {
-            var account = iterator.next();
+        for (AccountEntity account : dynamicInfo.getFreeTaskList()) {
             if (Objects.equals(account.getId(), id)) {
-                iterator.remove();
+                taskService.forceHaltTask(account);
                 return result.setCode(200)
                         .setMsg("success")
                         .setData(null);
