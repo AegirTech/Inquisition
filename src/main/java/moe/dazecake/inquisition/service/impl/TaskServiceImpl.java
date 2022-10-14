@@ -422,7 +422,7 @@ public class TaskServiceImpl implements TaskService {
             dynamicInfo.getUserSanList().put(id, dynamicInfo.getUserSanList().get(id) + 1);
 
             //检查是否到达阈值 阈值为最大值-40
-            if (dynamicInfo.getUserSanList().get(id) == dynamicInfo.getUserMaxSanList().get(id) - 40) {
+            if (dynamicInfo.getUserSanList().get(id) >= dynamicInfo.getUserMaxSanList().get(id) - 40) {
 
                 //检查待分配队列中是否有重复任务
                 dynamicInfo.getFreeTaskList().removeIf(accountEntity -> accountEntity.getId().equals(account.getId()));

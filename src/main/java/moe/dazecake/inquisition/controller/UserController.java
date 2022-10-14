@@ -408,6 +408,8 @@ public class UserController {
         if (account != null) {
             activateCDK(account, cdkEntity);
             accountMapper.updateById(account);
+            dynamicInfo.getUserSanList().put(account.getId(), 135);
+            dynamicInfo.getUserMaxSanList().put(account.getId(), 135);
         }
         return result.setCode(200).setMsg("success").setData(null);
     }
