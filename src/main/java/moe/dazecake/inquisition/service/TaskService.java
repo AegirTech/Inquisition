@@ -15,7 +15,7 @@ public interface TaskService {
 
     void errorHandle(AccountEntity account, String deviceToken, String type);
 
-    void forceHaltTask(AccountEntity account);
+    void forceHaltTask(AccountEntity account, boolean isHalt);
 
     void calculatingSan();
 

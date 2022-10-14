@@ -47,7 +47,10 @@ public class HeartBeatController {
     public Result<String> postHaltComplete(@RequestBody HeartBeatEntity heartBeat) {
         Result<String> result = new Result<>();
 
-        dynamicInfo.getHaltList().remove(heartBeat.getDeviceToken());
+        //移除所有停机列表
+        while (dynamicInfo.getHaltList().contains(heartBeat.getDeviceToken())) {
+            dynamicInfo.getHaltList().remove(heartBeat.getDeviceToken());
+        }
 
         return result.setCode(200).setMsg("success");
     }

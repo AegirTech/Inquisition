@@ -14,10 +14,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -305,7 +302,7 @@ public class TaskServiceImpl implements TaskService {
 
         switch (type) {
             case ("lineBusy"): {
-                forceHaltTask(account);
+                forceHaltTask(account, false);
                 dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
                 dynamicInfo.getFreeTaskList().add(account);
                 break;
@@ -313,11 +310,11 @@ public class TaskServiceImpl implements TaskService {
             case ("accountError"): {
                 if (account.getServer() == 0) {
                     if (httpService.isOfficialAccountWork(account.getAccount(), account.getPassword())) {
-                        forceHaltTask(account);
+                        forceHaltTask(account, false);
                         dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
                         dynamicInfo.getFreeTaskList().add(account);
                     } else {
-                        forceHaltTask(account);
+                        forceHaltTask(account, false);
                         account.setFreeze(1);
                         accountMapper.updateById(account);
                         dynamicInfo.getUserSanList().remove(account.getId());
@@ -327,7 +324,7 @@ public class TaskServiceImpl implements TaskService {
                 } else if (account.getServer() == 1) {
                     if (httpService.isBiliAccountWork(account.getAccount(), account.getPassword())) {
                         if (account.getBLimitDevice().size() <= 2) {
-                            forceHaltTask(account);
+                            forceHaltTask(account, false);
                             account.setFreeze(1);
                             account.setBLimit(0);
                             account.getBLimitDevice().clear();
@@ -338,12 +335,12 @@ public class TaskServiceImpl implements TaskService {
                         } else {
                             account.setBLimit(1);
                             accountMapper.updateById(account);
-                            forceHaltTask(account);
+                            forceHaltTask(account, false);
                             dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
                             dynamicInfo.getFreeTaskList().add(account);
                         }
                     } else {
-                        forceHaltTask(account);
+                        forceHaltTask(account, false);
                         account.setFreeze(1);
                         accountMapper.updateById(account);
                         dynamicInfo.getUserSanList().remove(account.getId());
@@ -354,21 +351,23 @@ public class TaskServiceImpl implements TaskService {
             }
             default: {
                 messagePush(account, "账号异常", "您的存在异常，请立即联系管理员协助排查，否则托管将无法继续进行");
-                forceHaltTask(account);
+                forceHaltTask(account, false);
                 break;
             }
         }
     }
 
     @Override
-    public void forceHaltTask(AccountEntity account) {
+    public void forceHaltTask(AccountEntity account, boolean isHalt) {
         //清除等待队列
         dynamicInfo.getFreeTaskList().remove(account);
 
         //清除上锁队列
         for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
             if (lockTask.getAccount().getId().equals(account.getId())) {
-                dynamicInfo.getHaltList().add(lockTask.getDeviceToken());
+                if (isHalt) {
+                    dynamicInfo.getHaltList().add(lockTask.getDeviceToken());
+                }
                 dynamicInfo.getLockTaskList().remove(lockTask);
                 break;
             }

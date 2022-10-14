@@ -148,7 +148,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                     .setTime(LocalDateTime.now());
                             logController.addLog(logEntity, "system");
 
-                            taskService.forceHaltTask(lockTask.getAccount());
+                            taskService.forceHaltTask(lockTask.getAccount(), true);
                             num++;
                         }
                     }

@@ -83,7 +83,8 @@ public class TaskController {
 
                 //重复分配任务检查
                 AccountEntity finalAccount = account;
-                if (dynamicInfo.getLockTaskList().stream().anyMatch(lockTask -> lockTask.getAccount().getId().equals(finalAccount.getId()))) {
+                if (dynamicInfo.getLockTaskList().stream()
+                        .anyMatch(lockTask -> lockTask.getAccount().getId().equals(finalAccount.getId()))) {
                     iterator.remove();
                     continue;
                 }
@@ -237,7 +238,7 @@ public class TaskController {
 
         for (AccountEntity account : dynamicInfo.getFreeTaskList()) {
             if (Objects.equals(account.getId(), id)) {
-                taskService.forceHaltTask(account);
+                taskService.forceHaltTask(account, true);
                 return result.setCode(200)
                         .setMsg("success")
                         .setData(null);
