@@ -48,3 +48,11 @@ cron: '0 0 4,12,20 * * ?'
 wx-pusher:
   enable: false
   app-token: xxxxxxx
+
+storage:
+  oss:
+    enable: false
+    secretId: xxx
+    secretKey: xxx
+    bucket: xxx
+    region: xxx
