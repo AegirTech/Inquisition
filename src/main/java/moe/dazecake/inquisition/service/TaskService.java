@@ -17,4 +17,6 @@ public interface TaskService {
 
     void forceHaltTask(AccountEntity account);
 
+    void calculatingSan();
+
 }

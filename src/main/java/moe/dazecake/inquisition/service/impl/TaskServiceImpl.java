@@ -15,6 +15,8 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -303,20 +305,23 @@ public class TaskServiceImpl implements TaskService {
 
         switch (type) {
             case ("lineBusy"): {
-                dynamicInfo.getLockTaskList().removeIf(e -> e.getDeviceToken().equals(deviceToken));
+                forceHaltTask(account);
                 dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
+                dynamicInfo.getFreeTaskList().add(account);
                 break;
             }
             case ("accountError"): {
                 if (account.getServer() == 0) {
                     if (httpService.isOfficialAccountWork(account.getAccount(), account.getPassword())) {
+                        forceHaltTask(account);
+                        dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
                         dynamicInfo.getFreeTaskList().add(account);
-                        dynamicInfo.getLockTaskList().removeIf(e -> e.getDeviceToken().equals(deviceToken));
                     } else {
                         forceHaltTask(account);
                         account.setFreeze(1);
                         accountMapper.updateById(account);
                         dynamicInfo.getUserSanList().remove(account.getId());
+                        dynamicInfo.getUserMaxSanList().remove(account.getId());
                         messagePush(account, "账号异常", "您的账号密码有误，请在面板更新正确的账号密码，否则托管将无法继续进行");
                     }
                 } else if (account.getServer() == 1) {
@@ -328,18 +333,21 @@ public class TaskServiceImpl implements TaskService {
                             account.getBLimitDevice().clear();
                             accountMapper.updateById(account);
                             dynamicInfo.getUserSanList().remove(account.getId());
+                            dynamicInfo.getUserMaxSanList().remove(account.getId());
                             messagePush(account, "账号异常", "您近期登陆的设备较多，已被B服限制登陆，请立即修改密码并于面板更新密码,否则托管将无法继续进行");
                         } else {
                             account.setBLimit(1);
                             accountMapper.updateById(account);
+                            forceHaltTask(account);
+                            dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
                             dynamicInfo.getFreeTaskList().add(account);
-                            dynamicInfo.getLockTaskList().removeIf(e -> e.getDeviceToken().equals(deviceToken));
                         }
                     } else {
                         forceHaltTask(account);
                         account.setFreeze(1);
                         accountMapper.updateById(account);
                         dynamicInfo.getUserSanList().remove(account.getId());
+                        dynamicInfo.getUserMaxSanList().remove(account.getId());
                         messagePush(account, "账号异常", "您的账号密码有误，请在面板更新正确的账号密码，否则托管将无法继续进行");
                     }
                 }
@@ -368,5 +376,80 @@ public class TaskServiceImpl implements TaskService {
 
         //清除冻结队列
         dynamicInfo.getFreezeTaskList().remove(account.getId());
+    }
+
+    @Override
+    public void calculatingSan() {
+        //检查两个表是否存在不同步的情况
+        dynamicInfo.getUserSanList().forEach((k, v) -> {
+            if (!dynamicInfo.getUserMaxSanList().containsKey(k)) {
+                dynamicInfo.getUserMaxSanList().put(k, 135);
+            }
+        });
+
+        //获取迭代器
+        Iterator<Map.Entry<Long, Integer>> entryIterator = dynamicInfo.getUserSanList().entrySet().iterator();
+
+        //遍历所有用户
+        while (entryIterator.hasNext()) {
+            Long id = entryIterator.next().getKey();
+
+            var account = accountMapper.selectById(id);
+
+            //检查是否已删除
+            if (account.getDelete() == 1) {
+                entryIterator.remove();
+                dynamicInfo.getUserMaxSanList().remove(id);
+                continue;
+            }
+
+            //检查是否已冻结
+            if (account.getFreeze() == 1) {
+                entryIterator.remove();
+                dynamicInfo.getUserMaxSanList().remove(id);
+                continue;
+            }
+
+            //检查是否已到期
+            if (account.getExpireTime().isBefore(LocalDateTime.now())) {
+                entryIterator.remove();
+                dynamicInfo.getUserMaxSanList().remove(id);
+                messagePush(account, "到期提醒", "您的账号已到期，作战已暂停，若仍需托管请及时续费");
+                continue;
+            }
+
+            //递增用户理智
+            dynamicInfo.getUserSanList().put(id, dynamicInfo.getUserSanList().get(id) + 1);
+
+            //检查是否到达阈值 阈值为最大值-40
+            if (dynamicInfo.getUserSanList().get(id) == dynamicInfo.getUserMaxSanList().get(id) - 40) {
+
+                //检查待分配队列中是否有重复任务
+                dynamicInfo.getFreeTaskList().removeIf(accountEntity -> accountEntity.getId().equals(account.getId()));
+
+                //加入待分配队列
+                dynamicInfo.getFreeTaskList().add(account);
+
+                //归零理智
+                dynamicInfo.getUserSanList().put(id, 0);
+
+                messagePush(account, "等待分配作战服务器", "您的理智已达到 " + dynamicInfo.getUserSanList().get(id) +
+                        "，等待分配作战服务器中，分配完成后将会自动开始作战");
+            }
+
+            //检查是否到达提醒阈值 阈值为最大值-45
+            if (dynamicInfo.getUserSanList().get(id) == dynamicInfo.getUserMaxSanList().get(id) - 45) {
+                messagePush(account, "作战预告", "您的账号最快将在30" +
+                        "分钟后开始作战，若您当前仍在线，请注意合理把握时间，避免被强制下线\n\n" +
+                        "若您需要轮空本次作战，请前往面板-->设置-->冻结，手动冻结账号来进行轮空\n\n" +
+                        "当前理智: " +
+                        dynamicInfo.getUserSanList().get(id) +
+                        "/" +
+                        dynamicInfo.getUserMaxSanList().get(id) + "\n\n" +
+                        "(可能存在误差，仅供参考)");
+            }
+
+        }
+
     }
 }

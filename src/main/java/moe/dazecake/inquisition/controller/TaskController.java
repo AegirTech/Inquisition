@@ -81,6 +81,13 @@ public class TaskController {
                     continue;
                 }
 
+                //重复分配任务检查
+                AccountEntity finalAccount = account;
+                if (dynamicInfo.getLockTaskList().stream().anyMatch(lockTask -> lockTask.getAccount().getId().equals(finalAccount.getId()))) {
+                    iterator.remove();
+                    continue;
+                }
+
                 //冻结判断，不处于冻结状态则返回任务
                 if (!taskService.checkFreeze(account)) {
                     hit = true;

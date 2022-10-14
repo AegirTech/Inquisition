@@ -24,7 +24,6 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 
 @Slf4j
@@ -78,55 +77,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
         taskRegistrar.addTriggerTask(
                 () -> {
                     log.info("正在刷新用户理智: " + LocalDateTime.now().toLocalTime());
-                    Iterator<Long> iterator = dynamicInfo.getUserSanList().keySet().iterator();
-                    while (iterator.hasNext()) {
-                        Long id = iterator.next();
-                        if (id < 0) {
-                            iterator.remove();
-                            continue;
-                        }
-                        if (dynamicInfo.getLockTaskList().stream().noneMatch(e -> e.getAccount().getId().equals(id))) {
-                            dynamicInfo.getUserSanList().put(id, dynamicInfo.getUserSanList().get(id) + 1);
-                            if (dynamicInfo.getUserSanList().get(id) == dynamicInfo.getUserMaxSanList().get(id) - 20) {
-                                var account = accountMapper.selectById(id);
-
-                                //过期预检
-                                if (accountMapper.selectById(id).getExpireTime()
-                                        .isAfter(LocalDateTime.now()) && account.getDelete() != 1) {
-                                    taskService.messagePush(account, "作战预告", "您的账号最快将在30" +
-                                            "分钟后开始作战，若您当前仍在线，请注意合理把握时间，避免被强制下线\n\n" +
-                                            "若您需要轮空本次作战，请前往面板-->设置-->冻结，手动冻结账号来进行轮空\n\n" +
-                                            "当前理智: " +
-                                            dynamicInfo.getUserSanList().get(id) +
-                                            "/" +
-                                            dynamicInfo.getUserMaxSanList().get(id) + "\n\n" +
-                                            "(可能存在误差，仅供参考)");
-                                } else {
-                                    taskService.messagePush(account, "到期提醒", "您的账号已到期，作战已暂停，" +
-                                            "若仍需托管请及时续费");
-                                    dynamicInfo.getUserSanList().remove(id);
-                                    dynamicInfo.getUserMaxSanList().remove(id);
-                                }
-
-                            } else if (dynamicInfo.getUserSanList().get(id) >= dynamicInfo.getUserMaxSanList()
-                                    .get(id) - 15) {
-                                var freeDeviceNum = 0;
-                                for (String deviceToken : dynamicInfo.getDeviceStatusMap().keySet()) {
-                                    if (dynamicInfo.getDeviceStatusMap().get(deviceToken) == 1) {
-                                        freeDeviceNum++;
-                                    }
-                                }
-                                if (freeDeviceNum > 0) {
-                                    dynamicInfo.getFreeTaskList().add(accountMapper.selectById(id));
-                                    dynamicInfo.getUserSanList().put(id, 0);
-                                }
-                            } else if (dynamicInfo.getUserSanList().get(id) >= dynamicInfo.getUserMaxSanList()
-                                    .get(id)) {
-                                dynamicInfo.getFreeTaskList().add(accountMapper.selectById(id));
-                                dynamicInfo.getUserSanList().put(id, 0);
-                            }
-                        }
-                    }
+                    taskService.calculatingSan();
                 },
                 triggerContext -> new CronTrigger("0 */6 * * * *").nextExecutionTime(triggerContext)
         );
@@ -197,9 +148,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                     .setTime(LocalDateTime.now());
                             logController.addLog(logEntity, "system");
 
-                            dynamicInfo.getHaltList().add(lockTask.getDeviceToken());
-                            dynamicInfo.getFreeTaskList().add(lockTask.getAccount());
-                            dynamicInfo.getLockTaskList().remove(lockTask);
+                            taskService.forceHaltTask(lockTask.getAccount());
                             num++;
                         }
                     }
