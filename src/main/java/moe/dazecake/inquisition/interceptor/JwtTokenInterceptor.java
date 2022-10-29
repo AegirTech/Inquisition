@@ -43,6 +43,7 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
             var proUser = proUserMapper.selectOne(
                     Wrappers.<ProUserEntity>lambdaQuery()
                             .eq(ProUserEntity::getAuthorization, token)
+                            .eq(ProUserEntity::getPermission, "pro")
             );
             if (proUser == null) {
                 response.setStatus(403);
@@ -55,6 +56,18 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
         if (login != null) {
             if (JWTUtils.verifyToken(token) && Objects.equals(JWTUtils.getType(Objects.requireNonNull(token)),
                     "admin")) {
+                return true;
+            } else {
+                response.setStatus(401);
+                return false;
+            }
+        }
+
+        //高级用户登陆验证
+        var proUserLogin = method.getMethod().getAnnotation(UserLogin.class);
+        if (proUserLogin != null) {
+            if (JWTUtils.verifyToken(token) && Objects.equals(JWTUtils.getType(Objects.requireNonNull(token)),
+                    "proUser")) {
                 return true;
             } else {
                 response.setStatus(401);

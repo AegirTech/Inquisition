@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 import moe.dazecake.inquisition.entity.ActivationDateSet.ActivationDate;
 import moe.dazecake.inquisition.entity.ConfigEntitySet.ConfigEntity;
 import moe.dazecake.inquisition.entity.NoticeEntitySet.NoticeEntity;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -88,6 +89,10 @@ public class AccountEntity {
     @Column(name = "refresh", comment = "剩余刷新次数")
     @Schema(description = "剩余刷新次数")
     Integer refresh;//剩余刷新次数
+
+    @Column(name = "agent", comment = "代理商")
+    @Schema(description = "代理商")
+    Long agent;//代理商
 
     @Column(name = "expire_time", comment = "过期时间")
     @Schema(description = "过期时间")

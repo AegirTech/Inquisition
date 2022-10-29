@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.UserLogin;
 import moe.dazecake.inquisition.entity.AccountEntity;
-import moe.dazecake.inquisition.entity.CDKEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.entity.NoticeEntitySet.NoticeEntity;
 import moe.dazecake.inquisition.entity.NoticeEntitySet.WXUID;
@@ -17,6 +16,7 @@ import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.CDKMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
+import moe.dazecake.inquisition.service.impl.CDKServiceImpl;
 import moe.dazecake.inquisition.service.impl.HttpServiceImpl;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.JWTUtils;
@@ -53,6 +53,9 @@ public class UserController {
     @Resource
     HttpServiceImpl httpService;
 
+    @Resource
+    CDKServiceImpl cdkService;
+
     @Value("${wx-pusher.app-token}")
     String appToken;
 
@@ -64,24 +67,8 @@ public class UserController {
     public Result<String> createUser(String cdk, @RequestBody AccountEntity accountEntity) {
         Result<String> result = new Result<>();
 
-        var cdkEntity = cdkMapper.selectOne(Wrappers.<CDKEntity>lambdaQuery().eq(CDKEntity::getCdk, cdk));
-        if (cdkEntity == null) {
-            result.setCode(403);
-            result.setMsg("CDK不存在");
-            return result;
-        } else if (cdkEntity.getUsed() == 1) {
-            result.setCode(403);
-            result.setMsg("CDK已使用");
-            return result;
-        }
-
-        cdkEntity.setUsed(1);
-        cdkMapper.updateById(cdkEntity);
-
         if (accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
                 .eq(AccountEntity::getAccount, accountEntity.getAccount())).size() != 0) {
-            cdkEntity.setUsed(0);
-            cdkMapper.updateById(cdkEntity);
             result.setCode(403);
             result.setMsg("账号已存在，无法重复注册");
             return result;
@@ -89,35 +76,27 @@ public class UserController {
 
         if (accountEntity.getServer() == 0) {
             if (!httpService.isOfficialAccountWork(accountEntity.getAccount(), accountEntity.getPassword())) {
-                cdkEntity.setUsed(0);
-                cdkMapper.updateById(cdkEntity);
                 return result.setCode(403).setMsg("账号或密码错误，注册需要填写的账号就是游戏账号！");
             }
         } else if (accountEntity.getServer() == 1) {
             if (!httpService.isBiliAccountWork(accountEntity.getAccount(), accountEntity.getPassword())) {
-                cdkEntity.setUsed(0);
-                cdkMapper.updateById(cdkEntity);
                 return result.setCode(403).setMsg("账号或密码错误，注册需要填写的账号就是游戏账号！");
             }
         } else {
-            cdkEntity.setUsed(0);
-            cdkMapper.updateById(cdkEntity);
             return result.setCode(403).setMsg("未知的服务器类型");
         }
 
         accountEntity.setId(0L);
         accountEntity.setExpireTime(LocalDateTime.now());
         accountEntity.setRefresh(1);
-        activateCDK(accountEntity, cdkEntity);
-        accountMapper.insert(accountEntity);
-        var account = accountMapper.selectOne(
-                Wrappers.<AccountEntity>lambdaQuery()
-                        .eq(AccountEntity::getAccount, accountEntity.getAccount())
-                        .eq(AccountEntity::getPassword, accountEntity.getPassword())
-        );
-        dynamicInfo.getUserSanList().put(account.getId(), 135);
-        dynamicInfo.getUserMaxSanList().put(account.getId(), 135);
-        return result.setCode(200).setMsg("success").setData(null);
+        var code = cdkService.createUserByCDK(accountEntity, cdk);
+
+        if (code == 200) {
+            result.setCode(200).setMsg("success").setData("注册成功");
+        } else if (code == 404) {
+            result.setCode(404).setMsg("CDK不存在或已被激活");
+        }
+        return result;
     }
 
     @Operation(summary = "登陆我的账号")
@@ -387,31 +366,15 @@ public class UserController {
     public Result<String> useCDK(@RequestHeader("Authorization") String token, String cdk) {
         Result<String> result = new Result<>();
 
-        var cdkEntity = cdkMapper.selectOne(Wrappers.<CDKEntity>lambdaQuery().eq(CDKEntity::getCdk, cdk));
-        if (cdkEntity == null) {
-            result.setCode(403);
-            result.setMsg("CDK不存在");
-            return result;
-        } else if (cdkEntity.getUsed() == 1) {
-            result.setCode(403);
-            result.setMsg("CDK已使用");
-            return result;
-        }
+        var id = JWTUtils.getId(token);
+        var code = cdkService.activateCDK(id, cdk);
 
-        cdkEntity.setUsed(1);
-        cdkMapper.updateById(cdkEntity);
-
-        var account = accountMapper.selectOne(
-                Wrappers.<AccountEntity>lambdaQuery()
-                        .eq(AccountEntity::getId, JWTUtils.getId(token))
-        );
-        if (account != null) {
-            activateCDK(account, cdkEntity);
-            accountMapper.updateById(account);
-            dynamicInfo.getUserSanList().put(account.getId(), 135);
-            dynamicInfo.getUserMaxSanList().put(account.getId(), 135);
+        if (code == 200) {
+            result.setCode(200).setMsg("success").setData("激活成功");
+        } else if (code == 404) {
+            result.setCode(404).setMsg("CDK不存在或已被激活");
         }
-        return result.setCode(200).setMsg("success").setData(null);
+        return result;
     }
 
     @UserLogin
@@ -580,28 +543,6 @@ public class UserController {
         AccountEntity account = accountMapper.selectById(id);
         result.setCode(200).setMsg("success").setData(account.getRefresh());
         return result;
-    }
-
-    private void activateCDK(AccountEntity accountEntity, CDKEntity cdkEntity) {
-        if (accountEntity.getExpireTime().isBefore(LocalDateTime.now())) {
-            accountEntity.setExpireTime(LocalDateTime.now());
-        }
-        switch (cdkEntity.getType()) {
-            case "daily":
-                accountEntity.setExpireTime(accountEntity.getExpireTime().plusDays(cdkEntity.getParam()));
-                break;
-            case "rouge_level":
-                accountEntity.setExpireTime(accountEntity.getExpireTime().plusDays(2));
-                accountEntity.getConfig().getRogue().setLevel(cdkEntity.getParam());
-                break;
-            case "rogue_coin":
-                accountEntity.setExpireTime(accountEntity.getExpireTime().plusDays(2));
-                accountEntity.getConfig().getRogue().setCoin(cdkEntity.getParam());
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + cdkEntity.getType());
-        }
-        accountEntity.setFreeze(0);
     }
 
 }

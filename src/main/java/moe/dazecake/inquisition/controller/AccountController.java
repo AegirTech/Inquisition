@@ -10,7 +10,7 @@ import moe.dazecake.inquisition.util.Result;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
+import java.util.HashMap;
 
 @Tag(name = "账号接口")
 @ResponseBody
@@ -63,15 +63,19 @@ public class AccountController {
     @Login
     @Operation(summary = "分页查询账号")
     @GetMapping("/showAccount")
-    public Result<ArrayList<AccountEntity>> showAccount(Long current, Long size) {
-        Result<ArrayList<AccountEntity>> result = new Result<>();
-        result.setData(new ArrayList<>());
+    public Result<HashMap<String,Object>> showAccount(Long current, Long size) {
+        Result<HashMap<String,Object>> result = new Result<>();
+        result.setData(new HashMap<>());
 
         var data = accountMapper.selectPage(new Page<>(current, size), null);
+
+        result.getData().put("records", data.getRecords());
+        result.getData().put("current", data.getCurrent());
+        result.getData().put("totalPages", data.getPages());
+        result.getData().put("total", data.getTotal());
+
         result.setCode(200)
-                .setMsg("success")
-                .getData()
-                .addAll(data.getRecords());
+                .setMsg("success");
 
         return result;
     }

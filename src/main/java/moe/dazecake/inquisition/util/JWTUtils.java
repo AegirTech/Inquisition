@@ -39,7 +39,7 @@ public class JWTUtils {
         JWTCreator.Builder builder = JWT.create();
         builder.withClaim("id", proUserEntity.getId())
                 .withClaim("username", proUserEntity.getUsername())
-                .withClaim("type", "user")
+                .withClaim("type", "proUser")
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION));
         return builder.sign(Algorithm.HMAC256(SECRET));
     }
