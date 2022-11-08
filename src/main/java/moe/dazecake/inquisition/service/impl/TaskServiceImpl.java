@@ -358,14 +358,19 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void forceHaltTask(AccountEntity account, boolean isHalt) {
+    public void forceHaltTask(AccountEntity account, boolean notHalted) {
         //清除等待队列
-        dynamicInfo.getFreeTaskList().remove(account);
+        for (AccountEntity entity : dynamicInfo.getFreeTaskList()) {
+            if (entity.getId().equals(account.getId())) {
+                dynamicInfo.getFreeTaskList().remove(entity);
+                break;
+            }
+        }
 
         //清除上锁队列
         for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
             if (lockTask.getAccount().getId().equals(account.getId())) {
-                if (isHalt) {
+                if (notHalted) {
                     dynamicInfo.getHaltList().add(lockTask.getDeviceToken());
                 }
                 dynamicInfo.getLockTaskList().remove(lockTask);

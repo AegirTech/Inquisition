@@ -146,5 +146,29 @@ public class DeviceController {
         return result;
     }
 
+    @Login
+    @Operation(summary = "通过设备token获取设备信息")
+    @GetMapping("/getDeviceByToken")
+    public Result<DeviceEntity> getDeviceByToken(String deviceToken) {
+        Result<DeviceEntity> result = new Result<>();
+
+        var device = deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
+                .eq(DeviceEntity::getDeviceToken, deviceToken)
+                .eq(DeviceEntity::getDelete, 0)
+                .ge(DeviceEntity::getExpireTime, LocalDateTime.now())
+        );
+
+        if (device != null) {
+            result.setCode(200)
+                    .setMsg("success")
+                    .setData(device);
+        } else {
+            result.setCode(403)
+                    .setMsg("Unable to get a non-existent device")
+                    .setData(null);
+        }
+
+        return result;
+    }
 
 }

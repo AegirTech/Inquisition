@@ -99,4 +99,24 @@ public class LogController {
 
         return result;
     }
+
+    @Login
+    @Operation(summary = "精确查询账号日志")
+    @GetMapping("/searchLogByAccount")
+    public Result<ArrayList<LogEntity>> searchLogByAccount(String account, Long current, Long size) {
+        Result<ArrayList<LogEntity>> result = new Result<>();
+        result.setData(new ArrayList<>());
+
+        //精确搜索
+        var data = logMapper.selectPage(new Page<>(current, size), Wrappers.<LogEntity>lambdaQuery()
+                .eq(LogEntity::getAccount, account)
+                .orderByDesc(LogEntity::getId)
+        );
+        result.setCode(200)
+                .setMsg("success")
+                .getData()
+                .addAll(data.getRecords());
+
+        return result;
+    }
 }

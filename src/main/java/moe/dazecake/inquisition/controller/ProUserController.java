@@ -17,6 +17,7 @@ import moe.dazecake.inquisition.mapper.LogMapper;
 import moe.dazecake.inquisition.mapper.ProUserMapper;
 import moe.dazecake.inquisition.service.impl.CDKServiceImpl;
 import moe.dazecake.inquisition.service.impl.HttpServiceImpl;
+import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Encoder;
 import moe.dazecake.inquisition.util.JWTUtils;
@@ -56,6 +57,9 @@ public class ProUserController {
 
     @Resource
     DynamicInfo dynamicInfo;
+
+    @Resource
+    TaskServiceImpl taskService;
 
     @Value("${inquisition.price.daily}")
     private Double dailyPrice;
@@ -174,7 +178,60 @@ public class ProUserController {
                         .eq(AccountEntity::getAgent, id)
         );
 
+        var sanMap = new HashMap<String, Object>();
+        for (AccountEntity user : data.getRecords()) {
+            if (dynamicInfo.getUserSanList().containsKey(user.getId())) {
+                sanMap.put(user.getId().toString(),
+                        dynamicInfo.getUserSanList().get(user.getId()) + "/" + dynamicInfo.getUserMaxSanList()
+                                .get(user.getId()));
+            } else {
+                sanMap.put(user.getId().toString(), null);
+            }
+        }
+
         result.getData().put("records", data.getRecords());
+        result.getData().put("sanRecords", sanMap);
+        result.getData().put("current", data.getCurrent());
+        result.getData().put("totalPages", data.getPages());
+        result.getData().put("total", data.getTotal());
+
+        return result.setCode(200)
+                .setMsg("success");
+    }
+
+    @ProUserLogin
+    @Operation(summary = "搜索附属用户")
+    @GetMapping("/searchSubUser")
+    public Result<HashMap<String, Object>> searchSubUser(@RequestHeader("Authorization") String token,
+                                                         @RequestParam Integer page,
+                                                         @RequestParam Integer size,
+                                                         @RequestParam String account) {
+
+        Result<HashMap<String, Object>> result = new Result<>();
+        result.setData(new HashMap<>());
+
+        var id = JWTUtils.getId(token);
+
+        var data = accountMapper.selectPage(
+                new Page<>(page, size),
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getAgent, id)
+                        .like(AccountEntity::getAccount, account)
+        );
+
+        var sanMap = new HashMap<String, Object>();
+        for (AccountEntity user : data.getRecords()) {
+            if (dynamicInfo.getUserSanList().containsKey(user.getId())) {
+                sanMap.put(user.getId().toString(),
+                        dynamicInfo.getUserSanList().get(user.getId()) + "/" + dynamicInfo.getUserMaxSanList()
+                                .get(user.getId()));
+            } else {
+                sanMap.put(user.getId().toString(), null);
+            }
+        }
+
+        result.getData().put("records", data.getRecords());
+        result.getData().put("sanRecords", sanMap);
         result.getData().put("current", data.getCurrent());
         result.getData().put("totalPages", data.getPages());
         result.getData().put("total", data.getTotal());
@@ -398,6 +455,115 @@ public class ProUserController {
     }
 
     @ProUserLogin
+    @Operation(summary = "强制附属用户立即作战")
+    @PostMapping("/forceSubUserFight")
+    public Result<String> forceSubUserFight(@RequestHeader("Authorization") String token,
+                                            @RequestParam Long userId) {
+        Result<String> result = new Result<>();
+
+        var id = JWTUtils.getId(token);
+
+        var accountEntity = accountMapper.selectById(userId);
+
+        if (accountEntity == null) {
+            return result.setCode(404)
+                    .setMsg("用户不存在")
+                    .setData(null);
+        }
+
+        //判断是否是代理商的附属用户
+        if (!Objects.equals(accountEntity.getAgent(), id)) {
+            return result.setCode(403)
+                    .setMsg("无权限")
+                    .setData(null);
+        }
+
+        //作战
+        for (AccountEntity freeTask : dynamicInfo.getFreeTaskList()) {
+            if (freeTask.getId().equals(userId)) {
+                return result.setCode(200).setMsg("已经在排队中");
+            }
+        }
+
+        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
+            if (lockTask.getAccount().getId().equals(userId)) {
+                return result.setCode(200).setMsg("已经在作战中");
+            }
+        }
+
+        dynamicInfo.getFreeTaskList().add(0, accountEntity);
+        dynamicInfo.getUserSanList().put(userId, 0);
+
+        return result.setCode(200)
+                .setMsg("success")
+                .setData(null);
+    }
+
+    @ProUserLogin
+    @Operation(summary = "强制附属用户立即停止作战")
+    @PostMapping("/forceSubUserStop")
+    public Result<String> forceSubUserStop(@RequestHeader("Authorization") String token,
+                                           @RequestParam Long userId) {
+        Result<String> result = new Result<>();
+
+        var id = JWTUtils.getId(token);
+
+        var accountEntity = accountMapper.selectById(userId);
+
+        if (accountEntity == null) {
+            return result.setCode(404)
+                    .setMsg("用户不存在")
+                    .setData(null);
+        }
+
+        //判断是否是代理商的附属用户
+        if (!Objects.equals(accountEntity.getAgent(), id)) {
+            return result.setCode(403)
+                    .setMsg("无权限")
+                    .setData(null);
+        }
+
+        //停止作战
+        taskService.forceHaltTask(accountEntity, true);
+
+        return result.setCode(200).setMsg("success").setData("执行成功");
+    }
+
+    @ProUserLogin
+    @Operation(summary = "修复附属用户账号问题")
+    @PostMapping("/fixSubUser")
+    public Result<String> repairSubUser(@RequestHeader("Authorization") String token,
+                                        @RequestParam Long userId) {
+        Result<String> result = new Result<>();
+
+        var id = JWTUtils.getId(token);
+
+        var accountEntity = accountMapper.selectById(userId);
+
+        if (accountEntity == null) {
+            return result.setCode(404)
+                    .setMsg("用户不存在")
+                    .setData(null);
+        }
+
+        //判断是否是代理商的附属用户
+        if (!Objects.equals(accountEntity.getAgent(), id)) {
+            return result.setCode(403)
+                    .setMsg("无权限")
+                    .setData(null);
+        }
+
+        //停止作战
+        taskService.forceHaltTask(accountEntity, true);
+
+        //重置动态数据
+        dynamicInfo.getUserSanList().put(userId, 135);
+        dynamicInfo.getUserMaxSanList().put(userId, 135);
+
+        return result.setCode(200).setMsg("success").setData("执行成功");
+    }
+
+    @ProUserLogin
     @Operation(summary = "为附属用户激活CDK")
     @PostMapping("/activateSubUserCdk")
     public Result<String> activateSubUserCdk(@RequestHeader("Authorization") String token,
@@ -440,7 +606,9 @@ public class ProUserController {
 
         var id = JWTUtils.getId(token);
 
-        var cdkList = cdkMapper.selectList(Wrappers.<CDKEntity>lambdaQuery().eq(CDKEntity::getAgent, id));
+        var cdkList =
+                cdkMapper.selectList(Wrappers.<CDKEntity>lambdaQuery().eq(CDKEntity::getAgent, id)
+                        .eq(CDKEntity::getUsed, 0));
 
         return result.setCode(200)
                 .setMsg("success")
@@ -451,10 +619,10 @@ public class ProUserController {
     @Operation(summary = "pro_user扣除余额创建cdk")
     @PostMapping("/createCdkByProUser")
     public Result<ArrayList<CDKEntity>> createCdkByProUser(@RequestHeader("Authorization") String token,
-                                   @RequestParam String type,
-                                   @RequestParam String tag,
-                                   @RequestParam Integer param,
-                                   @RequestParam Integer num) {
+                                                           @RequestParam String type,
+                                                           @RequestParam String tag,
+                                                           @RequestParam Integer param,
+                                                           @RequestParam Integer num) {
         Result<ArrayList<CDKEntity>> result = new Result<>();
 
         var id = JWTUtils.getId(token);
@@ -533,6 +701,12 @@ public class ProUserController {
                                             @RequestParam Long userId,
                                             @RequestParam Integer param) {
         Result<String> result = new Result<>();
+
+        if (param <= 0) {
+            return result.setCode(400)
+                    .setMsg("数量必须大于0")
+                    .setData(null);
+        }
 
         var id = JWTUtils.getId(token);
 

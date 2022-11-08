@@ -3,8 +3,10 @@ package moe.dazecake.inquisition.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.entity.AdminEntity;
 import moe.dazecake.inquisition.mapper.AdminMapper;
+import moe.dazecake.inquisition.mapper.ProUserMapper;
 import moe.dazecake.inquisition.util.Encoder;
 import moe.dazecake.inquisition.util.JWTUtils;
 import moe.dazecake.inquisition.util.Result;
@@ -24,6 +26,9 @@ public class AdminController {
 
     @Resource
     AdminMapper adminMapper;
+
+    @Resource
+    ProUserMapper proUserMapper;
 
     @Operation(summary = "管理员登陆")
     @PostMapping("/adminLogin")
@@ -57,4 +62,25 @@ public class AdminController {
         }
     }
 
+    @Login
+    @Operation(summary = "为pro_user增加余额")
+    @PostMapping("/addBalanceForProUser")
+    public Result<String> addBalanceForProUser(Long id, Integer balance) {
+        Result<String> result = new Result<>();
+
+        var proUser = proUserMapper.selectById(id);
+        if (proUser != null) {
+            proUser.setBalance(proUser.getBalance() + balance);
+            proUserMapper.updateById(proUser);
+
+            result.setCode(200);
+            result.setMsg("success");
+
+        } else {
+            result.setCode(403);
+            result.setMsg("Unable to add balance to a non-existent account");
+        }
+
+        return result;
+    }
 }

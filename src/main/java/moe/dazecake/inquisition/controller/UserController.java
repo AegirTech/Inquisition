@@ -192,6 +192,11 @@ public class UserController {
                 Wrappers.<AccountEntity>lambdaQuery()
                         .eq(AccountEntity::getId, JWTUtils.getId(token))
         );
+
+        if (account == null || password == null || server == null) {
+            return result.setCode(403).setMsg("未填写数据");
+        }
+
         if (server == 0) {
             if (httpService.isOfficialAccountWork(account, password)) {
                 accountEntity.setAccount(account);
