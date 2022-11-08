@@ -22,9 +22,11 @@ import moe.dazecake.inquisition.util.Encoder;
 import moe.dazecake.inquisition.util.JWTUtils;
 import moe.dazecake.inquisition.util.Result;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
@@ -55,6 +57,17 @@ public class ProUserController {
     @Resource
     DynamicInfo dynamicInfo;
 
+    @Value("${inquisition.price.daily}")
+    private Double dailyPrice;
+
+    @Value("${inquisition.price.rogue_1}")
+    private Double rogue1Price;
+
+    @Value("${inquisition.price.rogue_2}")
+    private Double rogue2Price;
+
+    private static final String salt = "arklightspro";
+
     @Login
     @Operation(summary = "创建高级用户账号")
     @PostMapping("/createProUser")
@@ -63,7 +76,7 @@ public class ProUserController {
 
         proUserEntity.setId(0L);
         proUserEntity.setDelete(0);
-        proUserEntity.setPassword(Encoder.MD5(proUserEntity.getPassword()));
+        proUserEntity.setPassword(Encoder.MD5(proUserEntity.getPassword() + salt));
 
         //rand 8位字符串
         proUserEntity.setAuthorization(RandomStringUtils.randomAlphabetic(16));
@@ -87,7 +100,7 @@ public class ProUserController {
         var account = proUserMapper.selectOne(
                 Wrappers.<ProUserEntity>lambdaQuery()
                         .eq(ProUserEntity::getUsername, username)
-                        .eq(ProUserEntity::getPassword, Encoder.MD5(password))
+                        .eq(ProUserEntity::getPassword, Encoder.MD5(password + salt))
         );
 
         if (account != null) {
@@ -119,30 +132,6 @@ public class ProUserController {
     }
 
     @ProUserLogin
-    @Operation(summary = "修改高级用户信息")
-    @PostMapping("/updateProUserInfo")
-    public Result<String> updateProUserInfo(@RequestHeader("Authorization") String token,
-                                            @RequestBody ProUserEntity proUserEntity) {
-        Result<String> result = new Result<>();
-
-        var id = JWTUtils.getId(token);
-
-        var old = proUserMapper.selectById(id);
-
-        proUserEntity.setExpireTime(old.getExpireTime());
-        proUserEntity.setPermission(old.getPermission());
-        proUserEntity.setDelete(old.getDelete());
-        proUserEntity.setAuthorization(old.getAuthorization());
-        proUserEntity.setId(id);
-
-        proUserMapper.updateById(proUserEntity);
-
-        return result.setCode(200)
-                .setMsg("success")
-                .setData(null);
-    }
-
-    @ProUserLogin
     @Operation(summary = "修改高级用户密码")
     @PostMapping("/updateProUserPassword")
     public Result<String> updateProUserPassword(@RequestHeader("Authorization") String token,
@@ -154,8 +143,8 @@ public class ProUserController {
 
         var old = proUserMapper.selectById(id);
 
-        if (Encoder.MD5(oldPassword).equals(old.getPassword())) {
-            old.setPassword(Encoder.MD5(newPassword));
+        if (Encoder.MD5(oldPassword + salt).equals(old.getPassword() + salt)) {
+            old.setPassword(Encoder.MD5(newPassword + salt));
             proUserMapper.updateById(old);
             return result.setCode(200)
                     .setMsg("success")
@@ -456,5 +445,138 @@ public class ProUserController {
         return result.setCode(200)
                 .setMsg("success")
                 .setData((ArrayList<CDKEntity>) cdkList);
+    }
+
+    @ProUserLogin
+    @Operation(summary = "pro_user扣除余额创建cdk")
+    @PostMapping("/createCdkByProUser")
+    public Result<ArrayList<CDKEntity>> createCdkByProUser(@RequestHeader("Authorization") String token,
+                                   @RequestParam String type,
+                                   @RequestParam String tag,
+                                   @RequestParam Integer param,
+                                   @RequestParam Integer num) {
+        Result<ArrayList<CDKEntity>> result = new Result<>();
+
+        var id = JWTUtils.getId(token);
+
+        var proUser = proUserMapper.selectById(id);
+
+        if (proUser == null) {
+            return result.setCode(404)
+                    .setMsg("用户不存在")
+                    .setData(null);
+        }
+
+        if (num <= 0) {
+            return result.setCode(400)
+                    .setMsg("数量必须大于0")
+                    .setData(null);
+        }
+
+        //判断类型
+        switch (type) {
+            case "daily":
+                if (proUser.getBalance() < num * param * dailyPrice * proUser.getDiscount()) {
+                    return result.setCode(403)
+                            .setMsg("余额不足")
+                            .setData(null);
+                } else {
+                    proUser.setBalance(proUser.getBalance() - num * param * dailyPrice * proUser.getDiscount());
+                    proUserMapper.updateById(proUser);
+                    ArrayList<CDKEntity> newCDKList = new ArrayList<>();
+                    for (int i = 0; i < num; i++) {
+                        newCDKList.add(CDKEntity.builder()
+                                .id(0L)
+                                .cdk(RandomStringUtils.randomAlphabetic(32))
+                                .type(type)
+                                .param(param)
+                                .tag(tag)
+                                .isAgent(1)
+                                .agent(id)
+                                .used(0)
+                                .build());
+                    }
+                    newCDKList.forEach(cdkMapper::insert);
+                    return result.setCode(200)
+                            .setMsg("success")
+                            .setData(newCDKList);
+                }
+            case "rogue_1":
+                if (proUser.getBalance() < num * rogue1Price * proUser.getDiscount()) {
+                    return result.setCode(403)
+                            .setMsg("余额不足")
+                            .setData(null);
+                }
+                //适配魁影肉鸽
+                break;
+            case "rogue_2":
+                if (proUser.getBalance() < num * rogue2Price * proUser.getDiscount()) {
+                    return result.setCode(403)
+                            .setMsg("余额不足")
+                            .setData(null);
+                }
+                //适配水月肉鸽
+                break;
+            default:
+                return result.setCode(403)
+                        .setMsg("类型错误")
+                        .setData(null);
+
+        }
+        return result;
+    }
+
+    @ProUserLogin
+    @Operation(summary = "pro_user手动续期附属用户daily时长")
+    @PostMapping("/renewSubUserDaily")
+    public Result<String> renewSubUserDaily(@RequestHeader("Authorization") String token,
+                                            @RequestParam Long userId,
+                                            @RequestParam Integer param) {
+        Result<String> result = new Result<>();
+
+        var id = JWTUtils.getId(token);
+
+        var accountEntity = accountMapper.selectById(userId);
+
+        if (accountEntity == null) {
+            return result.setCode(404)
+                    .setMsg("用户不存在")
+                    .setData(null);
+        }
+
+        //判断是否是代理商的附属用户
+        if (!Objects.equals(accountEntity.getAgent(), id)) {
+            return result.setCode(403)
+                    .setMsg("无权限")
+                    .setData(null);
+        }
+
+        var proUser = proUserMapper.selectById(id);
+
+        if (proUser == null) {
+            return result.setCode(404)
+                    .setMsg("pro用户不存在")
+                    .setData(null);
+        }
+
+        if (proUser.getBalance() < param * dailyPrice * proUser.getDiscount()) {
+            return result.setCode(403)
+                    .setMsg("余额不足")
+                    .setData(null);
+        }
+
+        proUser.setBalance(proUser.getBalance() - param * dailyPrice * proUser.getDiscount());
+        proUserMapper.updateById(proUser);
+
+        if (accountEntity.getExpireTime().isBefore(LocalDateTime.now())) {
+            accountEntity.setExpireTime(LocalDateTime.now().plusDays(param));
+        } else {
+            accountEntity.setExpireTime(accountEntity.getExpireTime().plusDays(param));
+        }
+        accountMapper.updateById(accountEntity);
+
+        return result.setCode(200)
+                .setMsg("success")
+                .setData(null);
     }
 }

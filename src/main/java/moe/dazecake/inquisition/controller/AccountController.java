@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
+import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Result;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,9 @@ public class AccountController {
 
     @Resource
     AccountMapper accountMapper;
+
+    @Resource
+    DynamicInfo dynamicInfo;
 
     @Login
     @Operation(summary = "增加账号")
@@ -69,7 +73,18 @@ public class AccountController {
 
         var data = accountMapper.selectPage(new Page<>(current, size), null);
 
+        var sanMap = new HashMap<String,Object>();
+        for (AccountEntity user : data.getRecords()) {
+            if (dynamicInfo.getUserSanList().containsKey(user.getId())) {
+                sanMap.put(user.getId().toString(),
+                        dynamicInfo.getUserSanList().get(user.getId()) + "/" + dynamicInfo.getUserMaxSanList().get(user.getId()));
+            } else {
+                sanMap.put(user.getId().toString(), null);
+            }
+        }
+
         result.getData().put("records", data.getRecords());
+        result.getData().put("sanRecords", sanMap);
         result.getData().put("current", data.getCurrent());
         result.getData().put("totalPages", data.getPages());
         result.getData().put("total", data.getTotal());
