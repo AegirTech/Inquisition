@@ -21,6 +21,8 @@ public class DynamicInfo {
 
     String arklightsBateMD5;
 
+    HashMap<String, String> announcement = new HashMap<>();
+
     HashMap<String, Integer> deviceStatusMap = new HashMap<>();
 
     ArrayList<AccountEntity> freeTaskList = new ArrayList<>();
@@ -33,9 +35,9 @@ public class DynamicInfo {
 
     HashMap<String, Integer> counter = new HashMap<>();
 
-    HashMap<Long,Integer> userSanList = new HashMap<>();
+    HashMap<Long, Integer> userSanList = new HashMap<>();
 
-    HashMap<Long,Integer> userMaxSanList = new HashMap<>();
+    HashMap<Long, Integer> userMaxSanList = new HashMap<>();
 
     public void load(DynamicInfo dynamicInfo) {
         this.setCounter(dynamicInfo.getCounter());

@@ -7,16 +7,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.entity.DeviceEntity;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
+import moe.dazecake.inquisition.service.impl.ChinacServiceImpl;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Result;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 
 @Tag(name = "设备接口")
 @ResponseBody
@@ -29,6 +28,9 @@ public class DeviceController {
     @Resource
     DynamicInfo dynamicInfo;
 
+    @Resource
+    ChinacServiceImpl chinacService;
+
     @Login
     @Operation(summary = "增加设备")
     @PostMapping("/addDevice")
@@ -36,8 +38,11 @@ public class DeviceController {
         Result<DeviceEntity> result = new Result<>();
 
         var deviceToken = RandomStringUtils.randomAlphabetic(16);
-        deviceEntity.setDeviceToken(deviceToken);
+        deviceEntity.setDeviceToken(deviceToken)
+                .setChinac(0)
+                .setDelete(0);
         deviceMapper.insert(deviceEntity);
+        dynamicInfo.getDeviceStatusMap().put(deviceToken, 0);
 
         result.setCode(200)
                 .setMsg("success")
@@ -57,6 +62,7 @@ public class DeviceController {
             deviceEntity.setDelete(1);
 
             deviceMapper.updateById(deviceEntity);
+            dynamicInfo.getDeviceStatusMap().remove(deviceEntity.getDeviceToken());
 
             result.setCode(200)
                     .setMsg("success")
@@ -95,26 +101,30 @@ public class DeviceController {
 
         var devices = deviceMapper.selectList(Wrappers.<DeviceEntity>lambdaQuery()
                 .eq(DeviceEntity::getDelete, 0)
-                .ge(DeviceEntity::getExpireTime, LocalDateTime.now())
         );
 
-        dynamicInfo.getDeviceStatusMap().forEach(
-                (token,status)-> devices.forEach(
-                        deviceEntity -> {
-                            if (Objects.equals(deviceEntity.getDeviceToken(), token)) {
-                                result.getData().add(new HashMap<>(){
-                                    {
-                                        put("id", String.valueOf(deviceEntity.getId()));
-                                        put("deviceName", deviceEntity.getDeviceName());
-                                        put("deviceToken", token);
-                                        put("status", String.valueOf(status));
-                                        put("expireTime", String.valueOf(deviceEntity.getExpireTime()));
-                                    }
-                                });
-                            }
-                        }
-                )
-        );
+        for (DeviceEntity device : devices) {
+            if (!dynamicInfo.getDeviceStatusMap().containsKey(device.getDeviceToken())) {
+                dynamicInfo.getDeviceStatusMap().put(device.getDeviceToken(), 0);
+            }
+
+            if (device.getChinac() == null) {
+                device.setChinac(0);
+            }
+
+            result.getData().add(new HashMap<>() {
+                {
+                    put("id", String.valueOf(device.getId()));
+                    put("deviceName", device.getDeviceName());
+                    put("deviceToken", device.getDeviceToken());
+                    put("isChinac", device.getChinac().toString());
+                    put("region", device.getRegion());
+                    put("expireTime", String.valueOf(device.getExpireTime()));
+                    put("status", String.valueOf(dynamicInfo.getDeviceStatusMap().get(device.getDeviceToken())));
+                }
+            });
+
+        }
 
         result.setCode(200)
                 .setMsg("success");
@@ -154,8 +164,6 @@ public class DeviceController {
 
         var device = deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
                 .eq(DeviceEntity::getDeviceToken, deviceToken)
-                .eq(DeviceEntity::getDelete, 0)
-                .ge(DeviceEntity::getExpireTime, LocalDateTime.now())
         );
 
         if (device != null) {
@@ -169,6 +177,64 @@ public class DeviceController {
         }
 
         return result;
+    }
+
+    @Login
+    @Operation(summary = "通过设备token获取华云设备实时截图参数")
+    @PostMapping("/getDeviceScreenshotInfo")
+    public Result<HashMap<String, String>> getDeviceScreenshotInfo(@RequestBody ArrayList<String> tokenList, String region) {
+        Result<HashMap<String, String>> result = new Result<>();
+        System.out.println(tokenList.toString());
+        result.setData(chinacService.getDeviceScreenshot(tokenList, region));
+        return result
+                .setCode(200)
+                .setMsg("success");
+    }
+
+    @Login
+    @Operation(summary = "通过设备token获取华云设备远程控制url")
+    @PostMapping("/getDeviceRemoteControlUrl")
+    public Result<String> getDeviceRemoteControlUrl(String token) {
+        Result<String> result = new Result<>();
+        DeviceEntity device = deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
+                .eq(DeviceEntity::getDeviceToken, token));
+        if (device == null || device.getChinac() != 1 || device.getDelete() == 1) {
+            result.setData("");
+        } else {
+            result.setData(chinacService.getDeviceRemoteControlUrl(
+                    device.getRegion(),
+                    device.getDeviceToken(),
+                    30,
+                    false,
+                    false,
+                    null
+            ));
+        }
+        return result.setCode(200)
+                .setMsg("success");
+    }
+
+    @Login
+    @Operation(summary = "获取华云设备组远程控制url")
+    @PostMapping("/getGroupDeviceRemoteControlUrl")
+    public Result<String> getGroupDeviceRemoteControlUrl(String token, @RequestBody ArrayList<String> tokenList) {
+        Result<String> result = new Result<>();
+        DeviceEntity device = deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
+                .eq(DeviceEntity::getDeviceToken, token));
+        if (device == null || device.getChinac() != 1 || device.getDelete() == 1) {
+            result.setData("");
+        } else {
+            result.setData(chinacService.getDeviceRemoteControlUrl(
+                    device.getRegion(),
+                    device.getDeviceToken(),
+                    30,
+                    false,
+                    true,
+                    tokenList
+            ));
+        }
+        return result.setCode(200)
+                .setMsg("success");
     }
 
 }

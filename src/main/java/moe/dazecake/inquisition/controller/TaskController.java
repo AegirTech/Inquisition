@@ -3,11 +3,14 @@ package moe.dazecake.inquisition.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.entity.AccountEntity;
+import moe.dazecake.inquisition.entity.DeviceEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.mapper.AccountMapper;
+import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
 import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
 import moe.dazecake.inquisition.util.DynamicInfo;
@@ -18,8 +21,11 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
 
+@Slf4j
 @Tag(name = "任务接口")
 @ResponseBody
 @RestController
@@ -40,6 +46,9 @@ public class TaskController {
     @Resource
     TaskServiceImpl taskService;
 
+    @Resource
+    DeviceMapper deviceMapper;
+
     @Value("${spring.mail.to}")
     String to;
 
@@ -50,6 +59,14 @@ public class TaskController {
     @GetMapping("/getTask")
     public synchronized Result<AccountEntity> getTask(String deviceToken) {
         Result<AccountEntity> result = new Result<>();
+
+        //设备合法性检查
+        if (deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
+                .eq(DeviceEntity::getDeviceToken, deviceToken)) == null) {
+            return result.setCode(403)
+                    .setMsg("设备未注册或令牌错误")
+                    .setData(null);
+        }
 
         //重复请求检查
         for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
@@ -62,7 +79,7 @@ public class TaskController {
 
         //任务上锁
         if (!dynamicInfo.getFreeTaskList().isEmpty()) {
-            AccountEntity account = new AccountEntity();
+            var account = new AccountEntity();
 
             //检查任务是否达到下发标准
             var iterator = dynamicInfo.getFreeTaskList().iterator();
@@ -77,8 +94,16 @@ public class TaskController {
                 }
 
                 //B服限制检查
-                if (account.getBLimit() == 1 && !account.getBLimitDevice().contains(deviceToken)) {
-                    continue;
+                if (account.getServer() == 1 && account.getBLimitDevice().size() != 0) {
+                    var usedDeviceToken = account.getBLimitDevice().get(0);
+                    if (!Objects.equals(usedDeviceToken, deviceToken)) {
+                        if (dynamicInfo.getDeviceStatusMap().containsKey(usedDeviceToken)) {
+                            continue;
+                        } else {
+                            account.getBLimitDevice().clear();
+                            accountMapper.updateById(account);
+                        }
+                    }
                 }
 
                 //重复分配任务检查
@@ -105,6 +130,7 @@ public class TaskController {
             }
 
             //任务上锁，同时分配强制超时期限
+            log.info("任务上锁");
             taskService.lockTask(deviceToken, account);
 
             //记录日志
@@ -142,7 +168,7 @@ public class TaskController {
                         .orElseThrow().getAccount();
 
         //检查B服限制新增设备
-        if (account.getServer() == 1 && account.getBLimit() == 0 && !account.getBLimitDevice().contains(deviceToken)) {
+        if (account.getServer() == 1 && account.getBLimitDevice().size() == 0) {
             account.getBLimitDevice().add(deviceToken);
             accountMapper.updateById(account);
         }

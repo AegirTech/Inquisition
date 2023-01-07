@@ -10,6 +10,7 @@ import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Result;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -33,8 +34,18 @@ public class AccountController {
     @Login
     @Operation(summary = "增加账号")
     @PostMapping("/addAccount")
-    public Result<String> addAccount(@RequestBody AccountEntity accountEntity) {
+    public Result<String> addAccount(String username, String account, String password, Long server,
+                                     @RequestParam
+                                     @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+                                     LocalDateTime expireTime) {
         Result<String> result = new Result<>();
+
+        var accountEntity = new AccountEntity();
+        accountEntity.setName(username)
+                .setAccount(account)
+                .setPassword(password)
+                .setServer(server)
+                .setExpireTime(expireTime);
 
         accountMapper.insert(accountEntity);
 
@@ -43,6 +54,43 @@ public class AccountController {
         result.setData(null);
 
         return result;
+    }
+
+    @Login
+    @Operation(summary = "从速通迁移账号")
+    @PostMapping("/transferAccountFromArkLights")
+    public Result<String> transferAccountFromArkLights(@RequestBody HashMap<String, String> accountJson) {
+        Result<String> result = new Result<>();
+        var num = 0;
+
+        for (int i = 1; i <= 30; i++) {
+            if (accountJson.containsKey("username" + i) && accountJson.containsKey("password" + i)) {
+                var account = new AccountEntity();
+
+                //导入账号密码
+                if (accountJson.get("username" + i).contains("#")) {
+                    var parts = accountJson.get("username" + i).split("#");
+                    account.setName(parts[1]);
+                    account.setAccount(parts[0]);
+                } else {
+                    account.setName(accountJson.get("username" + i));
+                    account.setAccount(accountJson.get("username" + i));
+                }
+                account.setPassword(accountJson.get("password" + i));
+                if (accountJson.containsKey("server" + i)) {
+                    account.setServer(Long.valueOf(accountJson.get("server" + i)));
+                } else {
+                    account.setServer(0L);
+                }
+
+                accountMapper.insert(account);
+                num++;
+            }
+        }
+
+        return result.setCode(200)
+                .setMsg("success")
+                .setData("已添加" + num + "个账号");
     }
 
 
@@ -145,6 +193,7 @@ public class AccountController {
         if (account != null) {
             account = accountEntity;
             account.setId(id);
+            account.setUpdateTime(LocalDateTime.now());
             accountMapper.updateById(account);
 
             result.setCode(200)
@@ -168,6 +217,7 @@ public class AccountController {
         var account = accountMapper.selectById(id);
         if (account != null) {
             account.setRefresh(1);
+            account.setUpdateTime(LocalDateTime.now());
             accountMapper.updateById(account);
 
             result.setCode(200)

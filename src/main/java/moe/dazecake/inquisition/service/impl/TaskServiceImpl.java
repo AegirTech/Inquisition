@@ -1,6 +1,7 @@
 package moe.dazecake.inquisition.service.impl;
 
 import com.zjiecode.wxpusher.client.bean.Message;
+import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
@@ -14,8 +15,12 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Objects;
 
+@Slf4j
 @Service
 public class TaskServiceImpl implements TaskService {
 
@@ -40,7 +45,7 @@ public class TaskServiceImpl implements TaskService {
     @Value("${spring.mail.enable:false}")
     boolean enableMail;
 
-    @Value("${wx-pusher.enable}")
+    @Value("${wx-pusher.enable:fasle}")
     boolean enableWxPusher;
 
 
@@ -229,6 +234,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void lockTask(String deviceToken, AccountEntity account) {
         LocalDateTime localDateTime = LocalDateTime.now();
+        System.out.println(account);
         var lockTask = new LockTask();
         lockTask.setDeviceToken(deviceToken);
         switch (account.getTaskType()) {
@@ -240,7 +246,12 @@ public class TaskServiceImpl implements TaskService {
                 lockTask.setAccount(account);
                 lockTask.setExpirationTime(localDateTime.plusHours(48));
                 break;
+            case "rogue2":
+                lockTask.setAccount(account);
+                lockTask.setExpirationTime(localDateTime.plusHours(72));
+                break;
         }
+        System.out.println(lockTask);
         dynamicInfo.getLockTaskList().add(lockTask);
     }
 
@@ -309,12 +320,11 @@ public class TaskServiceImpl implements TaskService {
             }
             case ("accountError"): {
                 if (account.getServer() == 0) {
+                    forceHaltTask(account, false);
                     if (httpService.isOfficialAccountWork(account.getAccount(), account.getPassword())) {
-                        forceHaltTask(account, false);
                         dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
                         dynamicInfo.getFreeTaskList().add(account);
                     } else {
-                        forceHaltTask(account, false);
                         account.setFreeze(1);
                         accountMapper.updateById(account);
                         dynamicInfo.getUserSanList().remove(account.getId());
@@ -322,25 +332,10 @@ public class TaskServiceImpl implements TaskService {
                         messagePush(account, "账号异常", "您的账号密码有误，请在面板更新正确的账号密码，否则托管将无法继续进行");
                     }
                 } else if (account.getServer() == 1) {
+                    forceHaltTask(account, false);
                     if (httpService.isBiliAccountWork(account.getAccount(), account.getPassword())) {
-                        if (account.getBLimitDevice().size() <= 2) {
-                            forceHaltTask(account, false);
-                            account.setFreeze(1);
-                            account.setBLimit(0);
-                            account.getBLimitDevice().clear();
-                            accountMapper.updateById(account);
-                            dynamicInfo.getUserSanList().remove(account.getId());
-                            dynamicInfo.getUserMaxSanList().remove(account.getId());
-                            messagePush(account, "账号异常", "您近期登陆的设备较多，已被B服限制登陆，请立即修改密码并于面板更新密码,否则托管将无法继续进行");
-                        } else {
-                            account.setBLimit(1);
-                            accountMapper.updateById(account);
-                            forceHaltTask(account, false);
-                            dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
-                            dynamicInfo.getFreeTaskList().add(account);
-                        }
+                        messagePush(account, "账号异常", "您近期登陆的设备较多，似乎已被B服限制登陆，请立即修改密码并于面板更新密码,否则托管可能将无法继续进行");
                     } else {
-                        forceHaltTask(account, false);
                         account.setFreeze(1);
                         accountMapper.updateById(account);
                         dynamicInfo.getUserSanList().remove(account.getId());
@@ -434,11 +429,11 @@ public class TaskServiceImpl implements TaskService {
                 //加入待分配队列
                 dynamicInfo.getFreeTaskList().add(account);
 
-                //归零理智
-                dynamicInfo.getUserSanList().put(id, 0);
-
                 messagePush(account, "等待分配作战服务器", "您的理智已达到 " + dynamicInfo.getUserSanList().get(id) +
                         "，等待分配作战服务器中，分配完成后将会自动开始作战");
+
+                //归零理智
+                dynamicInfo.getUserSanList().put(id, 0);
             }
 
             //检查是否到达提醒阈值 阈值为最大值-45

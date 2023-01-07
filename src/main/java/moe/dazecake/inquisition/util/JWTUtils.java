@@ -6,15 +6,16 @@ import com.auth0.jwt.algorithms.Algorithm;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.AdminEntity;
 import moe.dazecake.inquisition.entity.ProUserEntity;
-import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.Date;
 
 public class JWTUtils {
 
-    private static final String SECRET = RandomStringUtils.randomAlphabetic(16);
+    //    private static String SECRET = RandomStringUtils.randomAlphabetic(16);
+    public static String SECRET;
 
-    private static final long EXPIRATION = 1000 * 60 * 60 * 24 * 7;
+
+    private static final long EXPIRATION = 1000L * 60 * 60 * 24 * 30;
 
     public static String generateTokenForAdmin(AdminEntity adminEntity) {
         JWTCreator.Builder builder = JWT.create();

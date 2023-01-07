@@ -62,6 +62,7 @@ public class CDKServiceImpl implements CDKService {
             accountEntity.setAgent(cdkEntity.getAgent());
         }
         accountEntity.setFreeze(0);
+        accountEntity.setUpdateTime(LocalDateTime.now());
 
         cdkMapper.updateById(cdkEntity);
         accountMapper.updateById(accountEntity);
@@ -95,6 +96,9 @@ public class CDKServiceImpl implements CDKService {
         if (cdkEntity.getIsAgent() == 1) {
             accountEntity.setAgent(cdkEntity.getAgent());
         }
+
+        accountEntity.setCreateTime(LocalDateTime.now());
+        accountEntity.setUpdateTime(LocalDateTime.now());
 
         cdkMapper.updateById(cdkEntity);
         accountMapper.insert(accountEntity);

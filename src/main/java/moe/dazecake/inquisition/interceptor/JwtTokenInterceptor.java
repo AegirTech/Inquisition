@@ -1,8 +1,10 @@
 package moe.dazecake.inquisition.interceptor;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.annotation.ProKey;
+import moe.dazecake.inquisition.annotation.ProUserLogin;
 import moe.dazecake.inquisition.annotation.UserLogin;
 import moe.dazecake.inquisition.entity.ProUserEntity;
 import moe.dazecake.inquisition.mapper.ProUserMapper;
@@ -17,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Objects;
 
+@Slf4j
 @Component
 public class JwtTokenInterceptor implements HandlerInterceptor {
 
@@ -64,7 +67,7 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
         }
 
         //高级用户登陆验证
-        var proUserLogin = method.getMethod().getAnnotation(UserLogin.class);
+        var proUserLogin = method.getMethod().getAnnotation(ProUserLogin.class);
         if (proUserLogin != null) {
             if (JWTUtils.verifyToken(token) && Objects.equals(JWTUtils.getType(Objects.requireNonNull(token)),
                     "proUser")) {

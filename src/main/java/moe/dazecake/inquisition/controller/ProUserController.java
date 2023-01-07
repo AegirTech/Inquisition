@@ -61,13 +61,13 @@ public class ProUserController {
     @Resource
     TaskServiceImpl taskService;
 
-    @Value("${inquisition.price.daily}")
+    @Value("${inquisition.price.daily:1.0}")
     private Double dailyPrice;
 
-    @Value("${inquisition.price.rogue_1}")
+    @Value("${inquisition.price.rogue_1:40.0}")
     private Double rogue1Price;
 
-    @Value("${inquisition.price.rogue_2}")
+    @Value("${inquisition.price.rogue_2:40.0}")
     private Double rogue2Price;
 
     private static final String salt = "arklightspro";
@@ -92,7 +92,7 @@ public class ProUserController {
 
     @Operation(summary = "登陆高级用户账号")
     @PostMapping("/proUserLogin")
-    public Result<HashMap<String, String>> userLogin(String username, String password) {
+    public Result<HashMap<String, String>> proUserLogin(String username, String password) {
         Result<HashMap<String, String>> result = new Result<>();
 
         if (username == null || password == null) {
@@ -286,6 +286,7 @@ public class ProUserController {
         accountEntity.setId(oldAccountEntity.getId());
         accountEntity.setExpireTime(oldAccountEntity.getExpireTime());
         accountEntity.setAgent(id);
+        accountEntity.setUpdateTime(LocalDateTime.now());
 
         //冻结设置
         if (!Objects.equals(oldAccountEntity.getFreeze(), accountEntity.getFreeze())) {
@@ -447,6 +448,7 @@ public class ProUserController {
 
         //刷新
         accountEntity.setRefresh(1);
+        accountEntity.setUpdateTime(LocalDateTime.now());
         accountMapper.updateById(accountEntity);
 
         return result.setCode(200)
@@ -747,6 +749,7 @@ public class ProUserController {
         } else {
             accountEntity.setExpireTime(accountEntity.getExpireTime().plusDays(param));
         }
+        accountEntity.setUpdateTime(LocalDateTime.now());
         accountMapper.updateById(accountEntity);
 
         return result.setCode(200)

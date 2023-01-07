@@ -126,9 +126,9 @@ docker run -d -p 2000:2000 --name inquisition --network aegirtech-net dazecake/i
 
 单纯的后端部署完成后无法正常使用，您需要部署前端以获取图形化的操作界面
 
-Inquisition 的前端实现为 [IberiaEye 伊比利亚之眼](https://github.com/AegirTech/IberiaEye)，由于主要贡献者近期生活事务繁忙，`master`分支开发暂时被搁置，~~您可以使用由 [DazeCake](https://github.com/DazeCake) 开发的`element-plus`分支，该分支基于`Vue3 + Vite + TypeScript + Element-Plus`开发，较为简陋的前端实现，无移动端适配，仅用于开发调试，强烈不建议应用于生产环境。主要维护版本请查看`master`分支。~~
+Inquisition 的前端实现为 [IberiaEye 伊比利亚之眼](https://github.com/AegirTech/IberiaEye)
 
-`element-plus`分支已弃用，暂无前端支持
+在经历了长达半年的咕咕后，我们终于有时间来维护前端项目的更新了。新的前端将会与`v1.0.0`同步上线，预计时间为2023年1月底正式与大家见面
 
 ### 自定义配置
 
@@ -160,7 +160,8 @@ docker rm inquisition
 # 更新容器
 docker pull dazecake/inquisition:latest
 
-# 重新运行 (或增加启动参数)
-docker run -d -p 2000:2000 --name inquisition --network aegirtech-net dazecake/inquisition:latest
+# 重新运行
+docker run -d -p 2000:2000 --name inquisition --network aegirtech-net \
+-v /usr/local/inquisition/config:/config \
+dazecake/inquisition:latest
 ```
-

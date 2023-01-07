@@ -1,16 +1,20 @@
 package moe.dazecake.inquisition.entity.TaskDateSet;
 
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import moe.dazecake.inquisition.entity.AccountEntity;
 
 import java.time.LocalDateTime;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class LockTask {
-    String deviceToken;
+    String deviceToken = "";
 
-    AccountEntity account;
+    AccountEntity account = null;
 
     LocalDateTime expirationTime;
 }

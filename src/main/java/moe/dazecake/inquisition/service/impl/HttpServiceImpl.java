@@ -116,7 +116,7 @@ public class HttpServiceImpl implements HttpService {
         return Base64.getEncoder().encodeToString(cipher.doFinal(plain.getBytes(StandardCharsets.UTF_8)));
     }
 
-    @Value("${storage.oss.enable}")
+    @Value("${storage.oss.enable:fasle}")
     private boolean ossEnable;
 
     @Value("${storage.oss.secretId}")

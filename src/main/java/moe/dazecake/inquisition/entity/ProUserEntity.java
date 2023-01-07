@@ -43,11 +43,11 @@ public class ProUserEntity {
     @Schema(description = "权限")
     String permission;
 
-    @Column(name = "余额", comment = "balance")
+    @Column(name = "balance", comment = "余额")
     @Schema(description = "余额")
     Double balance;
 
-    @Column(name = "折扣系数", comment = "discount")
+    @Column(name = "discount", comment = "折扣系数")
     @Schema(description = "折扣系数")
     Double discount;
 

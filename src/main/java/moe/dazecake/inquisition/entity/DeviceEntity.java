@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.time.LocalDateTime;
 
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Accessors(chain = true)
 @TableName("device")
 @Schema(description = "设备配置")
 public class DeviceEntity {
@@ -28,23 +30,31 @@ public class DeviceEntity {
     @IsAutoIncrement
     @IsKey
     @IsNotNull
-    @Column(name = "id",comment = "ID")
+    @Column(name = "id", comment = "ID")
     @Schema(description = "id")
     Long id;
 
-    @Column(name = "device_name",comment = "设备名称")
+    @Column(name = "device_name", comment = "设备名称")
     @Schema(description = "设备名称")
     String deviceName;
 
-    @Column(name = "device_token",comment = "设备token")
+    @Column(name = "device_token", comment = "设备token")
     @Schema(description = "设备token")
     String deviceToken;
 
-    @Column(name = "expire_time",comment = "到期时间")
-    @Schema(description = "到期时间")
+    @Column(name = "chinac", comment = "华云设备")
+    @Schema(description = "华云设备")
+    Integer chinac;
+
+    @Column(name = "region", comment = "华云设备地域")
+    @Schema(description = "华云设备地域")
+    String region;
+
+    @Column(name = "expire_time", comment = "过期时间")
+    @Schema(description = "过期时间")
     LocalDateTime expireTime;
 
-    @Column(name = "delete",comment = "逻辑删除")
+    @Column(name = "delete", comment = "逻辑删除")
     @Schema(description = "逻辑删除")
     @TableField(value = "`delete`")
     Integer delete;

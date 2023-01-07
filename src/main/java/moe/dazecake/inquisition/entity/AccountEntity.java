@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 import moe.dazecake.inquisition.entity.ActivationDateSet.ActivationDate;
 import moe.dazecake.inquisition.entity.ConfigEntitySet.ConfigEntity;
 import moe.dazecake.inquisition.entity.NoticeEntitySet.NoticeEntity;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Accessors(chain = true)
 @TableName(value = "account", autoResultMap = true)
 @Schema(description = "账户配置")
 public class AccountEntity {
@@ -52,56 +54,60 @@ public class AccountEntity {
 
     @Column(name = "freeze", comment = "冻结")
     @Schema(description = "冻结")
-    Integer freeze;//冻结
+    Integer freeze = 0;//冻结
 
     @Column(name = "server", comment = "服务器类型")
     @Schema(description = "服务器类型")
-    Long server;//服务器类型 0:官服 1:B服
+    Long server = 0L;//服务器类型 0:官服 1:B服
 
     @Column(name = "task_type", comment = "任务类型")
     @Schema(description = "任务类型")
-    String taskType;//任务类型
+    String taskType = "daily";//任务类型
 
     @Column(name = "config", comment = "配置", type = MySqlTypeConstant.JSON)
     @Schema(description = "配置")
     @TableField(typeHandler = GsonTypeHandler.class)
-    ConfigEntity config;
+    ConfigEntity config = new ConfigEntity();
 
     @Column(name = "active", comment = "激活时间", type = MySqlTypeConstant.JSON)
     @Schema(description = "激活时间")
     @TableField(typeHandler = GsonTypeHandler.class)
-    ActivationDate active;
+    ActivationDate active = new ActivationDate();
 
     @Column(name = "notice", comment = "通知", type = MySqlTypeConstant.JSON)
     @Schema(description = "通知")
     @TableField(typeHandler = GsonTypeHandler.class)
-    NoticeEntity notice;
-
-    @Column(name = "b_limit", comment = "B服限制")
-    @Schema(description = "B服限制")
-    Integer bLimit;//B服限制
+    NoticeEntity notice = new NoticeEntity();
 
     @Column(name = "b_limit_device", comment = "B服限制设备", type = MySqlTypeConstant.JSON)
     @Schema(description = "B服限制设备")
     @TableField(typeHandler = GsonTypeHandler.class)
-    ArrayList<String> bLimitDevice;//B服限制设备
+    ArrayList<String> bLimitDevice = new ArrayList<>();//B服限制设备
 
     @Column(name = "refresh", comment = "剩余刷新次数")
     @Schema(description = "剩余刷新次数")
-    Integer refresh;//剩余刷新次数
+    Integer refresh = 1;//剩余刷新次数
 
     @Column(name = "agent", comment = "代理商")
     @Schema(description = "代理商")
     Long agent;//代理商
 
+    @Column(name = "create_time", comment = "创建时间")
+    @Schema(description = "创建时间")
+    LocalDateTime createTime = LocalDateTime.now();//创建时间
+
+    @Column(name = "update_time", comment = "更新时间")
+    @Schema(description = "更新时间")
+    LocalDateTime updateTime = LocalDateTime.now();//更新时间
+
     @Column(name = "expire_time", comment = "过期时间")
     @Schema(description = "过期时间")
-    LocalDateTime expireTime;//过期时间
+    LocalDateTime expireTime = LocalDateTime.now().plusDays(30);//过期时间
 
     @Column(name = "delete", comment = "逻辑删除")
     @Schema(description = "逻辑删除")
     @TableField(value = "`delete`")
-    Integer delete;
+    Integer delete = 0;
 
 
 }

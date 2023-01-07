@@ -45,7 +45,7 @@ public class CDKEntity {
     @Schema(description = "tag")
     String tag;
 
-    @Column(name = "isAgent",comment = "是否启用代理归属")
+    @Column(name = "is_agent", comment = "是否启用代理归属")
     @Schema(description = "是否启用代理归属")
     Integer isAgent;
 

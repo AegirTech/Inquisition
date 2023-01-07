@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QQ {
-    private String text;
-    private Boolean enable;
+    private String text = "";
+    private Boolean enable = false;
 }

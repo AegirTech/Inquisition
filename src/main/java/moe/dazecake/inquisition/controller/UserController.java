@@ -14,10 +14,11 @@ import moe.dazecake.inquisition.entity.NoticeEntitySet.WXUID;
 import moe.dazecake.inquisition.entity.NoticeEntitySet.WechatCallbackEntity;
 import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.mapper.AccountMapper;
-import moe.dazecake.inquisition.mapper.CDKMapper;
+import moe.dazecake.inquisition.mapper.BillMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
 import moe.dazecake.inquisition.service.impl.CDKServiceImpl;
 import moe.dazecake.inquisition.service.impl.HttpServiceImpl;
+import moe.dazecake.inquisition.service.impl.PayServiceImpl;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.JWTUtils;
 import moe.dazecake.inquisition.util.Result;
@@ -48,56 +49,96 @@ public class UserController {
     LogMapper logMapper;
 
     @Resource
-    CDKMapper cdkMapper;
-
-    @Resource
     HttpServiceImpl httpService;
 
     @Resource
     CDKServiceImpl cdkService;
 
-    @Value("${wx-pusher.app-token}")
+    @Resource
+    PayServiceImpl payService;
+
+    @Resource
+    BillMapper billMapper;
+
+    @Value("${wx-pusher.app-token:}")
     String appToken;
 
-    @Value("${wx-pusher.enable}")
+    @Value("${wx-pusher.enable:false}")
     boolean enableWxPusher;
 
-    @Operation(summary = "创建我的账号")
-    @PostMapping("/createUser")
-    public Result<String> createUser(String cdk, @RequestBody AccountEntity accountEntity) {
+    @Operation(summary = "使用CDK创建我的账号")
+    @PostMapping("/createUserByCDK")
+    public Result<String> createUserByCDK(String cdk, String username, String account, String password, Integer server) {
         Result<String> result = new Result<>();
 
         if (accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
-                .eq(AccountEntity::getAccount, accountEntity.getAccount())).size() != 0) {
-            result.setCode(403);
-            result.setMsg("账号已存在，无法重复注册");
+                .eq(AccountEntity::getAccount, account)).size() != 0) {
+            result.setCode(10001);
+            result.setMsg("账号已存在，请直接登录");
             return result;
         }
 
-        if (accountEntity.getServer() == 0) {
-            if (!httpService.isOfficialAccountWork(accountEntity.getAccount(), accountEntity.getPassword())) {
-                return result.setCode(403).setMsg("账号或密码错误，注册需要填写的账号就是游戏账号！");
+        if (server == 0) {
+            if (!httpService.isOfficialAccountWork(account, password)) {
+                return result.setCode(10002).setMsg("账号或密码错误，注册需要填写的账号就是游戏账号！");
             }
-        } else if (accountEntity.getServer() == 1) {
-            if (!httpService.isBiliAccountWork(accountEntity.getAccount(), accountEntity.getPassword())) {
-                return result.setCode(403).setMsg("账号或密码错误，注册需要填写的账号就是游戏账号！");
+        } else if (server == 1) {
+            if (!httpService.isBiliAccountWork(account, password)) {
+                return result.setCode(10002).setMsg("账号或密码错误，注册需要填写的账号就是游戏账号！");
             }
         } else {
-            return result.setCode(403).setMsg("未知的服务器类型");
+            return result.setCode(10003).setMsg("未知的服务器类型");
         }
 
-        accountEntity.setId(0L);
-        accountEntity.setExpireTime(LocalDateTime.now());
-        accountEntity.setRefresh(1);
-        var code = cdkService.createUserByCDK(accountEntity, cdk);
+        var newAccount = new AccountEntity();
+        newAccount.setName(username)
+                .setAccount(account)
+                .setPassword(password);
+        var code = cdkService.createUserByCDK(newAccount, cdk);
 
         if (code == 200) {
             result.setCode(200).setMsg("success").setData("注册成功");
         } else if (code == 404) {
-            result.setCode(404).setMsg("CDK不存在或已被激活");
+            result.setCode(10004).setMsg("CDK不存在或已被激活");
         }
         return result;
     }
+
+    @Operation(summary = "使用在线支付创建我的账号")
+    @PostMapping("/createUserByPay")
+    public Result<String> createUserByPay(String payType, String username, String account, String password, Integer server) {
+        Result<String> result = new Result<>();
+
+        if (accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
+                .eq(AccountEntity::getAccount, account)).size() != 0) {
+            result.setCode(10001);
+            result.setMsg("账号已存在，请直接登录");
+            return result;
+        }
+
+        if (server == 0) {
+            if (!httpService.isOfficialAccountWork(account, password)) {
+                return result.setCode(10002).setMsg("账号或密码错误，注册需要填写的账号就是游戏账号！");
+            }
+        } else if (server == 1) {
+            if (!httpService.isBiliAccountWork(account, password)) {
+                return result.setCode(10002).setMsg("账号或密码错误，注册需要填写的账号就是游戏账号！");
+            }
+        } else {
+            return result.setCode(10003).setMsg("未知的服务器类型");
+        }
+
+        var bill = payService.createOrder(1.0, payType, "/auth/user/");
+        bill.setType("register")
+                .setParam(username + "|" + account + "|" + password + "|" + server);
+        billMapper.updateById(bill);
+
+        result.setData(bill.getPayUrl());
+
+        return result.setCode(200)
+                .setMsg("success");
+    }
+
 
     @Operation(summary = "登陆我的账号")
     @PostMapping("/userLogin")
@@ -136,7 +177,6 @@ public class UserController {
     @GetMapping("/showMyAccount")
     public Result<AccountEntity> showMyAccount(@RequestHeader("Authorization") String token) {
         Result<AccountEntity> result = new Result<>();
-        result.setData(new AccountEntity());
 
         var account = accountMapper.selectOne(
                 Wrappers.<AccountEntity>lambdaQuery()
@@ -167,6 +207,7 @@ public class UserController {
             account.setId(JWTUtils.getId(token));
             account.setTaskType(taskType);
             account.setExpireTime(expireTime);
+            account.setUpdateTime(LocalDateTime.now());
 
             accountMapper.updateById(account);
 
@@ -202,6 +243,7 @@ public class UserController {
                 accountEntity.setAccount(account);
                 accountEntity.setPassword(password);
                 accountEntity.setServer(server);
+                accountEntity.setUpdateTime(LocalDateTime.now());
                 accountMapper.updateById(accountEntity);
             } else {
                 result.setCode(403)
@@ -214,6 +256,8 @@ public class UserController {
                 accountEntity.setPassword(password);
                 accountEntity.setServer(server);
                 accountEntity.setFreeze(0);
+                accountEntity.getBLimitDevice().clear();
+                accountEntity.setUpdateTime(LocalDateTime.now());
                 accountMapper.updateById(accountEntity);
             } else {
                 result.setCode(403)
@@ -359,10 +403,16 @@ public class UserController {
         Result<String> result = new Result<>();
 
         var id = JWTUtils.getId(token);
+        var ans = "";
+        if (dynamicInfo.getUserSanList().get(id).equals(dynamicInfo.getUserMaxSanList().get(id))) {
+            ans = "正在尝试作战以校准理智值";
+        } else {
+            ans = dynamicInfo.getUserSanList().get(id) + "/" + dynamicInfo.getUserMaxSanList().get(id);
+        }
 
         return result.setCode(200)
                 .setMsg("success")
-                .setData(dynamicInfo.getUserSanList().get(id) + "/" + dynamicInfo.getUserMaxSanList().get(id));
+                .setData(ans);
     }
 
     @UserLogin
@@ -517,7 +567,7 @@ public class UserController {
         Long id = JWTUtils.getId(token);
         AccountEntity account = accountMapper.selectById(id);
         if (account.getRefresh() < 1) {
-            return result.setCode(403).setMsg("今日刷新次数已达上线，明天再来看看吧");
+            return result.setCode(403).setMsg("今日刷新次数已达上限，每天零点刷新，明天再来看看吧");
         }
         for (AccountEntity freeTask : dynamicInfo.getFreeTaskList()) {
             if (freeTask.getId().equals(id)) {

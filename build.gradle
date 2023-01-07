@@ -22,6 +22,7 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket:2.7.0'
+    testImplementation 'junit:junit:4.13.1'
     compileOnly 'org.projectlombok:lombok:1.18.24'
     developmentOnly 'org.springframework.boot:spring-boot-devtools:2.7.0'
     runtimeOnly 'mysql:mysql-connector-java:8.0.29'
@@ -38,8 +39,5 @@ dependencies {
     implementation 'com.zjiecode:wxpusher-java-sdk:2.1.4'
     implementation 'com.squareup.okhttp3:okhttp:4.10.0'
     implementation 'com.qcloud:cos_api:5.6.105'
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
 }

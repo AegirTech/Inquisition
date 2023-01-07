@@ -1,22 +1,26 @@
 package moe.dazecake.inquisition.entity.ActivationDateSet;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ActivationDate {
 
-    private ActivateConfig monday;
+    private ActivateConfig monday = new ActivateConfig();
 
-    private ActivateConfig tuesday;
+    private ActivateConfig tuesday = new ActivateConfig();
 
-    private ActivateConfig wednesday;
+    private ActivateConfig wednesday = new ActivateConfig();
 
-    private ActivateConfig thursday;
+    private ActivateConfig thursday = new ActivateConfig();
 
-    private ActivateConfig friday;
+    private ActivateConfig friday = new ActivateConfig();
 
-    private ActivateConfig saturday;
+    private ActivateConfig saturday = new ActivateConfig();
 
-    private ActivateConfig sunday;
+    private ActivateConfig sunday = new ActivateConfig();
 
 }

@@ -10,6 +10,7 @@ import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
+import moe.dazecake.inquisition.service.impl.ChinacServiceImpl;
 import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
 import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
 import moe.dazecake.inquisition.service.impl.WXPusherServiceImpl;
@@ -21,9 +22,12 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.support.CronTrigger;
 
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 
 @Slf4j
@@ -52,6 +56,9 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
     @Resource
     TaskServiceImpl taskService;
 
+    @Resource
+    ChinacServiceImpl chinacService;
+
     @Value("${spring.mail.to}")
     String to;
 
@@ -61,12 +68,18 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
     @Value("${wx-pusher.enable:false}")
     boolean enableWxPusher;
 
+    @Value("${inquisition.chinac.enableAutoDeviceManage:false}")
+    boolean enableAutoDeviceManage;
+
+    @Value("${inquisition.chinac.maxPlayerInDevice:25}")
+    Integer maxPlayerInDevice;
+
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
         //队列巡检
         taskRegistrar.addTriggerTask(
                 () -> {
-                    log.info("正在巡检队列: " + LocalDateTime.now().toLocalTime());
+                    //log.info("正在巡检队列: " + LocalDateTime.now().toLocalTime());
                     //检查等待队列中是否存在重复项，若存在删除多余的重复项
                     LinkedHashSet<AccountEntity> set = new LinkedHashSet<>(dynamicInfo.freeTaskList);
                     dynamicInfo.freeTaskList = new ArrayList<>(set);
@@ -76,62 +89,93 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
         //理智刷新
         taskRegistrar.addTriggerTask(
                 () -> {
-                    log.info("正在刷新用户理智: " + LocalDateTime.now().toLocalTime());
+                    //log.info("正在刷新用户理智: " + LocalDateTime.now().toLocalTime());
                     taskService.calculatingSan();
                 },
                 triggerContext -> new CronTrigger("0 */6 * * * *").nextExecutionTime(triggerContext)
         );
         //设备离线监控
         taskRegistrar.addTriggerTask(
-                () -> dynamicInfo.getCounter().forEach(
-                        (token, num) -> {
-                            if (num > 0 || num > -60 && num < 0) {
-                                --num;
-                                dynamicInfo.getCounter().put(token, num);
-                            } else if (num == 0) {
-                                dynamicInfo.getDeviceStatusMap().put(token, 0);
-                                log.warn("设备离线: " + token);
+                () -> {
+                    for (java.util.Map.Entry<String, Integer> count : dynamicInfo.getCounter().entrySet()) {
 
-                                dynamicInfo.getCounter().put(token, -1);
-                            } else if (num == -60) {
-                                //重连超时提示
-                                var device = deviceMapper.selectOne(
-                                        Wrappers.<DeviceEntity>lambdaQuery()
-                                                .eq(DeviceEntity::getDeviceToken, token)
-                                );
+                        var token = count.getKey();
+                        var num = count.getValue();
 
-                                //记录日志
-                                LogEntity logEntity = new LogEntity();
-                                logEntity.setLevel("WARN")
-                                        .setTaskType("system")
-                                        .setTitle("设备离线")
-                                        .setDetail("设备名称: " + device.getDeviceName() + "\n" +
-                                                "设备token: " + device.getDeviceToken() + "\n"
-                                        )
-                                        .setFrom(token)
-                                        .setTime(LocalDateTime.now());
-                                logController.addLog(logEntity, "system");
+                        --num;
+                        dynamicInfo.getCounter().put(token, num);
 
-                                if (enableMail) {
-                                    //邮件通知
-                                    String emailStr = "设备名称: " + device.getDeviceName() + "\n"
-                                            + "设备token: " + device.getDeviceToken() + "\n"
-                                            + "时间: " + LocalDateTime.now() + "\n";
+                        if (num == 0) {
+                            dynamicInfo.getDeviceStatusMap().put(token, 0);
+                            log.warn("设备离线: " + token);
+                        } else if (num == -60) {
+                            //重连超时提示
+                            var device = deviceMapper.selectOne(
+                                    Wrappers.<DeviceEntity>lambdaQuery()
+                                            .eq(DeviceEntity::getDeviceToken, token)
+                            );
 
-                                    emailService.sendSimpleMail(to, "设备离线", emailStr);
-                                }
+                            //记录日志
+                            LogEntity logEntity = new LogEntity();
+                            logEntity.setLevel("WARN")
+                                    .setTaskType("system")
+                                    .setTitle("设备离线")
+                                    .setDetail("设备名称: " + device.getDeviceName() + "\n" +
+                                            "设备token: " + device.getDeviceToken() + "\n"
+                                    )
+                                    .setFrom(token)
+                                    .setTime(LocalDateTime.now());
+                            logController.addLog(logEntity, "system");
 
-                                //更新设备状态
-                                dynamicInfo.getCounter().put(token, -61);
+                            if (enableMail) {
+                                //邮件通知
+                                String emailStr = "设备名称: " + device.getDeviceName() + "\n"
+                                        + "设备token: " + device.getDeviceToken() + "\n"
+                                        + "时间: " + LocalDateTime.now() + "\n";
+
+                                emailService.sendSimpleMail(to, "[审判庭] 设备离线", emailStr);
+                            }
+                        } else if (num == 86400) {
+                            //超时24h，移除设备
+                            dynamicInfo.getDeviceStatusMap().remove(token);
+                            dynamicInfo.getCounter().remove(token);
+
+                            var device = deviceMapper.selectOne(
+                                    Wrappers.<DeviceEntity>lambdaQuery()
+                                            .eq(DeviceEntity::getDeviceToken, token)
+                            );
+                            device.setDelete(1);
+                            deviceMapper.updateById(device);
+
+                            //记录日志
+                            LogEntity logEntity = new LogEntity();
+                            logEntity.setLevel("WARN")
+                                    .setTaskType("system")
+                                    .setTitle("设备移除")
+                                    .setDetail("设备名称: " + device.getDeviceName() + "\n" +
+                                            "设备token: " + device.getDeviceToken() + "\n"
+                                    )
+                                    .setFrom(token)
+                                    .setTime(LocalDateTime.now());
+                            logController.addLog(logEntity, "system");
+
+                            if (enableMail) {
+                                //邮件通知
+                                String emailStr = "设备名称: " + device.getDeviceName() + "\n"
+                                        + "设备token: " + device.getDeviceToken() + "\n"
+                                        + "时间: " + LocalDateTime.now() + "\n";
+
+                                emailService.sendSimpleMail(to, "[审判庭] 设备移除", emailStr);
                             }
                         }
-                ),
+                    }
+                },
                 triggerContext -> new CronTrigger("0/5 * * * * ?").nextExecutionTime(triggerContext)
         );
         //任务超时检测
         taskRegistrar.addTriggerTask(
                 () -> {
-                    log.info("任务超时检测");
+                    //log.info("任务超时检测");
                     LocalDateTime nowTime = LocalDateTime.now();
                     int num = 0;
                     for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
@@ -158,84 +202,72 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                 },
                 triggerContext -> new CronTrigger("0 0/5 * * * ?").nextExecutionTime(triggerContext)
         );
-        //设备过期检测
-        taskRegistrar.addTriggerTask(
-                () -> {
-                    log.info("设备过期检测");
-                    LocalDateTime nowTime = LocalDateTime.now();
-                    var deviceList = deviceMapper.selectList(null);
-                    deviceList.forEach(
-                            (device) -> {
-                                if (nowTime.isAfter(device.getExpireTime()) && device.getDelete() == 0) {
-                                    device.setDelete(1);
-                                    deviceMapper.updateById(device);
-                                    log.info("已过期设备: " + device.getId() + "--" + device.getDeviceToken());
 
-                                    //记录日志
-                                    LogEntity logEntity = new LogEntity();
-                                    logEntity.setLevel("WARN")
-                                            .setTaskType("system")
-                                            .setTitle("设备过期")
-                                            .setDetail("")
-                                            .setFrom(device.getDeviceToken())
-                                            .setTime(LocalDateTime.now());
-                                    logController.addLog(logEntity, "system");
-
-                                }
-                            }
-                    );
-                },
-                triggerContext -> new CronTrigger("0 0/10 * * * ?").nextExecutionTime(triggerContext)
-        );
-        //设备载入刷新
-        taskRegistrar.addTriggerTask(
-                () -> {
-                    log.info("设备载入刷新");
-                    var devices = deviceMapper.selectList(
-                            Wrappers.<DeviceEntity>lambdaQuery()
-                                    .eq(DeviceEntity::getDelete, 0)
-                                    .ge(DeviceEntity::getExpireTime, LocalDateTime.now())
-                    );
-                    devices.forEach(
-                            device -> {
-                                if (!dynamicInfo.getDeviceStatusMap().containsKey(device.getDeviceToken())) {
-                                    dynamicInfo.getDeviceStatusMap().put(device.getDeviceToken(), 0);
-                                    dynamicInfo.getCounter().put(device.getDeviceToken(), 1);
-                                }
-                            }
-                    );
-                },
-                triggerContext -> new CronTrigger("0 0/5 * * * ? ").nextExecutionTime(triggerContext)
-        );
         //账号过期检测
         taskRegistrar.addTriggerTask(
                 () -> {
                     log.info("账号过期检测");
                     var finalTime = LocalDateTime.now().plusDays(7);
-                    var accountList = accountMapper.selectList(null);
+                    var accountList = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
+                            .lt(AccountEntity::getExpireTime, finalTime)
+                            .gt(AccountEntity::getExpireTime, LocalDateTime.now())
+                            .eq(AccountEntity::getDelete, 0));
                     accountList.forEach(
                             (account) -> {
-                                if (finalTime.isAfter(account.getExpireTime()) && LocalDateTime.now()
-                                        .isBefore(account.getExpireTime()) && account.getDelete() == 0) {
-                                    var msg = "您的托管账号将于" + account.getExpireTime()
-                                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "过期，记得及时续费哦。";
+                                log.info("【临期账号】: " + account.getAccount() + " " + account.getAccount());
+                                var msg = "您的托管账号将于" + account.getExpireTime()
+                                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "过期，记得及时续费哦。";
 
-                                    //邮件推送
-                                    if (enableMail && account.getNotice().getMail().getEnable()) {
-                                        emailService.sendSimpleMail(account.getNotice().getMail().getText(),
-                                                "【明日方舟】托管续费提醒",
-                                                msg);
-                                    }
-
-                                    //微信推送
-                                    if (enableWxPusher && account.getNotice().getWxUID().getEnable()) {
-                                        wxPusherService.push(Message.CONTENT_TYPE_MD,
-                                                msg,
-                                                account.getNotice().getWxUID().getText(),
-                                                null
-                                        );
-                                    }
+                                //邮件推送
+                                if (enableMail && account.getNotice().getMail().getEnable()) {
+                                    emailService.sendSimpleMail(account.getNotice().getMail().getText(),
+                                            "【明日方舟】托管续费提醒",
+                                            msg);
                                 }
+
+                                //微信推送
+                                if (enableWxPusher && account.getNotice().getWxUID().getEnable()) {
+                                    wxPusherService.push(Message.CONTENT_TYPE_MD,
+                                            msg,
+                                            account.getNotice().getWxUID().getText(),
+                                            null
+                                    );
+                                }
+
+                            }
+                    );
+                },
+                triggerContext -> new CronTrigger("0 0 20 * * ?").nextExecutionTime(triggerContext)
+        );
+        //账号冻结检测
+        taskRegistrar.addTriggerTask(
+                () -> {
+                    log.info("账号冻结检测");
+                    var accountList = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
+                            .gt(AccountEntity::getExpireTime, LocalDateTime.now())
+                            .eq(AccountEntity::getFreeze, 1)
+                            .eq(AccountEntity::getDelete, 0));
+                    accountList.forEach(
+                            (account) -> {
+                                log.info("【冻结账号】: " + account.getAccount() + " " + account.getAccount());
+                                var msg = "您的账号仍处于冻结状态，若非手动冻结请及时检查账号状态，避免浪费账号托管时长";
+
+                                //邮件推送
+                                if (enableMail && account.getNotice().getMail().getEnable()) {
+                                    emailService.sendSimpleMail(account.getNotice().getMail().getText(),
+                                            "【明日方舟】账号冻结提醒",
+                                            msg);
+                                }
+
+                                //微信推送
+                                if (enableWxPusher && account.getNotice().getWxUID().getEnable()) {
+                                    wxPusherService.push(Message.CONTENT_TYPE_MD,
+                                            msg,
+                                            account.getNotice().getWxUID().getText(),
+                                            null
+                                    );
+                                }
+
                             }
                     );
                 },
@@ -247,6 +279,8 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                     log.info("每日刷新次数更新");
                     var accountList = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
                             .eq(AccountEntity::getRefresh, 0)
+                            .eq(AccountEntity::getDelete, 0)
+                            .ge(AccountEntity::getExpireTime, LocalDateTime.now())
                     );
                     accountList.forEach(
                             (account) -> {
@@ -256,6 +290,79 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                     );
                 },
                 triggerContext -> new CronTrigger("0 0 0 * * ?").nextExecutionTime(triggerContext)
+        );
+        //动态设备管理
+        taskRegistrar.addTriggerTask(
+                () -> {
+                    if (!enableAutoDeviceManage) {
+                        return;
+                    }
+                    log.info("动态设备增加");
+                    var payedUserList = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
+                            .ge(AccountEntity::getExpireTime, LocalDateTime.now())
+                            .eq(AccountEntity::getDelete, 0));
+                    var deviceList = deviceMapper.selectList(Wrappers.<DeviceEntity>lambdaQuery()
+                            .eq(DeviceEntity::getDelete, 0));
+                    if (deviceList.size() < payedUserList.size() / maxPlayerInDevice) {
+                        var newDevice = chinacService.createDevice(
+                                "cn-jsha-cloudphone-3",
+                                "805321",
+                                "PREPAID",
+                                0,
+                                1,
+                                null, null, null);
+                        if (newDevice == null) {
+                            String text = "设备增加失败，请检查平台余额是否充足";
+                            emailService.sendSimpleMail(to, "[审判庭] 设备增加失败提醒", text);
+                            return;
+                        }
+                        SimpleDateFormat format = new SimpleDateFormat("MM_dd");
+                        String time = format.format(new Date().getTime());
+                        deviceMapper.insert(new DeviceEntity()
+                                .setDeviceName("审判庭_" + time)
+                                .setRegion("")
+                                .setDeviceToken(newDevice.get(0))
+                                .setDelete(0)
+                        );
+                        String text = "激活用户: " + payedUserList.size() + "\n" +
+                                "设备数量: " + deviceList.size() + "\n" +
+                                "已为您自动增添新设备，请留意扣费信息";
+                        emailService.sendSimpleMail(to, "[审判庭] 设备增加提醒", text);
+                    }
+                    log.info("设备自动续费");
+
+                    //检测多余设备跳过续费 最多允许冗余设备数量: 2
+                    var overNum = (payedUserList.size() - deviceList.size() * maxPlayerInDevice) / maxPlayerInDevice;
+                    //过滤手动添加设备
+                    deviceList.removeIf(device -> device.getChinac() != 1);
+                    if (overNum > 2) {
+                        for (int i = 0; i < overNum; i++) {
+                            Iterator<DeviceEntity> iterator = deviceList.iterator();
+                            var flagDevice = iterator.next();
+                            while (iterator.hasNext()) {
+                                var device = iterator.next();
+                                if (flagDevice.getExpireTime().isBefore(device.getExpireTime())) {
+                                    flagDevice = device;
+                                }
+                            }
+                            deviceList.remove(flagDevice);
+                        }
+                    }
+                    for (DeviceEntity device : deviceList) {
+                        if (device.getExpireTime().isBefore(LocalDateTime.now().plusDays(7)) && device.getChinac() == 1) {
+                            if (chinacService.renewDevice(device.getRegion(), device.getDeviceToken(), 1)) {
+                                String text = "续费设备: " + device.getDeviceName() + "\n" +
+                                        "已为您自动续费，请留意扣费信息";
+                                emailService.sendSimpleMail(to, "[审判庭] 设备续费提醒", text);
+                            } else {
+                                String text = "自动续费失败，请检查平台余额是否充足";
+                                emailService.sendSimpleMail(to, "[审判庭] 设备续费失败提醒", text);
+                            }
+                            break;
+                        }
+                    }
+                },
+                triggerContext -> new CronTrigger("0 0 20 * * ?").nextExecutionTime(triggerContext)
         );
     }
 }
