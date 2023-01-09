@@ -406,6 +406,8 @@ public class UserController {
         var ans = "";
         if (dynamicInfo.getUserSanList().get(id).equals(dynamicInfo.getUserMaxSanList().get(id))) {
             ans = "正在尝试作战以校准理智值";
+        } else if (dynamicInfo.getLockTaskList().stream().anyMatch(e -> e.getAccount().getId().equals(id))) {
+            ans = "等待作战结束以校准理智";
         } else {
             ans = dynamicInfo.getUserSanList().get(id) + "/" + dynamicInfo.getUserMaxSanList().get(id);
         }
@@ -540,45 +542,39 @@ public class UserController {
     }
 
     @UserLogin
-    @Operation(summary = "插队")
-    @PostMapping("/insertQueue")
-    public Result<String> insertQueue(@RequestHeader("Authorization") String token) {
-        Result<String> result = new Result<>();
-        Long id = JWTUtils.getId(token);
-
-        var freeListIterator = dynamicInfo.getFreeTaskList().iterator();
-        while (freeListIterator.hasNext()) {
-            var freeTask = freeListIterator.next();
-            if (freeTask.getId().equals(id)) {
-                freeListIterator.remove();
-                dynamicInfo.getFreeTaskList().add(0, freeTask);
-                return result.setCode(200).setMsg("插队成功");
-            }
-        }
-
-        return result.setCode(200).setMsg("不在排队队列中，无法插队");
-    }
-
-    @UserLogin
     @Operation(summary = "立即开始作战")
     @PostMapping("/startNow")
     public Result<String> startNow(@RequestHeader("Authorization") String token) {
         Result<String> result = new Result<>();
         Long id = JWTUtils.getId(token);
         AccountEntity account = accountMapper.selectById(id);
-        if (account.getRefresh() < 1) {
-            return result.setCode(403).setMsg("今日刷新次数已达上限，每天零点刷新，明天再来看看吧");
+
+        if (account.getDelete() == 1 || account.getExpireTime().isBefore(LocalDateTime.now())) {
+            return result.setCode(10006).setMsg("账号已到期或失效");
         }
+
         for (AccountEntity freeTask : dynamicInfo.getFreeTaskList()) {
             if (freeTask.getId().equals(id)) {
-                return result.setCode(200).setMsg("已经在排队中");
+                var freeListIterator = dynamicInfo.getFreeTaskList().iterator();
+                while (freeListIterator.hasNext()) {
+                    var insertTask = freeListIterator.next();
+                    if (insertTask.getId().equals(id)) {
+                        freeListIterator.remove();
+                        dynamicInfo.getFreeTaskList().add(0, insertTask);
+                        return result.setCode(20003).setMsg("插队成功");
+                    }
+                }
             }
         }
 
         for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
             if (lockTask.getAccount().getId().equals(id)) {
-                return result.setCode(200).setMsg("已经在作战中");
+                return result.setCode(20002).setMsg("已经在作战中");
             }
+        }
+
+        if (account.getRefresh() < 1) {
+            return result.setCode(10005).setMsg("今日刷新次数已达上限，每天零点刷新，明天再来看看吧");
         }
 
         account.setRefresh(account.getRefresh() - 1);
@@ -586,7 +582,7 @@ public class UserController {
         dynamicInfo.getFreeTaskList().add(0, account);
         dynamicInfo.getUserSanList().put(id, 0);
 
-        return result.setCode(200).setMsg("立即开始作战成功，等待分配作战服务器");
+        return result.setCode(20001).setMsg("立即开始作战成功，等待分配作战服务器");
     }
 
     @UserLogin
