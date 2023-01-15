@@ -1,6 +1,9 @@
 FROM openjdk:11-jre-slim
 MAINTAINER DazeCake
 
+RUN apt-get -y update
+RUN apt-get -y install android-tools-adb
+
 COPY build/libs/*.jar /Inquisition.jar
 COPY src/main/resources/application.yml /config/application.yml
 

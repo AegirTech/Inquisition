@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -234,7 +233,7 @@ public class UserController {
                         .eq(AccountEntity::getId, JWTUtils.getId(token))
         );
 
-        if (account == null || password == null || server == null) {
+        if (account.isBlank() || password.isBlank() || server == null) {
             return result.setCode(403).setMsg("未填写数据");
         }
 
@@ -246,7 +245,7 @@ public class UserController {
                 accountEntity.setUpdateTime(LocalDateTime.now());
                 accountMapper.updateById(accountEntity);
             } else {
-                result.setCode(403)
+                result.setCode(10002)
                         .setMsg("验证失败，账号或密码错误");
                 return result;
             }
@@ -260,7 +259,7 @@ public class UserController {
                 accountEntity.setUpdateTime(LocalDateTime.now());
                 accountMapper.updateById(accountEntity);
             } else {
-                result.setCode(403)
+                result.setCode(10002)
                         .setMsg("验证失败，账号或密码错误");
                 return result;
             }
@@ -326,19 +325,28 @@ public class UserController {
     @UserLogin
     @Operation(summary = "查询我的日志")
     @GetMapping("/showMyLog")
-    public Result<ArrayList<LogEntity>> showMyLog(@RequestHeader("Authorization") String token, Long current,
-                                                  Long size) {
-        Result<ArrayList<LogEntity>> result = new Result<>();
-        result.setData(new ArrayList<>());
+    public Result<HashMap<String, Object>> showMyLog(@RequestHeader("Authorization") String token, Long current,
+                                                     Long size) {
+        Result<HashMap<String, Object>> result = new Result<>();
+        result.setData(new HashMap<>());
 
         //降序分页查找
         var data = logMapper.selectPage(new Page<>(current, size), Wrappers.<LogEntity>lambdaQuery()
                 .eq(LogEntity::getAccount, JWTUtils.getUsername(token))
                 .orderByDesc(LogEntity::getId));
+
+        for (LogEntity log : data.getRecords()) {
+            log.setPassword("");
+            log.setFrom("");
+        }
+
+        result.getData().put("records", data.getRecords());
+        result.getData().put("current", data.getCurrent());
+        result.getData().put("totalPages", data.getPages());
+        result.getData().put("total", data.getTotal());
+
         result.setCode(200)
-                .setMsg("success")
-                .getData()
-                .addAll(data.getRecords());
+                .setMsg("success");
 
         return result;
     }
@@ -404,7 +412,9 @@ public class UserController {
 
         var id = JWTUtils.getId(token);
         var ans = "";
-        if (dynamicInfo.getUserSanList().get(id).equals(dynamicInfo.getUserMaxSanList().get(id))) {
+        if (!dynamicInfo.getUserSanList().containsKey(id)) {
+            ans = "账号冻结中";
+        } else if (dynamicInfo.getUserSanList().get(id).equals(dynamicInfo.getUserMaxSanList().get(id))) {
             ans = "正在尝试作战以校准理智值";
         } else if (dynamicInfo.getLockTaskList().stream().anyMatch(e -> e.getAccount().getId().equals(id))) {
             ans = "等待作战结束以校准理智";
@@ -575,6 +585,10 @@ public class UserController {
 
         if (account.getRefresh() < 1) {
             return result.setCode(10005).setMsg("今日刷新次数已达上限，每天零点刷新，明天再来看看吧");
+        }
+
+        if (account.getFreeze() == 1) {
+            return result.setCode(10007).setMsg("请先解冻再执行操作");
         }
 
         account.setRefresh(account.getRefresh() - 1);

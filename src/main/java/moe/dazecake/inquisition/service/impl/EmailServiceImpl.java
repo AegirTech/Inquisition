@@ -22,12 +22,15 @@ public class EmailServiceImpl implements EmailService {
     @Value("${spring.mail.from}")
     private String from;
 
+    @Value("${spring.mail.nickname:阿戈尔科技}")
+    private String nickname;
+
     @Override
     public void sendSimpleMail(String to, String subject, String content) {
         //创建SimpleMailMessage对象
         SimpleMailMessage message = new SimpleMailMessage();
         //邮件发送人
-        message.setFrom(from);
+        message.setFrom(nickname + '<' + from + '>');
         //邮件接收人
         message.setTo(to);
         //邮件主题
@@ -46,7 +49,7 @@ public class EmailServiceImpl implements EmailService {
         try {
             messageHelper = new MimeMessageHelper(message, true);
             //邮件发送人
-            messageHelper.setFrom(from);
+            messageHelper.setFrom(nickname + '<' + from + '>');
             //邮件接收人,设置多个收件人地址
             InternetAddress[] internetAddressTo = InternetAddress.parse(to);
             messageHelper.setTo(internetAddressTo);

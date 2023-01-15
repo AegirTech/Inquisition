@@ -234,7 +234,6 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void lockTask(String deviceToken, AccountEntity account) {
         LocalDateTime localDateTime = LocalDateTime.now();
-        System.out.println(account);
         var lockTask = new LockTask();
         lockTask.setDeviceToken(deviceToken);
         switch (account.getTaskType()) {
@@ -251,7 +250,6 @@ public class TaskServiceImpl implements TaskService {
                 lockTask.setExpirationTime(localDateTime.plusHours(72));
                 break;
         }
-        System.out.println(lockTask);
         dynamicInfo.getLockTaskList().add(lockTask);
     }
 

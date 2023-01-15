@@ -92,7 +92,7 @@ public class RunScript implements ApplicationRunner {
                 log.info("同步Chinac设备");
                 var chinacDeviceList = chinacService.queryAllDeviceList();
                 for (ChinacPhoneEntity chinacPhone : chinacDeviceList) {
-                    if (chinacPhone.getPayType() != "PREPAID") {
+                    if (!chinacPhone.getPayType().equals("PREPAID")) {
                         continue;
                     }
                     if (deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
@@ -107,6 +107,7 @@ public class RunScript implements ApplicationRunner {
                                 .setDelete(0)
                                 .setChinac(1);
                         deviceMapper.insert(newDevice);
+                        log.info("同步设备 " + newDevice.getDeviceToken());
                         dynamicInfo.getDeviceStatusMap().put(newDevice.getDeviceToken(), 0);
                         dynamicInfo.getCounter().put(newDevice.getDeviceToken(), 1);
                     }

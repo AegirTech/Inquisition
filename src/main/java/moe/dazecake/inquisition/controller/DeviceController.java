@@ -184,7 +184,6 @@ public class DeviceController {
     @PostMapping("/getDeviceScreenshotInfo")
     public Result<HashMap<String, String>> getDeviceScreenshotInfo(@RequestBody ArrayList<String> tokenList, String region) {
         Result<HashMap<String, String>> result = new Result<>();
-        System.out.println(tokenList.toString());
         result.setData(chinacService.getDeviceScreenshot(tokenList, region));
         return result
                 .setCode(200)

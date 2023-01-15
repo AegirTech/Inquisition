@@ -61,8 +61,6 @@ public class ChinacServiceImpl implements ChinacService {
         //按照参数名称升序排列并编码
         Map<String, Object> treeQueryMap = new TreeMap<>(publicParams);
 
-        log.info(treeQueryMap.toString());
-
         StringBuilder params = new StringBuilder();
         for (String key : treeQueryMap.keySet()) {
             if (treeQueryMap.get(key) != null) {
@@ -80,7 +78,6 @@ public class ChinacServiceImpl implements ChinacService {
 
         HttpUrl httpUrl = Objects.requireNonNull(HttpUrl.parse(url + "/?" + params))
                 .newBuilder().build();
-        log.info(httpUrl.toString());
 
         Gson gson = new Gson();
         MediaType mediaType = MediaType.Companion.parse("application/json;charset=UTF-8");
@@ -287,7 +284,6 @@ public class ChinacServiceImpl implements ChinacService {
                 Gson gson = new Gson();
                 assert response.body() != null;
                 var jsonStr = response.body().string();
-                log.info(jsonStr);
                 ChinacResult<HashMap<String, String>> result =
                         gson.fromJson(jsonStr,
                                 new TypeToken<ChinacResult<HashMap<String, String>>>() {
@@ -334,7 +330,6 @@ public class ChinacServiceImpl implements ChinacService {
                 if (response.isSuccessful()) {
                     assert response.body() != null;
                     var jsonStr = response.body().string();
-                    log.info(jsonStr);
                     ChinacScreenshotEntity result =
                             gson.fromJson(jsonStr,
                                     new TypeToken<ChinacScreenshotEntity>() {

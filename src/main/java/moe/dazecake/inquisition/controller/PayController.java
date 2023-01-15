@@ -92,7 +92,7 @@ public class PayController {
             return result.setData("你小子折腾啥呢");
         }
 
-        var bill = payService.createOrder(mo * 30 * dailyPrice, payType);
+        var bill = payService.createOrder(mo * 30 * dailyPrice, payType, "/user/home/");
         bill.setUserId(id)
                 .setType("daily")
                 .setParam(String.valueOf(30 * mo));

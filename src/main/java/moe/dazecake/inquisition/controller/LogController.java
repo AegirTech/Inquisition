@@ -33,6 +33,8 @@ public class LogController {
         logEntity.setDetail(logEntity.getDetail().replaceAll("hikay960q4", ""));
         logService.addLog(logEntity, deviceToken);
 
+        // TODO: 1/12/23 高级资深干员提示
+
         return result;
     }
 
