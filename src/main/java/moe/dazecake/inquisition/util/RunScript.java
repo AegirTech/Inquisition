@@ -125,15 +125,15 @@ public class RunScript implements ApplicationRunner {
 
             httpService.updateLatestMD5();
 
-            if (!secret.equals("")) {
-                SECRET = secret;
-            } else {
-                SECRET = RandomStringUtils.randomAlphabetic(16);
-                log.info("已生成随机 secret: " + SECRET);
-            }
-
-            log.info("审判庭初始化完成");
         }
+        if (!secret.equals("")) {
+            SECRET = secret;
+        } else {
+            SECRET = RandomStringUtils.randomAlphabetic(16);
+            log.info("已生成随机 secret: " + SECRET);
+        }
+
+        log.info("审判庭初始化完成");
     }
 
     @PreDestroy
