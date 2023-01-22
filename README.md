@@ -20,5 +20,5 @@ Inquisition 可以轻松管理数百个账号与设备。
 
 请参考 [快速部署](doc/FastDeploy.md) 文档
 
-一般用户可以使用由项目组提供支持的的付费 [在线托管服务](http://ark.aegirtech.com/)
+一般用户可以使用由项目组提供支持的的付费 [在线托管服务](https://ark.aegirtech.com/)
 ，此服务将会提供最优先甚至领先于release版本的服务与支持，使用在线托管服务亦是对开发的支持。

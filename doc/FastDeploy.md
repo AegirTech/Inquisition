@@ -128,7 +128,7 @@ docker run -d -p 2000:2000 --name inquisition --network aegirtech-net dazecake/i
 
 Inquisition 的前端实现为 [IberiaEye 伊比利亚之眼](https://github.com/AegirTech/IberiaEye)
 
-在经历了长达半年的咕咕后，我们终于有时间来维护前端项目的更新了。新的前端将会与`v1.0.0`同步上线，预计时间为2023年1月底正式与大家见面
+在经历了长达半年的咕咕后，我们终于有时间来维护前端项目的更新了。预计将于春节后与大家见面
 
 ### 自定义配置
 
