@@ -72,15 +72,13 @@ public interface ChinacService {
      * @param Region 机房标识，取值参见地域列表
      * @param Id     云手机ID
      * @param Period 续费时长，取值范围: 1,2,3,6，单位:月
-     * @return
+     * @return boolean 是否续费成功
      */
     boolean renewDevice(
             String Region,
             String Id,
             Integer Period
     );
-
-    ArrayList<HashMap<String, Object>> queryPublicImageList(String Region);
 
     //【云手机操作相关】==========================================
 

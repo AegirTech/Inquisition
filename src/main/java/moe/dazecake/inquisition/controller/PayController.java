@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.annotation.UserLogin;
 import moe.dazecake.inquisition.entity.BillEntity;
 import moe.dazecake.inquisition.mapper.BillMapper;
+import moe.dazecake.inquisition.service.impl.MessageServiceImpl;
 import moe.dazecake.inquisition.service.impl.PayServiceImpl;
 import moe.dazecake.inquisition.util.Encoder;
 import moe.dazecake.inquisition.util.JWTUtils;
@@ -32,6 +33,9 @@ public class PayController {
 
     @Resource
     PayServiceImpl payService;
+
+    @Resource
+    MessageServiceImpl messageService;
 
     @Value("${inquisition.price.daily:1.0}")
     private Double dailyPrice;
@@ -67,7 +71,7 @@ public class PayController {
                     return "success";
                 } else {
                     log.info("[支付回调]: 支付成功, 解决失败");
-                    // TODO: 12/30/22 消息推送至管理员
+                    messageService.pushAdmin("支付成功, 但是解决失败", "支付成功, 但是解决失败");
                     return "success";
                 }
 

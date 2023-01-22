@@ -1,6 +1,5 @@
 package moe.dazecake.inquisition.service.impl;
 
-import com.zjiecode.wxpusher.client.bean.Message;
 import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
@@ -31,10 +30,7 @@ public class TaskServiceImpl implements TaskService {
     LogServiceImpl logService;
 
     @Resource
-    EmailServiceImpl emailService;
-
-    @Resource
-    WXPusherServiceImpl wxPusherService;
+    MessageServiceImpl messageService;
 
     @Resource
     HttpServiceImpl httpService;
@@ -45,7 +41,7 @@ public class TaskServiceImpl implements TaskService {
     @Value("${spring.mail.enable:false}")
     boolean enableMail;
 
-    @Value("${wx-pusher.enable:fasle}")
+    @Value("${wx-pusher.enable:false}")
     boolean enableWxPusher;
 
 
@@ -280,30 +276,12 @@ public class TaskServiceImpl implements TaskService {
                 .setTime(LocalDateTime.now());
 
         if (logEntity.getDetail().contains("高级资深干员")) {
-            messagePush(account, "公开招募标签提醒", "恭喜你获得了高级资深干员tag，快去看看吧！");
+            messageService.push(account, "公开招募标签提醒", "恭喜你获得了高级资深干员tag，快去看看吧！");
         } else if (logEntity.getDetail().contains("资深干员")) {
-            messagePush(account, "公开招募标签提醒", "恭喜你获得了资深干员tag，快去看看吧！");
+            messageService.push(account, "公开招募标签提醒", "恭喜你获得了资深干员tag，快去看看吧！");
         }
 
         logService.addLog(logEntity, deviceToken);
-    }
-
-    @Override
-    public void messagePush(AccountEntity account, String title, String content) {
-        //微信推送
-        if (enableWxPusher && account.getNotice().getWxUID().getEnable()) {
-            wxPusherService.push(Message.CONTENT_TYPE_MD,
-                    "# " + title + "\n\n" +
-                            content,
-                    account.getNotice().getWxUID().getText(),
-                    null);
-        }
-
-        //邮件推送
-        if (enableMail && account.getNotice().getMail().getEnable()) {
-            emailService.sendSimpleMail(account.getNotice().getMail().getText(), title,
-                    content);
-        }
     }
 
     @Override
@@ -327,24 +305,25 @@ public class TaskServiceImpl implements TaskService {
                         accountMapper.updateById(account);
                         dynamicInfo.getUserSanList().remove(account.getId());
                         dynamicInfo.getUserMaxSanList().remove(account.getId());
-                        messagePush(account, "账号异常", "您的账号密码有误，请在面板更新正确的账号密码，否则托管将无法继续进行");
+                        messageService.push(account, "账号异常", "您的账号密码有误，请在面板更新正确的账号密码，否则托管将无法继续进行");
                     }
                 } else if (account.getServer() == 1) {
                     forceHaltTask(account, false);
                     if (httpService.isBiliAccountWork(account.getAccount(), account.getPassword())) {
-                        messagePush(account, "账号异常", "您近期登陆的设备较多，似乎已被B服限制登陆，请立即修改密码并于面板更新密码,否则托管可能将无法继续进行");
+                        messageService.push(account, "账号异常", "您近期登陆的设备较多，已被B服限制登陆，请立即修改密码并于面板更新密码,否则托管可能将无法继续进行");
                     } else {
                         account.setFreeze(1);
                         accountMapper.updateById(account);
                         dynamicInfo.getUserSanList().remove(account.getId());
                         dynamicInfo.getUserMaxSanList().remove(account.getId());
-                        messagePush(account, "账号异常", "您的账号密码有误，请在面板更新正确的账号密码，否则托管将无法继续进行");
+                        messageService.push(account, "账号异常", "您的账号密码有误，请在面板更新正确的账号密码，否则托管将无法继续进行");
                     }
                 }
             }
             default: {
-                messagePush(account, "账号异常", "您的存在异常，请立即联系管理员协助排查，否则托管将无法继续进行");
                 forceHaltTask(account, false);
+                dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
+                dynamicInfo.getFreeTaskList().add(account);
                 break;
             }
         }
@@ -411,7 +390,7 @@ public class TaskServiceImpl implements TaskService {
             if (account.getExpireTime().isBefore(LocalDateTime.now())) {
                 entryIterator.remove();
                 dynamicInfo.getUserMaxSanList().remove(id);
-                messagePush(account, "到期提醒", "您的账号已到期，作战已暂停，若仍需托管请及时续费");
+                messageService.push(account, "到期提醒", "您的账号已到期，作战已暂停，若仍需托管请及时续费");
                 continue;
             }
 
@@ -427,7 +406,7 @@ public class TaskServiceImpl implements TaskService {
                 //加入待分配队列
                 dynamicInfo.getFreeTaskList().add(account);
 
-                messagePush(account, "等待分配作战服务器", "您的理智已达到 " + dynamicInfo.getUserSanList().get(id) +
+                messageService.push(account, "等待分配作战服务器", "您的理智已达到 " + dynamicInfo.getUserSanList().get(id) +
                         "，等待分配作战服务器中，分配完成后将会自动开始作战");
 
                 //归零理智
@@ -436,7 +415,7 @@ public class TaskServiceImpl implements TaskService {
 
             //检查是否到达提醒阈值 阈值为最大值-45
             if (dynamicInfo.getUserSanList().get(id) == dynamicInfo.getUserMaxSanList().get(id) - 45) {
-                messagePush(account, "作战预告", "您的账号最快将在30" +
+                messageService.push(account, "作战预告", "您的账号最快将在30" +
                         "分钟后开始作战，若您当前仍在线，请注意合理把握时间，避免被强制下线\n\n" +
                         "若您需要轮空本次作战，请前往面板-->设置-->冻结，手动冻结账号来进行轮空\n\n" +
                         "当前理智: " +

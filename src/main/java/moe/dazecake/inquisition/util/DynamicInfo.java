@@ -40,14 +40,17 @@ public class DynamicInfo {
     HashMap<Long, Integer> userMaxSanList = new HashMap<>();
 
     public void load(DynamicInfo dynamicInfo) {
-        this.setCounter(dynamicInfo.getCounter());
-        this.setDeviceStatusMap(dynamicInfo.getDeviceStatusMap());
-        this.setFreeTaskList(dynamicInfo.getFreeTaskList());
-        this.setFreezeTaskList(dynamicInfo.getFreezeTaskList());
-        this.setHaltList(dynamicInfo.getHaltList());
-        this.setLockTaskList(dynamicInfo.getLockTaskList());
-        this.setUserMaxSanList(dynamicInfo.getUserMaxSanList());
-        this.setUserSanList(dynamicInfo.getUserSanList());
+        this.arklightsMD5 = dynamicInfo.arklightsMD5;
+        this.arklightsBateMD5 = dynamicInfo.arklightsBateMD5;
+        this.announcement = dynamicInfo.announcement;
+        this.deviceStatusMap = dynamicInfo.deviceStatusMap;
+        this.freeTaskList = dynamicInfo.freeTaskList;
+        this.lockTaskList = dynamicInfo.lockTaskList;
+        this.freezeTaskList = dynamicInfo.freezeTaskList;
+        this.haltList = dynamicInfo.haltList;
+        this.counter = dynamicInfo.counter;
+        this.userSanList = dynamicInfo.userSanList;
+        this.userMaxSanList = dynamicInfo.userMaxSanList;
     }
 
 }

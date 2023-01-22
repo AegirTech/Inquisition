@@ -5,8 +5,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
+import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
+import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
+import moe.dazecake.inquisition.service.MessageService;
 import moe.dazecake.inquisition.service.impl.LogServiceImpl;
 import moe.dazecake.inquisition.util.Result;
 import org.springframework.web.bind.annotation.*;
@@ -24,16 +27,28 @@ public class LogController {
     @Resource
     LogServiceImpl logService;
 
+    @Resource
+    AccountMapper accountMapper;
+
+    @Resource
+    MessageService messageService;
+
     @Operation(summary = "增加日志")
     @PostMapping("/addLog")
     public Result<String> addLog(@RequestBody LogEntity logEntity, String deviceToken) {
         Result<String> result = new Result<>();
 
-        logEntity.setTitle(logEntity.getTitle().replaceAll("hikay960q4", ""));
-        logEntity.setDetail(logEntity.getDetail().replaceAll("hikay960q4", ""));
         logService.addLog(logEntity, deviceToken);
 
-        // TODO: 1/12/23 高级资深干员提示
+        if (logEntity.getDetail().contains("高级资深干员")) {
+            try {
+                var luckyDog = accountMapper.selectOne(Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getAccount, logEntity.getAccount()));
+                messageService.push(luckyDog, "高级资深干员提示", "恭喜你获得了高级资深干员！快上游戏看看吧！");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         return result;
     }

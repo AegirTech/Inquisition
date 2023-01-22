@@ -233,6 +233,30 @@ public class AccountController {
     }
 
     @Login
+    @Operation(summary = "账号立即作战")
+    @PostMapping("/startAccountByAdmin")
+    public Result<String> startAccountByAdmin(Long id) {
+        Result<String> result = new Result<>();
+
+        var account = accountMapper.selectById(id);
+        if (account != null) {
+            accountMapper.updateById(account);
+            dynamicInfo.getFreeTaskList().add(0, account);
+            dynamicInfo.getUserSanList().put(id, 0);
+
+            result.setCode(200)
+                    .setMsg("success");
+
+        } else {
+            result.setCode(403)
+                    .setMsg("Unable to update a non-existent account");
+
+        }
+        result.setData(null);
+        return result;
+    }
+
+    @Login
     @Operation(summary = "修复账号")
     @PostMapping("/fixAccount")
     public Result<String> fixAccount(Long id) {

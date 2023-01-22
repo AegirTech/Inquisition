@@ -11,8 +11,6 @@ public interface TaskService {
 
     void log(String deviceToken, AccountEntity account, String level, String title, String content, String imgUrl);
 
-    void messagePush(AccountEntity account, String title, String content);
-
     void errorHandle(AccountEntity account, String deviceToken, String type);
 
     void forceHaltTask(AccountEntity account, boolean isHalt);

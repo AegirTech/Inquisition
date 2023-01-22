@@ -1,7 +1,6 @@
 package moe.dazecake.inquisition.util;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.zjiecode.wxpusher.client.bean.Message;
 import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.controller.LogController;
 import moe.dazecake.inquisition.entity.AccountEntity;
@@ -11,9 +10,8 @@ import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.service.impl.ChinacServiceImpl;
-import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
+import moe.dazecake.inquisition.service.impl.MessageServiceImpl;
 import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
-import moe.dazecake.inquisition.service.impl.WXPusherServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -48,10 +46,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
     LogController logController;
 
     @Resource
-    EmailServiceImpl emailService;
-
-    @Resource
-    WXPusherServiceImpl wxPusherService;
+    MessageServiceImpl messageService;
 
     @Resource
     TaskServiceImpl taskService;
@@ -127,14 +122,11 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                     .setTime(LocalDateTime.now());
                             logController.addLog(logEntity, "system");
 
-                            if (enableMail) {
-                                //邮件通知
-                                String emailStr = "设备名称: " + device.getDeviceName() + "\n"
-                                        + "设备token: " + device.getDeviceToken() + "\n"
-                                        + "时间: " + LocalDateTime.now() + "\n";
+                            //邮件通知
+                            messageService.pushAdmin("[审判庭] 设备离线", "设备名称: " + device.getDeviceName() + "\n"
+                                    + "设备token: " + device.getDeviceToken() + "\n"
+                                    + "时间: " + LocalDateTime.now() + "\n");
 
-                                emailService.sendSimpleMail(to, "[审判庭] 设备离线", emailStr);
-                            }
                         } else if (num == 86400) {
                             //超时24h，移除设备
                             dynamicInfo.getDeviceStatusMap().remove(token);
@@ -159,14 +151,10 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                     .setTime(LocalDateTime.now());
                             logController.addLog(logEntity, "system");
 
-                            if (enableMail) {
-                                //邮件通知
-                                String emailStr = "设备名称: " + device.getDeviceName() + "\n"
-                                        + "设备token: " + device.getDeviceToken() + "\n"
-                                        + "时间: " + LocalDateTime.now() + "\n";
-
-                                emailService.sendSimpleMail(to, "[审判庭] 设备移除", emailStr);
-                            }
+                            //邮件通知
+                            messageService.pushAdmin("[审判庭] 设备移除", "设备名称: " + device.getDeviceName() + "\n"
+                                    + "设备token: " + device.getDeviceToken() + "\n"
+                                    + "时间: " + LocalDateTime.now() + "\n");
                         }
                     }
                 },
@@ -218,22 +206,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                 var msg = "您的托管账号将于" + account.getExpireTime()
                                         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "过期，记得及时续费哦。";
 
-                                //邮件推送
-                                if (enableMail && account.getNotice().getMail().getEnable()) {
-                                    emailService.sendSimpleMail(account.getNotice().getMail().getText(),
-                                            "【明日方舟】托管续费提醒",
-                                            msg);
-                                }
-
-                                //微信推送
-                                if (enableWxPusher && account.getNotice().getWxUID().getEnable()) {
-                                    wxPusherService.push(Message.CONTENT_TYPE_MD,
-                                            msg,
-                                            account.getNotice().getWxUID().getText(),
-                                            null
-                                    );
-                                }
-
+                                messageService.push(account, "【明日方舟】托管续费提醒", msg);
                             }
                     );
                 },
@@ -252,21 +225,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                 log.info("【冻结账号】: " + account.getAccount() + " " + account.getAccount());
                                 var msg = "您的账号仍处于冻结状态，若非手动冻结请及时检查账号状态，避免浪费账号托管时长";
 
-                                //邮件推送
-                                if (enableMail && account.getNotice().getMail().getEnable()) {
-                                    emailService.sendSimpleMail(account.getNotice().getMail().getText(),
-                                            "【明日方舟】账号冻结提醒",
-                                            msg);
-                                }
-
-                                //微信推送
-                                if (enableWxPusher && account.getNotice().getWxUID().getEnable()) {
-                                    wxPusherService.push(Message.CONTENT_TYPE_MD,
-                                            msg,
-                                            account.getNotice().getWxUID().getText(),
-                                            null
-                                    );
-                                }
+                                messageService.push(account, "【明日方舟】账号冻结提醒", msg);
 
                             }
                     );
@@ -312,8 +271,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                 1,
                                 null, null, null);
                         if (newDevice == null) {
-                            String text = "设备增加失败，请检查平台余额是否充足";
-                            emailService.sendSimpleMail(to, "[审判庭] 设备增加失败提醒", text);
+                            messageService.pushAdmin("[审判庭] 设备增加失败提醒", "设备增加失败，请检查平台余额是否充足");
                             return;
                         }
                         SimpleDateFormat format = new SimpleDateFormat("MM_dd");
@@ -324,10 +282,10 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                 .setDeviceToken(newDevice.get(0))
                                 .setDelete(0)
                         );
-                        String text = "激活用户: " + payedUserList.size() + "\n" +
+                        String text = "激活用户数量: " + payedUserList.size() + "\n" +
                                 "设备数量: " + deviceList.size() + "\n" +
                                 "已为您自动增添新设备，请留意扣费信息";
-                        emailService.sendSimpleMail(to, "[审判庭] 设备增加提醒", text);
+                        messageService.pushAdmin("[审判庭] 设备增加提醒", text);
                     }
                     log.info("设备自动续费");
 
@@ -353,10 +311,10 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                             if (chinacService.renewDevice(device.getRegion(), device.getDeviceToken(), 1)) {
                                 String text = "续费设备: " + device.getDeviceName() + "\n" +
                                         "已为您自动续费，请留意扣费信息";
-                                emailService.sendSimpleMail(to, "[审判庭] 设备续费提醒", text);
+                                messageService.pushAdmin("[审判庭] 设备续费提醒", text);
                             } else {
                                 String text = "自动续费失败，请检查平台余额是否充足";
-                                emailService.sendSimpleMail(to, "[审判庭] 设备续费失败提醒", text);
+                                messageService.pushAdmin("[审判庭] 设备续费失败提醒", text);
                             }
                             break;
                         }

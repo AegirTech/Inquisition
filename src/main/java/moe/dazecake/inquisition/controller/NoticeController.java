@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.mapper.AccountMapper;
-import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
+import moe.dazecake.inquisition.service.impl.MessageServiceImpl;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Encoder;
 import moe.dazecake.inquisition.util.Result;
@@ -25,7 +25,7 @@ public class NoticeController {
     AccountMapper accountMapper;
 
     @Resource
-    TaskServiceImpl taskService;
+    MessageServiceImpl messageService;
 
     @Resource
     DynamicInfo dynamicInfo;
@@ -37,7 +37,7 @@ public class NoticeController {
 
         var account = accountMapper.selectById(id);
         if (account != null) {
-            taskService.messagePush(account, title, content);
+            messageService.push(account, title, content);
             return new Result<String>().setCode(200).setMsg("发送成功");
         } else {
             return new Result<String>().setCode(403).setMsg("用户不存在");

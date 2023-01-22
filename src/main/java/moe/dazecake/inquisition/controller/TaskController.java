@@ -12,6 +12,7 @@ import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
+import moe.dazecake.inquisition.service.impl.MessageServiceImpl;
 import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Result;
@@ -39,6 +40,9 @@ public class TaskController {
 
     @Resource
     private AccountMapper accountMapper;
+
+    @Resource
+    private MessageServiceImpl messageService;
 
     @Resource
     EmailServiceImpl emailService;
@@ -137,7 +141,7 @@ public class TaskController {
             taskService.log(deviceToken, account, "INFO", "任务开始", "任务开始", null);
 
             //推送消息
-            taskService.messagePush(account, "任务开始", "请勿强行顶号，强行顶号将导致轮空");
+            messageService.push(account, "任务开始", "请勿强行顶号，强行顶号将导致轮空");
 
             //移出等待队列
             iterator.remove();
@@ -177,7 +181,7 @@ public class TaskController {
         taskService.log(deviceToken, account, "INFO", "任务完成", "任务完成", imageUrl);
 
         //推送消息
-        taskService.messagePush(account, "任务完成", "任务完成，可登陆面板查看作战结果");
+        messageService.push(account, "任务完成", "任务完成，可登陆面板查看作战结果");
 
         //管理员推送消息推送
         if (account.getTaskType().equals("rogue") && enableMail) {
@@ -216,7 +220,7 @@ public class TaskController {
         taskService.errorHandle(account, deviceToken, type);
 
         //推送消息
-        taskService.messagePush(account, "任务失败", "任务失败，请登陆面板查看失败原因");
+        messageService.push(account, "任务失败", "任务失败，请登陆面板查看失败原因");
 
         result.setCode(200)
                 .setMsg("success")
@@ -231,7 +235,7 @@ public class TaskController {
     public Result<String> tempAddTask(@RequestBody AccountEntity accountEntity) {
         Result<String> result = new Result<>();
 
-        Long minIndex = 0L;
+        long minIndex = 0L;
 
         for (AccountEntity account : dynamicInfo.getFreeTaskList()) {
             if (minIndex > account.getId()) {

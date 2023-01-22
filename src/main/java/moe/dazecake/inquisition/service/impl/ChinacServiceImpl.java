@@ -209,34 +209,6 @@ public class ChinacServiceImpl implements ChinacService {
     }
 
     @Override
-    public ArrayList<HashMap<String, Object>> queryPublicImageList(String Region) {
-
-        HashMap<String, Object> queryMap = new HashMap<>();
-        queryMap.put("Action", "ListCloudPhoneEnableImage");
-        queryMap.put("Region", Region);
-
-        try (Response response = new OkHttpClient().newCall(createRequest(queryMap)).execute()) {
-            if (response.isSuccessful()) {
-                Gson gson = new Gson();
-                assert response.body() != null;
-                var jsonStr = response.body().string();
-                ChinacResult<HashMap<String, ArrayList<HashMap<String, Object>>>> result =
-                        gson.fromJson(jsonStr,
-                                new TypeToken<ChinacResult<HashMap<String, ArrayList<HashMap<String, Object>>>>>() {
-                                }.getType());
-                if (result.getCode() == 10000) {
-                    return result.getData().get("List");
-                }
-            } else {
-                log.error(response.toString());
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return null;
-    }
-
-    @Override
     public String getDeviceRemoteControlUrl(String Region, String Id, Integer Duration, boolean AutoDisconnect, boolean AllowGroupControl, ArrayList<String> SalveCloudPhoneIds) {
         HashMap<String, Object> queryMap = new HashMap<>();
         queryMap.put("Action", "GetPhonePageUrl");
