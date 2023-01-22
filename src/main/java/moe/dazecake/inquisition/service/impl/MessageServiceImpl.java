@@ -4,9 +4,11 @@ import com.zjiecode.wxpusher.client.bean.Message;
 import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.service.MessageService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
+@Service
 public class MessageServiceImpl implements MessageService {
 
     @Value("${spring.mail.enable:false}")
