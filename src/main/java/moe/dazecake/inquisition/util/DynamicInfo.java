@@ -3,8 +3,8 @@ package moe.dazecake.inquisition.util;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import moe.dazecake.inquisition.entity.AccountEntity;
-import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
+import moe.dazecake.inquisition.model.dto.TaskDateSet.LockTask;
+import moe.dazecake.inquisition.model.entity.AccountEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

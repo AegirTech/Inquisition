@@ -1,10 +1,10 @@
 package moe.dazecake.inquisition.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import moe.dazecake.inquisition.entity.AccountEntity;
-import moe.dazecake.inquisition.entity.LogEntity;
-import moe.dazecake.inquisition.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.mapper.AccountMapper;
+import moe.dazecake.inquisition.model.dto.TaskDateSet.LockTask;
+import moe.dazecake.inquisition.model.entity.AccountEntity;
+import moe.dazecake.inquisition.model.entity.LogEntity;
 import moe.dazecake.inquisition.service.intf.TaskService;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.TimeUtil;

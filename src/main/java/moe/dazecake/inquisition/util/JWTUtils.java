@@ -3,9 +3,9 @@ package moe.dazecake.inquisition.util;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
-import moe.dazecake.inquisition.entity.AccountEntity;
-import moe.dazecake.inquisition.entity.AdminEntity;
-import moe.dazecake.inquisition.entity.ProUserEntity;
+import moe.dazecake.inquisition.model.entity.AccountEntity;
+import moe.dazecake.inquisition.model.entity.AdminEntity;
+import moe.dazecake.inquisition.model.entity.ProUserEntity;
 
 import java.util.Date;
 

@@ -4,11 +4,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
-import moe.dazecake.inquisition.entity.AccountEntity;
-import moe.dazecake.inquisition.entity.BillEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.BillMapper;
-import moe.dazecake.inquisition.mapper.ProUserMapper;
+import moe.dazecake.inquisition.model.entity.AccountEntity;
+import moe.dazecake.inquisition.model.entity.BillEntity;
 import moe.dazecake.inquisition.service.impl.StatisticsServiceImpl;
 import moe.dazecake.inquisition.util.Result;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,9 +27,6 @@ public class StatisticsController {
 
     @Resource
     AccountMapper accountMapper;
-
-    @Resource
-    ProUserMapper proUserMapper;
 
     @Resource
     BillMapper billMapper;

@@ -1,6 +1,6 @@
 package moe.dazecake.inquisition.service.intf;
 
-import moe.dazecake.inquisition.entity.BillEntity;
+import moe.dazecake.inquisition.model.entity.BillEntity;
 
 import java.util.List;
 

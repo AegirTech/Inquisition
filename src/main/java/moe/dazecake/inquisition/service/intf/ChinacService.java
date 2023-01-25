@@ -1,8 +1,8 @@
 package moe.dazecake.inquisition.service.intf;
 
-import moe.dazecake.inquisition.entity.ChinacEntitySet.ChinacPageListEntity;
-import moe.dazecake.inquisition.entity.ChinacEntitySet.ChinacPhoneEntity;
-import moe.dazecake.inquisition.entity.ChinacEntitySet.ChinacResult;
+import moe.dazecake.inquisition.model.dto.ChinacEntitySet.ChinacPageListEntity;
+import moe.dazecake.inquisition.model.dto.ChinacEntitySet.ChinacPhoneEntity;
+import moe.dazecake.inquisition.model.dto.ChinacEntitySet.ChinacResult;
 import okhttp3.Request;
 
 import java.util.ArrayList;

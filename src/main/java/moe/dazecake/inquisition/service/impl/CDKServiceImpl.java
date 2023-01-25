@@ -2,10 +2,10 @@ package moe.dazecake.inquisition.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
-import moe.dazecake.inquisition.entity.AccountEntity;
-import moe.dazecake.inquisition.entity.CDKEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.CDKMapper;
+import moe.dazecake.inquisition.model.entity.AccountEntity;
+import moe.dazecake.inquisition.model.entity.CDKEntity;
 import moe.dazecake.inquisition.service.intf.CDKService;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import org.springframework.stereotype.Service;

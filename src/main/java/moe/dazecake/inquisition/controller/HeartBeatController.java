@@ -2,11 +2,13 @@ package moe.dazecake.inquisition.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import moe.dazecake.inquisition.entity.HeartBeatEntity;
+import moe.dazecake.inquisition.model.vo.HeartBeatVO;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Result;
-import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 
@@ -20,7 +22,7 @@ public class HeartBeatController {
 
     @Operation(summary = "心跳协议")
     @PostMapping("/heartBeat")
-    public Result<String> postHeartBeat(@RequestBody HeartBeatEntity heartBeat) {
+    public Result<String> postHeartBeat(@RequestBody HeartBeatVO heartBeat) {
         Result<String> result = new Result<>();
 
         //状态更新
@@ -44,7 +46,7 @@ public class HeartBeatController {
 
     @Operation(summary = "完成停机上报")
     @PostMapping("/haltComplete")
-    public Result<String> postHaltComplete(@RequestBody HeartBeatEntity heartBeat) {
+    public Result<String> postHaltComplete(@RequestBody HeartBeatVO heartBeat) {
         Result<String> result = new Result<>();
 
         //移除所有停机列表

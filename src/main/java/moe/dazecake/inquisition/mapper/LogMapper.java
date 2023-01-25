@@ -1,7 +1,7 @@
 package moe.dazecake.inquisition.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import moe.dazecake.inquisition.entity.LogEntity;
+import moe.dazecake.inquisition.model.entity.LogEntity;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

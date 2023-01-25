@@ -1,7 +1,7 @@
 package moe.dazecake.inquisition.service.impl;
 
 import com.zjiecode.wxpusher.client.bean.Message;
-import moe.dazecake.inquisition.entity.AccountEntity;
+import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.service.intf.MessageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

@@ -1,10 +1,10 @@
 package moe.dazecake.inquisition.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import moe.dazecake.inquisition.entity.DeviceEntity;
-import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
+import moe.dazecake.inquisition.model.entity.DeviceEntity;
+import moe.dazecake.inquisition.model.entity.LogEntity;
 import moe.dazecake.inquisition.service.intf.LogService;
 import org.springframework.stereotype.Service;
 
