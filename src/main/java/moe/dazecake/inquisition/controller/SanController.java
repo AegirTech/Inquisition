@@ -2,8 +2,8 @@ package moe.dazecake.inquisition.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import moe.dazecake.inquisition.util.DynamicInfo;
-import moe.dazecake.inquisition.util.Result;
+import moe.dazecake.inquisition.utils.DynamicInfo;
+import moe.dazecake.inquisition.utils.Result;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;

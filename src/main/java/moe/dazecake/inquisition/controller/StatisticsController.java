@@ -9,7 +9,7 @@ import moe.dazecake.inquisition.mapper.BillMapper;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.BillEntity;
 import moe.dazecake.inquisition.service.impl.StatisticsServiceImpl;
-import moe.dazecake.inquisition.util.Result;
+import moe.dazecake.inquisition.utils.Result;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;

@@ -1,4 +1,4 @@
-package moe.dazecake.inquisition.util;
+package moe.dazecake.inquisition.utils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

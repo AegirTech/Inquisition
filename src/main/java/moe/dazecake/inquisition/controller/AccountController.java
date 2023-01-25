@@ -8,8 +8,8 @@ import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
-import moe.dazecake.inquisition.util.DynamicInfo;
-import moe.dazecake.inquisition.util.Result;
+import moe.dazecake.inquisition.utils.DynamicInfo;
+import moe.dazecake.inquisition.utils.Result;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 

@@ -7,7 +7,7 @@ import moe.dazecake.inquisition.mapper.CDKMapper;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.CDKEntity;
 import moe.dazecake.inquisition.service.intf.CDKService;
-import moe.dazecake.inquisition.util.DynamicInfo;
+import moe.dazecake.inquisition.utils.DynamicInfo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

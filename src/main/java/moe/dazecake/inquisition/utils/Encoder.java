@@ -1,4 +1,4 @@
-package moe.dazecake.inquisition.util;
+package moe.dazecake.inquisition.utils;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;

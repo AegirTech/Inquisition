@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.mapper.CDKMapper;
 import moe.dazecake.inquisition.model.entity.CDKEntity;
-import moe.dazecake.inquisition.util.Result;
+import moe.dazecake.inquisition.utils.Result;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;

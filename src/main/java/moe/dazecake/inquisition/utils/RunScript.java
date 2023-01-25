@@ -1,4 +1,4 @@
-package moe.dazecake.inquisition.util;
+package moe.dazecake.inquisition.utils;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.gson.Gson;
@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
-import static moe.dazecake.inquisition.util.JWTUtils.SECRET;
+import static moe.dazecake.inquisition.utils.JWTUtils.SECRET;
 
 @Component
 @Slf4j

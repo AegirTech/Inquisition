@@ -8,8 +8,8 @@ import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.model.entity.DeviceEntity;
 import moe.dazecake.inquisition.service.impl.ChinacServiceImpl;
-import moe.dazecake.inquisition.util.DynamicInfo;
-import moe.dazecake.inquisition.util.Result;
+import moe.dazecake.inquisition.utils.DynamicInfo;
+import moe.dazecake.inquisition.utils.Result;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.web.bind.annotation.*;
 

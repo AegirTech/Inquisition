@@ -1,4 +1,4 @@
-package moe.dazecake.inquisition.util;
+package moe.dazecake.inquisition.utils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;

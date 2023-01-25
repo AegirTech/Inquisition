@@ -1,4 +1,4 @@
-package moe.dazecake.inquisition.util;
+package moe.dazecake.inquisition.utils;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;

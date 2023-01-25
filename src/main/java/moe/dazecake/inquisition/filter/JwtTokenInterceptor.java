@@ -8,7 +8,7 @@ import moe.dazecake.inquisition.annotation.ProUserLogin;
 import moe.dazecake.inquisition.annotation.UserLogin;
 import moe.dazecake.inquisition.mapper.ProUserMapper;
 import moe.dazecake.inquisition.model.entity.ProUserEntity;
-import moe.dazecake.inquisition.util.JWTUtils;
+import moe.dazecake.inquisition.utils.JWTUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;

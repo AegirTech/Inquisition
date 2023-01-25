@@ -1,4 +1,4 @@
-package moe.dazecake.inquisition.util;
+package moe.dazecake.inquisition.utils;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

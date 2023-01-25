@@ -14,8 +14,8 @@ import moe.dazecake.inquisition.model.entity.LogEntity;
 import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
 import moe.dazecake.inquisition.service.impl.MessageServiceImpl;
 import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
-import moe.dazecake.inquisition.util.DynamicInfo;
-import moe.dazecake.inquisition.util.Result;
+import moe.dazecake.inquisition.utils.DynamicInfo;
+import moe.dazecake.inquisition.utils.Result;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 

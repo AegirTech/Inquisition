@@ -6,8 +6,8 @@ import moe.dazecake.inquisition.model.dto.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.LogEntity;
 import moe.dazecake.inquisition.service.intf.TaskService;
-import moe.dazecake.inquisition.util.DynamicInfo;
-import moe.dazecake.inquisition.util.TimeUtil;
+import moe.dazecake.inquisition.utils.DynamicInfo;
+import moe.dazecake.inquisition.utils.TimeUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

@@ -9,7 +9,7 @@ import moe.dazecake.inquisition.model.dto.FMEntitySet.CreateOrderResultEntity;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.BillEntity;
 import moe.dazecake.inquisition.service.intf.PayService;
-import moe.dazecake.inquisition.util.Encoder;
+import moe.dazecake.inquisition.utils.Encoder;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;

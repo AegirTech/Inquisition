@@ -9,9 +9,9 @@ import moe.dazecake.inquisition.mapper.BillMapper;
 import moe.dazecake.inquisition.model.entity.BillEntity;
 import moe.dazecake.inquisition.service.impl.MessageServiceImpl;
 import moe.dazecake.inquisition.service.impl.PayServiceImpl;
-import moe.dazecake.inquisition.util.Encoder;
-import moe.dazecake.inquisition.util.JWTUtils;
-import moe.dazecake.inquisition.util.Result;
+import moe.dazecake.inquisition.utils.Encoder;
+import moe.dazecake.inquisition.utils.JWTUtils;
+import moe.dazecake.inquisition.utils.Result;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
