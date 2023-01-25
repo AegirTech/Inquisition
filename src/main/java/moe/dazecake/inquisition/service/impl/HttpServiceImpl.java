@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.entity.HttpEntitySet.BiliLoginRes;
 import moe.dazecake.inquisition.entity.HttpEntitySet.BiliPerLoginRes;
 import moe.dazecake.inquisition.entity.HttpEntitySet.OfficialLoginRes;
-import moe.dazecake.inquisition.service.HttpService;
+import moe.dazecake.inquisition.service.intf.HttpService;
 import moe.dazecake.inquisition.util.DynamicInfo;
 import moe.dazecake.inquisition.util.Encoder;
 import okhttp3.*;

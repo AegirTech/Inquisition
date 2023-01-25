@@ -1,4 +1,4 @@
-package moe.dazecake.inquisition.service;
+package moe.dazecake.inquisition.service.intf;
 
 public interface EmailService {
 

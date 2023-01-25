@@ -9,8 +9,8 @@ import moe.dazecake.inquisition.entity.AccountEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
-import moe.dazecake.inquisition.service.MessageService;
 import moe.dazecake.inquisition.service.impl.LogServiceImpl;
+import moe.dazecake.inquisition.service.intf.MessageService;
 import moe.dazecake.inquisition.util.Result;
 import org.springframework.web.bind.annotation.*;
 

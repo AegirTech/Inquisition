@@ -8,7 +8,7 @@ import moe.dazecake.inquisition.entity.FMEntitySet.CreateOrderResultEntity;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.BillMapper;
 import moe.dazecake.inquisition.mapper.ProUserMapper;
-import moe.dazecake.inquisition.service.PayService;
+import moe.dazecake.inquisition.service.intf.PayService;
 import moe.dazecake.inquisition.util.Encoder;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -55,11 +55,6 @@ public class PayServiceImpl implements PayService {
 
     @Resource
     BillMapper billMapper;
-
-    @Override
-    public BillEntity createOrder(Double amount, String payType) {
-        return createOrder(amount, payType, null);
-    }
 
     @Override
     public BillEntity createOrder(Double amount, String payType, String returnPath) {

@@ -1,7 +1,7 @@
 package moe.dazecake.inquisition.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import moe.dazecake.inquisition.service.EmailService;
+import moe.dazecake.inquisition.service.intf.EmailService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;

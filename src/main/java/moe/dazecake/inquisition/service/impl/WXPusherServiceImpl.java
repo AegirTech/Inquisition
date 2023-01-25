@@ -3,7 +3,7 @@ package moe.dazecake.inquisition.service.impl;
 import com.zjiecode.wxpusher.client.WxPusher;
 import com.zjiecode.wxpusher.client.bean.Message;
 import lombok.extern.slf4j.Slf4j;
-import moe.dazecake.inquisition.service.WXPusherService;
+import moe.dazecake.inquisition.service.intf.WXPusherService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

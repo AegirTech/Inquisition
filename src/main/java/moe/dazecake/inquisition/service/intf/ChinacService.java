@@ -1,4 +1,4 @@
-package moe.dazecake.inquisition.service;
+package moe.dazecake.inquisition.service.intf;
 
 import moe.dazecake.inquisition.entity.ChinacEntitySet.ChinacPageListEntity;
 import moe.dazecake.inquisition.entity.ChinacEntitySet.ChinacPhoneEntity;

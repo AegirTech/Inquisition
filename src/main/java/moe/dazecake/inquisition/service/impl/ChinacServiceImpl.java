@@ -10,7 +10,7 @@ import moe.dazecake.inquisition.entity.ChinacEntitySet.ChinacResult;
 import moe.dazecake.inquisition.entity.ChinacEntitySet.ChinacScreenshotEntity;
 import moe.dazecake.inquisition.entity.DeviceEntity;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
-import moe.dazecake.inquisition.service.ChinacService;
+import moe.dazecake.inquisition.service.intf.ChinacService;
 import moe.dazecake.inquisition.util.Encoder;
 import moe.dazecake.inquisition.util.UrlUtil;
 import okhttp3.*;

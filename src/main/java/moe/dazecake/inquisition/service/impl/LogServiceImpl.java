@@ -5,7 +5,7 @@ import moe.dazecake.inquisition.entity.DeviceEntity;
 import moe.dazecake.inquisition.entity.LogEntity;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
-import moe.dazecake.inquisition.service.LogService;
+import moe.dazecake.inquisition.service.intf.LogService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

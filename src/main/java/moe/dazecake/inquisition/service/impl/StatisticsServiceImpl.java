@@ -1,7 +1,7 @@
 package moe.dazecake.inquisition.service.impl;
 
 import moe.dazecake.inquisition.entity.BillEntity;
-import moe.dazecake.inquisition.service.StatisticsService;
+import moe.dazecake.inquisition.service.intf.StatisticsService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
