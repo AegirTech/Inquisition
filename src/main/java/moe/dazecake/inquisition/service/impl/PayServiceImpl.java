@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.BillMapper;
 import moe.dazecake.inquisition.mapper.ProUserMapper;
-import moe.dazecake.inquisition.model.dto.FMEntitySet.CreateOrderResultEntity;
+import moe.dazecake.inquisition.model.dto.fmpay.CreateOrderResultEntity;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.BillEntity;
 import moe.dazecake.inquisition.service.intf.PayService;

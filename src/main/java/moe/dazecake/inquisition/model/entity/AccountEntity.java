@@ -12,13 +12,12 @@ import com.gitee.sunchenbin.mybatis.actable.annotation.IsNotNull;
 import com.gitee.sunchenbin.mybatis.actable.constants.MySqlTypeConstant;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import moe.dazecake.inquisition.model.dto.ActivationDateSet.ActivationDate;
-import moe.dazecake.inquisition.model.dto.ConfigEntitySet.ConfigEntity;
-import moe.dazecake.inquisition.model.dto.NoticeEntitySet.NoticeEntity;
+import moe.dazecake.inquisition.model.entity.ActivationDateSet.ActivationDate;
+import moe.dazecake.inquisition.model.entity.ConfigEntitySet.ConfigEntity;
+import moe.dazecake.inquisition.model.entity.NoticeEntitySet.NoticeEntity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,7 +25,6 @@ import java.util.ArrayList;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Accessors(chain = true)
 @TableName(value = "account", autoResultMap = true)
 @Schema(description = "账户配置")

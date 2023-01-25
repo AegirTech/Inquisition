@@ -40,4 +40,6 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.10.0'
     implementation 'com.qcloud:cos_api:5.6.105'
     implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'org.mapstruct:mapstruct:1.5.3.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.3.Final'
 }

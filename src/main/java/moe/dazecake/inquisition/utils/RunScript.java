@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.AdminMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
-import moe.dazecake.inquisition.model.dto.ChinacEntitySet.ChinacPhoneEntity;
+import moe.dazecake.inquisition.model.dto.chinac.ChinacPhoneEntity;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.AdminEntity;
 import moe.dazecake.inquisition.model.entity.DeviceEntity;
