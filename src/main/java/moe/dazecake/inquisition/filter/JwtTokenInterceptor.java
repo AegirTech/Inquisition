@@ -1,4 +1,4 @@
-package moe.dazecake.inquisition.interceptor;
+package moe.dazecake.inquisition.filter;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,6 @@
 package moe.dazecake.inquisition.config;
 
-import moe.dazecake.inquisition.interceptor.JwtTokenInterceptor;
+import moe.dazecake.inquisition.filter.JwtTokenInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
