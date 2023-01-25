@@ -230,7 +230,7 @@ public class TaskController {
     }
 
     @Login
-    @Operation(summary = "临时插队任务")
+    @Operation(summary = "临时增加任务")
     @PostMapping("/tempAddTask")
     public Result<String> tempAddTask(@RequestBody AccountEntity accountEntity) {
         Result<String> result = new Result<>();
@@ -254,6 +254,24 @@ public class TaskController {
         accountEntity.setId(minIndex);
 
         dynamicInfo.getFreeTaskList().add(0, accountEntity);
+
+        return result.setCode(200)
+                .setMsg("success")
+                .setData(null);
+    }
+
+    @Login
+    @Operation(summary = "临时插队任务")
+    @PostMapping("/tempInsertTask")
+    public Result<String> tempInsertTask(@RequestBody Long id) {
+        Result<String> result = new Result<>();
+
+        dynamicInfo.getFreeTaskList().forEach(account -> {
+            if (account.getId().equals(id)) {
+                dynamicInfo.getFreeTaskList().remove(account);
+                dynamicInfo.getFreeTaskList().add(0, account);
+            }
+        });
 
         return result.setCode(200)
                 .setMsg("success")
