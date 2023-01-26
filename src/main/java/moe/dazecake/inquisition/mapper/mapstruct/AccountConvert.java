@@ -7,8 +7,8 @@ import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface AccountConvert {
-    AccountConvert INSTANCE = Mappers.getMapper(AccountConvert.class);
 
+    AccountConvert INSTANCE = Mappers.getMapper(AccountConvert.class);
 
     AccountWithSanVO toAccountWithSanVO(AccountEntity accountEntity, String san);
 }

@@ -655,16 +655,16 @@ public class ProUserController {
                     proUserMapper.updateById(proUser);
                     ArrayList<CDKEntity> newCDKList = new ArrayList<>();
                     for (int i = 0; i < num; i++) {
-                        newCDKList.add(CDKEntity.builder()
-                                .id(0L)
-                                .cdk(RandomStringUtils.randomAlphabetic(32))
-                                .type(type)
-                                .param(param)
-                                .tag(tag)
-                                .isAgent(1)
-                                .agent(id)
-                                .used(0)
-                                .build());
+                        var cdkEntity = new CDKEntity();
+                        cdkEntity.setId(0L);
+                        cdkEntity.setCdk(RandomStringUtils.randomAlphabetic(32));
+                        cdkEntity.setType(type);
+                        cdkEntity.setParam(param);
+                        cdkEntity.setTag(tag);
+                        cdkEntity.setIsAgent(1);
+                        cdkEntity.setAgent(id);
+                        cdkEntity.setUsed(0);
+                        newCDKList.add(cdkEntity);
                     }
                     newCDKList.forEach(cdkMapper::insert);
                     return result.setCode(200)

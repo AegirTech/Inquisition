@@ -11,9 +11,11 @@ import moe.dazecake.inquisition.service.intf.AdminService;
 import moe.dazecake.inquisition.utils.Encoder;
 import moe.dazecake.inquisition.utils.JWTUtils;
 import moe.dazecake.inquisition.utils.Result;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
+@Service
 public class AdminServiceImpl implements AdminService {
 
     private static final String salt = "arklightscloud";
