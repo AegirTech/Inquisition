@@ -4,9 +4,11 @@ import moe.dazecake.inquisition.model.dto.heartbeat.HeartBeatDTO;
 import moe.dazecake.inquisition.service.intf.HeartBeatService;
 import moe.dazecake.inquisition.utils.DynamicInfo;
 import moe.dazecake.inquisition.utils.Result;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
+@Service
 public class HeartBeatServiceImpl implements HeartBeatService {
 
     @Resource

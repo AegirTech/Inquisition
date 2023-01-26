@@ -2,14 +2,13 @@ package moe.dazecake.inquisition.utils;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
-import moe.dazecake.inquisition.controller.LogController;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.DeviceEntity;
-import moe.dazecake.inquisition.model.entity.LogEntity;
 import moe.dazecake.inquisition.model.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.service.impl.ChinacServiceImpl;
+import moe.dazecake.inquisition.service.impl.LogServiceImpl;
 import moe.dazecake.inquisition.service.impl.MessageServiceImpl;
 import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,7 +42,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
     DeviceMapper deviceMapper;
 
     @Resource
-    LogController logController;
+    LogServiceImpl logService;
 
     @Resource
     MessageServiceImpl messageService;
@@ -111,16 +110,8 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                             );
 
                             //记录日志
-                            LogEntity logEntity = new LogEntity();
-                            logEntity.setLevel("WARN")
-                                    .setTaskType("system")
-                                    .setTitle("设备离线")
-                                    .setDetail("设备名称: " + device.getDeviceName() + "\n" +
-                                            "设备token: " + device.getDeviceToken() + "\n"
-                                    )
-                                    .setFrom(token)
-                                    .setTime(LocalDateTime.now());
-                            logController.addLog(logEntity, "system");
+                            logService.logWarn("设备离线", "设备名称: " + device.getDeviceName() + "\n" +
+                                    "设备token: " + device.getDeviceToken() + "\n");
 
                             //邮件通知
                             messageService.pushAdmin("[审判庭] 设备离线", "设备名称: " + device.getDeviceName() + "\n"
@@ -140,16 +131,8 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                             deviceMapper.updateById(device);
 
                             //记录日志
-                            LogEntity logEntity = new LogEntity();
-                            logEntity.setLevel("WARN")
-                                    .setTaskType("system")
-                                    .setTitle("设备移除")
-                                    .setDetail("设备名称: " + device.getDeviceName() + "\n" +
-                                            "设备token: " + device.getDeviceToken() + "\n"
-                                    )
-                                    .setFrom(token)
-                                    .setTime(LocalDateTime.now());
-                            logController.addLog(logEntity, "system");
+                            logService.logWarn("设备移除", "设备名称: " + device.getDeviceName() + "\n" +
+                                    "设备token: " + device.getDeviceToken() + "\n");
 
                             //邮件通知
                             messageService.pushAdmin("[审判庭] 设备移除", "设备名称: " + device.getDeviceName() + "\n"
@@ -169,17 +152,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                     for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
                         if (lockTask.getExpirationTime().isBefore(nowTime)) {
                             //记录日志
-                            LogEntity logEntity = new LogEntity();
-                            logEntity.setLevel("WARN")
-                                    .setTaskType(lockTask.getAccount().getTaskType())
-                                    .setTitle("任务超时")
-                                    .setDetail("")
-                                    .setFrom(lockTask.getDeviceToken())
-                                    .setName(lockTask.getAccount().getName())
-                                    .setPassword(lockTask.getAccount().getPassword())
-                                    .setTime(LocalDateTime.now());
-                            logController.addLog(logEntity, "system");
-
+                            logService.logWarn("任务超时", "");
                             taskService.forceHaltTask(lockTask.getAccount(), true);
                             num++;
                         }

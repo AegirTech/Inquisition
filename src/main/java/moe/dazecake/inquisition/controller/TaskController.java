@@ -9,9 +9,9 @@ import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.DeviceEntity;
-import moe.dazecake.inquisition.model.entity.LogEntity;
 import moe.dazecake.inquisition.model.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
+import moe.dazecake.inquisition.service.impl.LogServiceImpl;
 import moe.dazecake.inquisition.service.impl.MessageServiceImpl;
 import moe.dazecake.inquisition.service.impl.TaskServiceImpl;
 import moe.dazecake.inquisition.utils.DynamicInfo;
@@ -36,7 +36,7 @@ public class TaskController {
     private DynamicInfo dynamicInfo;
 
     @Resource
-    private LogController logController;
+    private LogServiceImpl logService;
 
     @Resource
     private AccountMapper accountMapper;
@@ -365,16 +365,7 @@ public class TaskController {
         );
 
         //记录日志
-        LogEntity logEntity = new LogEntity();
-
-        logEntity.setLevel("INFO")
-                .setTaskType("system")
-                .setTitle("强制任务列表刷新")
-                .setDetail("审判官强制刷新了任务队列")
-                .setFrom("system")
-                .setTime(LocalDateTime.now());
-
-        logController.addLog(logEntity, "system");
+        logService.logInfo("任务列表刷新", "管理员强制刷新了任务队列");
 
         return new Result<String>().setCode(200)
                 .setMsg("success")
@@ -387,14 +378,7 @@ public class TaskController {
     public Result<String> forceUnlockOneTask(String deviceToken) {
         if (dynamicInfo.getLockTaskList().removeIf(lockTask -> lockTask.getDeviceToken().equals(deviceToken))) {
             //记录日志
-            LogEntity logEntity = new LogEntity();
-            logEntity.setLevel("INFO")
-                    .setTaskType("system")
-                    .setTitle("强制解锁")
-                    .setDetail("审判官强制解锁释放了一个任务")
-                    .setFrom("system")
-                    .setTime(LocalDateTime.now());
-            logController.addLog(logEntity, "system");
+            logService.logInfo("强制解锁", "管理员强制解锁释放了一个任务");
 
         } else {
             return new Result<String>().setCode(404)
@@ -415,14 +399,7 @@ public class TaskController {
             dynamicInfo.getLockTaskList().clear();
 
             //记录日志
-            LogEntity logEntity = new LogEntity();
-            logEntity.setLevel("INFO")
-                    .setTaskType("system")
-                    .setTitle("强制解锁")
-                    .setDetail("审判官强制解锁释放整个上锁队列")
-                    .setFrom("system")
-                    .setTime(LocalDateTime.now());
-            logController.addLog(logEntity, "system");
+            logService.logInfo("强制解锁", "管理员强制解锁释放整个上锁队列");
 
             return new Result<String>().setCode(200)
                     .setMsg("success")

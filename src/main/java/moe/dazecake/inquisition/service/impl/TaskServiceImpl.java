@@ -2,8 +2,8 @@ package moe.dazecake.inquisition.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.mapper.AccountMapper;
+import moe.dazecake.inquisition.model.dto.log.AddLogDTO;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
-import moe.dazecake.inquisition.model.entity.LogEntity;
 import moe.dazecake.inquisition.model.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.service.intf.TaskService;
 import moe.dazecake.inquisition.utils.DynamicInfo;
@@ -252,7 +252,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void log(String deviceToken, AccountEntity account, String level, String title,
                     String content, String imgUrl) {
-        LogEntity logEntity = new LogEntity();
+        var addLogDTO = new AddLogDTO();
         String type = "";
         if (Objects.equals(account.getTaskType(), "daily")) {
             type = "每日";
@@ -264,7 +264,7 @@ public class TaskServiceImpl implements TaskService {
                 "[" + type + "] [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) + "] " + type +
                         content;
 
-        logEntity.setLevel(level)
+        addLogDTO.setLevel(level)
                 .setTaskType(account.getTaskType())
                 .setTitle(title)
                 .setDetail(detail)
@@ -272,16 +272,9 @@ public class TaskServiceImpl implements TaskService {
                 .setFrom(deviceToken)
                 .setServer(account.getServer())
                 .setName(account.getName())
-                .setAccount(account.getAccount())
-                .setTime(LocalDateTime.now());
+                .setAccount(account.getAccount());
 
-        if (logEntity.getDetail().contains("高级资深干员")) {
-            messageService.push(account, "公开招募标签提醒", "恭喜你获得了高级资深干员tag，快去看看吧！");
-        } else if (logEntity.getDetail().contains("资深干员")) {
-            messageService.push(account, "公开招募标签提醒", "恭喜你获得了资深干员tag，快去看看吧！");
-        }
-
-        logService.addLog(logEntity, deviceToken);
+        logService.addLog(addLogDTO, false);
     }
 
     @Override
