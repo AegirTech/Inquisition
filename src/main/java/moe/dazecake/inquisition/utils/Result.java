@@ -37,6 +37,10 @@ public class Result<T> implements Serializable {
         return restResult(null, ResponseCodeConstants.SUCCESS, null);
     }
 
+    public static <T> Result<T> success(String msg) {
+        return restResult(null, ResponseCodeConstants.SUCCESS, msg);
+    }
+
     public static <T> Result<T> success(T data) {
         return restResult(data, ResponseCodeConstants.SUCCESS, null);
     }
@@ -47,6 +51,70 @@ public class Result<T> implements Serializable {
 
     public static <T> Result<T> isSuccess(boolean flag) {
         return flag ? success() : failed();
+    }
+
+    public static <T> Result<T> paramError() {
+        return restResult(null, ResponseCodeConstants.PARAM_ERROR, null);
+    }
+
+    public static <T> Result<T> paramError(String msg) {
+        return restResult(null, ResponseCodeConstants.PARAM_ERROR, msg);
+    }
+
+    public static <T> Result<T> paramError(T data) {
+        return restResult(data, ResponseCodeConstants.PARAM_ERROR, null);
+    }
+
+    public static <T> Result<T> paramError(T data, String msg) {
+        return restResult(data, ResponseCodeConstants.PARAM_ERROR, msg);
+    }
+
+    public static <T> Result<T> unauthorized() {
+        return restResult(null, ResponseCodeConstants.UNAUTHORIZED, null);
+    }
+
+    public static <T> Result<T> unauthorized(String msg) {
+        return restResult(null, ResponseCodeConstants.UNAUTHORIZED, msg);
+    }
+
+    public static <T> Result<T> unauthorized(T data) {
+        return restResult(data, ResponseCodeConstants.UNAUTHORIZED, null);
+    }
+
+    public static <T> Result<T> unauthorized(T data, String msg) {
+        return restResult(data, ResponseCodeConstants.UNAUTHORIZED, msg);
+    }
+
+    public static <T> Result<T> forbidden() {
+        return restResult(null, ResponseCodeConstants.FORBIDDEN, null);
+    }
+
+    public static <T> Result<T> forbidden(String msg) {
+        return restResult(null, ResponseCodeConstants.FORBIDDEN, msg);
+    }
+
+    public static <T> Result<T> forbidden(T data) {
+        return restResult(data, ResponseCodeConstants.FORBIDDEN, null);
+    }
+
+    public static <T> Result<T> forbidden(T data, String msg) {
+        return restResult(data, ResponseCodeConstants.FORBIDDEN, msg);
+    }
+
+    public static <T> Result<T> notFound() {
+        return restResult(null, ResponseCodeConstants.NOT_FOUND, null);
+    }
+
+    public static <T> Result<T> notFound(String msg) {
+        return restResult(null, ResponseCodeConstants.NOT_FOUND, msg);
+    }
+
+    public static <T> Result<T> notFound(T data) {
+        return restResult(data, ResponseCodeConstants.NOT_FOUND, null);
+    }
+
+    public static <T> Result<T> notFound(T data, String msg) {
+        return restResult(data, ResponseCodeConstants.NOT_FOUND, msg);
     }
 
     public static <T> Result<T> failed() {
