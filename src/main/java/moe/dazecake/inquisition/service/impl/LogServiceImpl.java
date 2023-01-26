@@ -96,7 +96,7 @@ public class LogServiceImpl implements LogService {
     }
 
     @NotNull
-    private PageQueryVO<LogDTO> getLogPageQueryVO(Page<LogEntity> data) {
+    public PageQueryVO<LogDTO> getLogPageQueryVO(Page<LogEntity> data) {
         var result = new PageQueryVO<LogDTO>();
         result.setCurrent(data.getCurrent());
         result.setTotal(data.getTotal());

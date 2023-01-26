@@ -198,7 +198,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @NotNull
-    private PageQueryVO<AccountWithSanVO> getAccountWithSanVOPageQueryVO(Page<AccountEntity> data) {
+    public PageQueryVO<AccountWithSanVO> getAccountWithSanVOPageQueryVO(Page<AccountEntity> data) {
         var result = new PageQueryVO<AccountWithSanVO>();
         result.setCurrent(data.getCurrent());
         result.setTotal(data.getPages());

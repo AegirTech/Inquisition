@@ -8,5 +8,5 @@ import java.util.List;
 
 @Data
 public class CDKListVO {
-    private List<CDKDTO> list = new ArrayList<>();
+    private List<CDKDTO> cdkList = new ArrayList<>();
 }

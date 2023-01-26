@@ -37,7 +37,7 @@ public class CDKServiceImpl implements CDKService {
     DynamicInfo dynamicInfo;
 
     @Override
-    public int activateCDK(Long id, String cdk) {
+    public Result<String> activateCDK(Long id, String cdk) {
 
         var accountEntity = accountMapper.selectById(id);
         var cdkEntity = cdkMapper.selectOne(
@@ -47,13 +47,11 @@ public class CDKServiceImpl implements CDKService {
         );
 
         if (accountEntity == null) {
-            log.error("Unable to activate CDK for a non-existent account");
-            return 404;
+            return Result.notFound("账号不存在");
         }
 
         if (cdkEntity == null) {
-            log.error("Unable to activate a non-existent CDK");
-            return 404;
+            return Result.notFound("激活码不存在或已使用");
         }
 
         if (accountEntity.getExpireTime().isBefore(LocalDateTime.now())) {
@@ -79,7 +77,7 @@ public class CDKServiceImpl implements CDKService {
         dynamicInfo.getUserSanList().put(accountEntity.getId(), 135);
         dynamicInfo.getUserMaxSanList().put(accountEntity.getId(), 135);
 
-        return 200;
+        return Result.success("激活成功");
     }
 
     @Override
@@ -133,7 +131,7 @@ public class CDKServiceImpl implements CDKService {
             cdkEntity.setType(createCDKDTO.getType());
             cdkEntity.setParam(createCDKDTO.getParam());
             cdkEntity.setTag(createCDKDTO.getTag());
-            cdkEntity.setIsAgent(createCDKDTO.isAgent() ? 1 : 0);
+            cdkEntity.setIsAgent(createCDKDTO.getIsAgent() ? 1 : 0);
             cdkEntity.setAgent(createCDKDTO.getAgent());
             cdkEntity.setUsed(0);
             newCDKList.add(cdkEntity);
@@ -164,7 +162,7 @@ public class CDKServiceImpl implements CDKService {
         List<CDKDTO> list = new ArrayList<>();
         cdkList.forEach(cdk -> list.add(CDKConvert.INSTANCE.toCDKDTO(cdk)));
         var cdkListVO = new CDKListVO();
-        cdkListVO.setList(list);
+        cdkListVO.setCdkList(list);
 
         return Result.success(cdkListVO, "查询成功");
     }

@@ -10,7 +10,6 @@ import com.gitee.sunchenbin.mybatis.actable.annotation.IsKey;
 import com.gitee.sunchenbin.mybatis.actable.annotation.IsNotNull;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -19,7 +18,6 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @TableName("pro_user")
 public class ProUserEntity {
 
@@ -43,11 +41,11 @@ public class ProUserEntity {
     @Schema(description = "权限")
     String permission;
 
-    @Column(name = "balance", comment = "余额")
+    @Column(name = "balance", comment = "余额", decimalLength = 2)
     @Schema(description = "余额")
     Double balance;
 
-    @Column(name = "discount", comment = "折扣系数")
+    @Column(name = "discount", comment = "折扣系数", decimalLength = 2)
     @Schema(description = "折扣系数")
     Double discount;
 

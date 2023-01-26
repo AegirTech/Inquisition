@@ -13,6 +13,8 @@ public interface TaskService {
 
     void errorHandle(AccountEntity account, String deviceToken, String type);
 
+    void forceHaltTask(Long id);
+
     void forceHaltTask(AccountEntity account, boolean isHalt);
 
     void calculatingSan();

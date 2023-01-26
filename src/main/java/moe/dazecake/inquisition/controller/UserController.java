@@ -436,9 +436,9 @@ public class UserController {
         var id = JWTUtils.getId(token);
         var code = cdkService.activateCDK(id, cdk);
 
-        if (code == 200) {
+        if (code.getCode() == 200) {
             result.setCode(200).setMsg("success").setData("激活成功");
-        } else if (code == 404) {
+        } else if (code.getCode() == 404) {
             result.setCode(404).setMsg("CDK不存在或已被激活");
         }
         return result;

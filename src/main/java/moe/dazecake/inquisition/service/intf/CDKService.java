@@ -19,7 +19,7 @@ public interface CDKService {
      * @author DazeCake
      * @date 2023/1/26 11:05
      */
-    int activateCDK(Long id, String cdk);
+    Result<String> activateCDK(Long id, String cdk);
 
     /**
      * 通过cdk创建用户

@@ -323,6 +323,25 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    public void forceHaltTask(Long id) {
+        for (AccountEntity freeTask : dynamicInfo.getFreeTaskList()) {
+            if (freeTask.getId().equals(id)) {
+                dynamicInfo.getFreeTaskList().remove(freeTask);
+                break;
+            }
+        }
+        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
+            if (lockTask.getAccount().getId().equals(id)) {
+                dynamicInfo.getLockTaskList().remove(lockTask);
+                dynamicInfo.getHaltList().add(lockTask.getDeviceToken());
+                break;
+            }
+        }
+        dynamicInfo.getFreezeTaskList().remove(id);
+    }
+
+    // TODO: 2023/1/26 删除此用法
+    @Override
     public void forceHaltTask(AccountEntity account, boolean notHalted) {
         //清除等待队列
         for (AccountEntity entity : dynamicInfo.getFreeTaskList()) {

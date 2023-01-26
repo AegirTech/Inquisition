@@ -10,7 +10,7 @@ public class CreateCDKDTO {
 
     private String tag;
 
-    private boolean isAgent;
+    private Boolean isAgent;
 
     private Long agent;
 
