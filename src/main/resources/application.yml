@@ -32,7 +32,7 @@ mybatis:
     #none 		系统不做任何处理。
     #add		新增表/新增字段/新增索引/新增唯一约束的功能，不做做修改和删除
   model:
-    pack: moe.dazecake.inquisition.entity
+    pack: moe.dazecake.inquisition.model.entity
   database:
     type: mysql
 
@@ -41,18 +41,3 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-
-# 定时任务配置
-cron: '0 0 4,12,20 * * ?'
-
-wx-pusher:
-  enable: false
-  app-token: xxxxxxx
-
-storage:
-  oss:
-    enable: false
-    secretId: xxx
-    secretKey: xxx
-    bucket: xxx
-    region: xxx
