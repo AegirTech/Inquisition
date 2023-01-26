@@ -2,6 +2,7 @@ package moe.dazecake.inquisition.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.gson.Gson;
+import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.BillMapper;
 import moe.dazecake.inquisition.mapper.ProUserMapper;
@@ -10,6 +11,8 @@ import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.BillEntity;
 import moe.dazecake.inquisition.service.intf.PayService;
 import moe.dazecake.inquisition.utils.Encoder;
+import moe.dazecake.inquisition.utils.JWTUtils;
+import moe.dazecake.inquisition.utils.Result;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -21,8 +24,10 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Map;
 import java.util.Objects;
 
+@Slf4j
 @Service
 public class PayServiceImpl implements PayService {
 
@@ -55,6 +60,9 @@ public class PayServiceImpl implements PayService {
 
     @Resource
     BillMapper billMapper;
+
+    @Resource
+    MessageServiceImpl messageService;
 
     @Override
     public BillEntity createOrder(Double amount, String payType, String returnPath) {
@@ -149,5 +157,64 @@ public class PayServiceImpl implements PayService {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public String payResultCallBack(Map<String, String> map) {
+        if (map.get("sign").equals(Encoder.MD5(
+                map.get("state") +
+                        map.get("merchantNum") +
+                        map.get("orderNo") +
+                        map.get("amount") +
+                        payToken
+        ))) {
+            var bill = billMapper.selectOne(Wrappers.<BillEntity>lambdaQuery()
+                    .eq(BillEntity::getPlatformOrderNo, map.get("platformOrderNo")));
+
+            if (bill == null) {
+                log.warn("[支付回调]: 前置账单获取出错");
+                return "500";
+            }
+
+            if (map.get("state").equals("1")) {
+
+                bill.setActualPayAmount(Double.valueOf(map.get("actualPayAmount")))
+                        .setState(1)
+                        .setUpdateTime(LocalDateTime.now());
+                billMapper.updateById(bill);
+
+                if (billCallBackSolver(bill)) {
+                    log.info("[支付回调]: 支付成功");
+                    return "success";
+                } else {
+                    log.info("[支付回调]: 支付成功, 解决失败");
+                    messageService.pushAdmin("支付成功, 但是解决失败", "支付成功, 但是解决失败");
+                    return "success";
+                }
+
+
+            }
+
+            log.warn("[支付回调]: 状态错误");
+            return "state error";
+        } else {
+            log.warn("[支付回调]: 签名错误");
+            return "sign error";
+        }
+    }
+
+    @Override
+    public Result<String> getAccountRenewalUrl(String token, String payType, Integer mo) {
+        var id = JWTUtils.getId(token);
+        if (mo < 1) {
+            return Result.failed("不允许购买小于1个月的套餐");
+        }
+
+        var bill = createOrder(mo * 30 * dailyPrice, payType, "/user/home/");
+        bill.setUserId(id)
+                .setType("daily")
+                .setParam(String.valueOf(30 * mo));
+        billMapper.updateById(bill);
+        return Result.success(bill.getPayUrl());
     }
 }
