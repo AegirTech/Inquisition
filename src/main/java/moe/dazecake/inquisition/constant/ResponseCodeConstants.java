@@ -6,6 +6,10 @@ public interface ResponseCodeConstants {
      */
     int SUCCESS = 200;
     /**
+     * 重复请求成功
+     */
+    int REPEAT_SUCCESS = 201;
+    /**
      * 参数错误
      */
     int PARAM_ERROR = 400;

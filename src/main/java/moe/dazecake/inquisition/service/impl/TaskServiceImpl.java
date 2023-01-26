@@ -1,12 +1,18 @@
 package moe.dazecake.inquisition.service.impl;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.mapper.AccountMapper;
+import moe.dazecake.inquisition.mapper.DeviceMapper;
+import moe.dazecake.inquisition.mapper.mapstruct.AccountConvert;
+import moe.dazecake.inquisition.model.dto.account.AccountDTO;
 import moe.dazecake.inquisition.model.dto.log.AddLogDTO;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
+import moe.dazecake.inquisition.model.entity.DeviceEntity;
 import moe.dazecake.inquisition.model.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.service.intf.TaskService;
 import moe.dazecake.inquisition.utils.DynamicInfo;
+import moe.dazecake.inquisition.utils.Result;
 import moe.dazecake.inquisition.utils.TimeUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,6 +30,9 @@ import java.util.Objects;
 public class TaskServiceImpl implements TaskService {
 
     @Resource
+    DeviceMapper deviceMapper;
+
+    @Resource
     DynamicInfo dynamicInfo;
 
     @Resource
@@ -38,12 +47,259 @@ public class TaskServiceImpl implements TaskService {
     @Resource
     AccountMapper accountMapper;
 
+    @Resource
+    EmailServiceImpl emailService;
+
     @Value("${spring.mail.enable:false}")
     boolean enableMail;
+
+    @Value("${spring.mail.to}")
+    String to;
 
     @Value("${wx-pusher.enable:false}")
     boolean enableWxPusher;
 
+
+    @Override
+    public Result<AccountDTO> getTask(String deviceToken) {
+        //设备合法性检查
+        if (deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
+                .eq(DeviceEntity::getDeviceToken, deviceToken)) == null) {
+            return Result.unauthorized("设备未授权");
+        }
+
+        //重复请求检查
+        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
+            if (lockTask.getDeviceToken().equals(deviceToken)) {
+                return Result.repeatSuccess(AccountConvert.INSTANCE.toAccountDTO(lockTask.getAccount()), "重复获取");
+            }
+        }
+
+        //任务上锁
+        if (!dynamicInfo.getFreeTaskList().isEmpty()) {
+            var account = new AccountEntity();
+
+            //检查任务是否达到下发标准
+            var iterator = dynamicInfo.getFreeTaskList().iterator();
+            var hit = false;
+            while (iterator.hasNext()) {
+                account = iterator.next();
+
+                //时间检查，不在激活区间则跳转到下一个判断
+                if (!checkActivationTime(account)) {
+                    iterator.remove();
+                    continue;
+                }
+
+                //B服限制检查
+                if (account.getServer() == 1 && account.getBLimitDevice().size() != 0) {
+                    var usedDeviceToken = account.getBLimitDevice().get(0);
+                    if (!Objects.equals(usedDeviceToken, deviceToken)) {
+                        if (dynamicInfo.getDeviceStatusMap().containsKey(usedDeviceToken)) {
+                            continue;
+                        } else {
+                            account.getBLimitDevice().clear();
+                            accountMapper.updateById(account);
+                        }
+                    }
+                }
+
+                //重复分配任务检查
+                AccountEntity finalAccount = account;
+                if (dynamicInfo.getLockTaskList().stream()
+                        .anyMatch(lockTask -> lockTask.getAccount().getId().equals(finalAccount.getId()))) {
+                    iterator.remove();
+                    continue;
+                }
+
+                //冻结判断，不处于冻结状态则返回任务
+                if (!checkFreeze(account)) {
+                    hit = true;
+                    break;
+                }
+            }
+
+            //检查是已经遍历完整个列表
+            if (!hit) {
+                //没有可用的任务
+                return Result.success("没有可用的任务");
+            }
+
+            //任务上锁，同时分配强制超时期限
+            log.info("任务上锁");
+            lockTask(deviceToken, account);
+
+            //记录日志
+            log(deviceToken, account, "INFO", "任务开始", "任务开始", null);
+
+            //推送消息
+            messageService.push(account, "任务开始", "请勿强行顶号，强行顶号将导致轮空");
+
+            //移出等待队列
+            iterator.remove();
+
+            //理智归零
+            dynamicInfo.getUserSanList().put(account.getId(), 0);
+
+
+            return Result.success(AccountConvert.INSTANCE.toAccountDTO(account), "获取成功");
+
+        } else {
+            return Result.success("待分配队列为空");
+        }
+    }
+
+    @Override
+    public Result<String> completeTask(String deviceToken, String imageUrl) {
+        Result<String> result = new Result<>();
+
+
+        var account =
+                dynamicInfo.getLockTaskList().stream().filter(e -> e.getDeviceToken().equals(deviceToken)).findFirst()
+                        .orElseThrow().getAccount();
+
+        //检查B服限制新增设备
+        if (account.getServer() == 1 && account.getBLimitDevice().size() == 0) {
+            account.getBLimitDevice().add(deviceToken);
+            accountMapper.updateById(account);
+        }
+
+        //记录日志
+        log(deviceToken, account, "INFO", "任务完成", "任务完成", imageUrl);
+
+        //推送消息
+        messageService.push(account, "任务完成", "任务完成，可登陆面板查看作战结果");
+
+        //管理员推送消息推送
+        if (account.getTaskType().equals("rogue") && enableMail) {
+            //发送邮件通知
+            String msg = "<p>肉鸽任务已完成<p>\n" +
+                    "<p>用户名称: " + account.getName() + "<p>\n" +
+                    "<p>用户账号: " + account.getAccount() + "<p>\n" +
+                    "<p>服务器: " + account.getServer() + "<p>\n" +
+                    "<img src=\"" + imageUrl + "\" alt=\"screenshots\">";
+            emailService.sendHtmlMail(to, "肉鸽任务完成", msg);
+        }
+
+        //移除队列
+        dynamicInfo.getLockTaskList().removeIf(lockTask -> lockTask.getDeviceToken().equals(deviceToken));
+
+        result.setCode(200)
+                .setMsg("success")
+                .setData("null");
+
+        return result;
+    }
+
+    @Override
+    public Result<String> failTask(String deviceToken, String type, String imageUrl) {
+        Result<String> result = new Result<>();
+
+        var account = dynamicInfo.getLockTaskList().stream().filter(e -> e.getDeviceToken().equals(deviceToken))
+                .findFirst()
+                .orElseThrow().getAccount();
+
+        //记录日志
+        log(deviceToken, account, "WARN", "任务失败", "任务失败,请登陆面板查看失败原因: " + type, imageUrl);
+
+        //异常处理
+        errorHandle(account, deviceToken, type);
+
+        //推送消息
+        messageService.push(account, "任务失败", "任务失败，请登陆面板查看失败原因");
+
+        result.setCode(200)
+                .setMsg("success")
+                .setData("null");
+
+        return result;
+    }
+
+    @Override
+    public Result<String> tempInsertTask(Long id) {
+        Result<String> result = new Result<>();
+
+        dynamicInfo.getFreeTaskList().forEach(account -> {
+            if (account.getId().equals(id)) {
+                dynamicInfo.getFreeTaskList().remove(account);
+                dynamicInfo.getFreeTaskList().add(0, account);
+            }
+        });
+
+        return result.setCode(200)
+                .setMsg("插队成功")
+                .setData(null);
+    }
+
+    @Override
+    public Result<String> tempRemoveTask(Long id) {
+        Result<String> result = new Result<>();
+
+        for (AccountEntity account : dynamicInfo.getFreeTaskList()) {
+            if (Objects.equals(account.getId(), id)) {
+                forceHaltTask(id);
+                return result.setCode(200)
+                        .setMsg("成功移出队列")
+                        .setData(null);
+            }
+        }
+
+        return result.setCode(404)
+                .setMsg("未找到该账号")
+                .setData(null);
+    }
+
+    @Override
+    public Result<String> forceLoadAllTask() {
+        dynamicInfo.getFreeTaskList().clear();
+        dynamicInfo.getFreeTaskList().addAll(
+                accountMapper.selectList(
+                        Wrappers.<AccountEntity>lambdaQuery()
+                                .eq(AccountEntity::getDelete, 0)
+                                .eq(AccountEntity::getFreeze, 0)
+                                .eq(AccountEntity::getTaskType, "daily")
+                                .ge(AccountEntity::getExpireTime, LocalDateTime.now())
+                )
+        );
+
+        //记录日志
+        logService.logInfo("任务列表刷新", "管理员强制刷新了任务队列");
+
+        return new Result<String>().setCode(200)
+                .setMsg("载入成功")
+                .setData(null);
+    }
+
+    @Override
+    public Result<String> forceUnlockOneTask(String deviceToken) {
+        if (dynamicInfo.getLockTaskList().removeIf(lockTask -> lockTask.getDeviceToken().equals(deviceToken))) {
+            //记录日志
+            logService.logInfo("强制解锁", "管理员强制解锁释放了一个任务");
+
+        } else {
+            return new Result<String>().setCode(404)
+                    .setMsg("未找到任务")
+                    .setData(null);
+        }
+
+        return new Result<String>().setCode(200)
+                .setMsg("解锁成功")
+                .setData(null);
+    }
+
+    @Override
+    public Result<String> forceUnlockTaskList() {
+        if (dynamicInfo.getLockTaskList().size() != 0) {
+            dynamicInfo.getLockTaskList().clear();
+
+            //记录日志
+            logService.logInfo("强制解锁", "管理员强制解锁释放整个上锁队列");
+
+            return Result.success("强制解锁成功");
+        } else {
+            return Result.success("强制解锁成功");
+        }
+    }
 
     //检查是否处于时间激活区间，如果是，则返回true，否则返回false
     @Override

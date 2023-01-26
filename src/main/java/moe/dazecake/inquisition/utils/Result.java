@@ -49,6 +49,22 @@ public class Result<T> implements Serializable {
         return restResult(data, ResponseCodeConstants.SUCCESS, msg);
     }
 
+    public static <T> Result<T> repeatSuccess() {
+        return restResult(null, ResponseCodeConstants.REPEAT_SUCCESS, null);
+    }
+
+    public static <T> Result<T> repeatSuccess(String msg) {
+        return restResult(null, ResponseCodeConstants.REPEAT_SUCCESS, msg);
+    }
+
+    public static <T> Result<T> repeatSuccess(T data) {
+        return restResult(data, ResponseCodeConstants.REPEAT_SUCCESS, null);
+    }
+
+    public static <T> Result<T> repeatSuccess(T data, String msg) {
+        return restResult(data, ResponseCodeConstants.REPEAT_SUCCESS, msg);
+    }
+
     public static <T> Result<T> isSuccess(boolean flag) {
         return flag ? success() : failed();
     }

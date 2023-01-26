@@ -14,4 +14,6 @@ public interface AccountConvert {
     AccountWithSanVO toAccountWithSanVO(AccountEntity accountEntity, String san);
 
     AccountEntity toAccountEntity(AccountDTO accountDTO);
+
+    AccountDTO toAccountDTO(AccountEntity accountEntity);
 }
