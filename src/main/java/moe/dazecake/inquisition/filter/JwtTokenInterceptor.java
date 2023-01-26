@@ -10,6 +10,7 @@ import moe.dazecake.inquisition.mapper.ProUserMapper;
 import moe.dazecake.inquisition.model.entity.ProUserEntity;
 import moe.dazecake.inquisition.utils.JWTUtils;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -26,10 +27,18 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
     @Resource
     private ProUserMapper proUserMapper;
 
+    @Value("${inquisition.dev_mode:false}")
+    private boolean devMode;
+
     @Override
     public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,
                              @NotNull Object handler) {
         if (!(handler instanceof HandlerMethod)) {
+            return true;
+        }
+
+        //开发模式跳过jwt检查
+        if (devMode) {
             return true;
         }
 
