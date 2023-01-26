@@ -1,4 +1,4 @@
-package moe.dazecake.inquisition.model.vo;
+package moe.dazecake.inquisition.model.dto.heartbeat;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Schema(description = "心跳")
-public class HeartBeatVO {
+public class HeartBeatDTO {
 
     /**
      * 状态码

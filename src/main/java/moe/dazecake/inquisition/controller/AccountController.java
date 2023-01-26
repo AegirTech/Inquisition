@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.model.dto.account.AccountDTO;
+import moe.dazecake.inquisition.model.dto.account.AccountIDDTO;
 import moe.dazecake.inquisition.model.dto.account.AddAccountDTO;
 import moe.dazecake.inquisition.model.vo.account.AccountWithSanVO;
 import moe.dazecake.inquisition.model.vo.query.PageQueryVO;
@@ -42,8 +43,8 @@ public class AccountController {
     @Login
     @Operation(summary = "删除账号")
     @PostMapping("/delAccount")
-    public Result<String> delAccount(@RequestBody Long id) {
-        accountService.deleteAccount(id);
+    public Result<String> delAccount(@RequestBody AccountIDDTO accountIDDTO) {
+        accountService.deleteAccount(accountIDDTO.getId());
         return Result.success(null, "删除成功");
     }
 
@@ -72,22 +73,22 @@ public class AccountController {
     @Login
     @Operation(summary = "重置刷新次数")
     @PostMapping("/resetRefresh")
-    public Result<String> resetRefresh(@RequestBody Long id) {
-        accountService.resetAccountRefresh(id, 1);
+    public Result<String> resetRefresh(@RequestBody AccountIDDTO accountIDDTO) {
+        accountService.resetAccountRefresh(accountIDDTO.getId(), 1);
         return Result.success(null, "重置成功");
     }
 
     @Login
     @Operation(summary = "账号立即作战")
     @PostMapping("/startAccountByAdmin")
-    public Result<String> startAccountByAdmin(@RequestBody Long id) {
-        return Result.success(null, accountService.forceFightAccount(id, true));
+    public Result<String> startAccountByAdmin(@RequestBody AccountIDDTO accountIDDTO) {
+        return Result.success(null, accountService.forceFightAccount(accountIDDTO.getId(), true));
     }
 
     @Login
     @Operation(summary = "重置账号动态信息")
     @PostMapping("/resetAccountDynamicInfo")
-    public Result<String> fixAccount(@RequestBody Long id) {
-        return Result.success(null, accountService.resetAccountDynamicInfo(id));
+    public Result<String> fixAccount(@RequestBody AccountIDDTO accountIDDTO) {
+        return Result.success(null, accountService.resetAccountDynamicInfo(accountIDDTO.getId()));
     }
 }
