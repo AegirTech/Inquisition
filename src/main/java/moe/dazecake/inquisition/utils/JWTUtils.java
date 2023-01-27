@@ -30,7 +30,7 @@ public class JWTUtils {
     public static String generateTokenForUser(AccountEntity accountEntity) {
         JWTCreator.Builder builder = JWT.create();
         builder.withClaim("id", accountEntity.getId())
-                .withClaim("username", accountEntity.getAccount())
+                .withClaim("account", accountEntity.getAccount())
                 .withClaim("type", "user")
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION));
         return builder.sign(Algorithm.HMAC256(SECRET));
@@ -63,9 +63,9 @@ public class JWTUtils {
         return JWT.decode(token.substring(7)).getClaim("id").asLong();
     }
 
-    public static String getUsername(String token) {
+    public static String getAccount(String token) {
         assert token != null;
-        return JWT.decode(token.substring(7)).getClaim("username").asString();
+        return JWT.decode(token.substring(7)).getClaim("account").asString();
     }
 
     public static String getType(String token) {

@@ -30,7 +30,7 @@ public interface CDKService {
      * @author DazeCake
      * @date 2023/1/26 11:06
      */
-    int createUserByCDK(AccountEntity accountEntity, String cdk);
+    Result<String> createUserByCDK(AccountEntity accountEntity, String cdk);
 
     /**
      * 创建cdk

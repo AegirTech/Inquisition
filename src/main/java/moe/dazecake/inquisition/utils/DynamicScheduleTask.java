@@ -53,7 +53,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
     @Resource
     ChinacServiceImpl chinacService;
 
-    @Value("${spring.mail.to}")
+    @Value("${spring.mail.to:}")
     String to;
 
     @Value("${spring.mail.enable:false}")
@@ -153,7 +153,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                         if (lockTask.getExpirationTime().isBefore(nowTime)) {
                             //记录日志
                             logService.logWarn("任务超时", "");
-                            taskService.forceHaltTask(lockTask.getAccount(), true);
+                            taskService.forceHaltTask(lockTask.getAccount().getId());
                             num++;
                         }
                     }

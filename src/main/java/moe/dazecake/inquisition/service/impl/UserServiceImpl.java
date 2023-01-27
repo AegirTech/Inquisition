@@ -1,0 +1,371 @@
+package moe.dazecake.inquisition.service.impl;
+
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.zjiecode.wxpusher.client.WxPusher;
+import com.zjiecode.wxpusher.client.bean.CreateQrcodeReq;
+import moe.dazecake.inquisition.mapper.AccountMapper;
+import moe.dazecake.inquisition.mapper.BillMapper;
+import moe.dazecake.inquisition.mapper.mapstruct.AccountConvert;
+import moe.dazecake.inquisition.model.dto.account.AccountDTO;
+import moe.dazecake.inquisition.model.dto.log.LogDTO;
+import moe.dazecake.inquisition.model.dto.user.UserStatusSTO;
+import moe.dazecake.inquisition.model.entity.AccountEntity;
+import moe.dazecake.inquisition.model.entity.TaskDateSet.LockTask;
+import moe.dazecake.inquisition.model.vo.UserLoginVO;
+import moe.dazecake.inquisition.model.vo.query.PageQueryVO;
+import moe.dazecake.inquisition.service.intf.UserService;
+import moe.dazecake.inquisition.utils.DynamicInfo;
+import moe.dazecake.inquisition.utils.JWTUtils;
+import moe.dazecake.inquisition.utils.Result;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Objects;
+
+@Service
+public class UserServiceImpl implements UserService {
+
+    @Resource
+    DynamicInfo dynamicInfo;
+
+    @Resource
+    AccountMapper accountMapper;
+
+    @Resource
+    LogServiceImpl logService;
+
+    @Resource
+    HttpServiceImpl httpService;
+
+    @Resource
+    CDKServiceImpl cdkService;
+
+    @Resource
+    PayServiceImpl payService;
+
+    @Resource
+    TaskServiceImpl taskService;
+
+    @Resource
+    AccountServiceImpl accountService;
+
+    @Resource
+    BillMapper billMapper;
+
+    @Value("${wx-pusher.app-token:}")
+    String appToken;
+
+    @Value("${wx-pusher.enable:false}")
+    boolean enableWxPusher;
+
+    @Override
+    public Result<String> createUserByCDK(String cdk, String username, String account, String password, Integer server) {
+        var preCheck = preCheckUser(account, password, server);
+        if (preCheck != null) {
+            return preCheck;
+        }
+
+        var newAccount = new AccountEntity();
+        newAccount.setName(username)
+                .setAccount(account)
+                .setPassword(password);
+        return cdkService.createUserByCDK(newAccount, cdk);
+    }
+
+    @Override
+    public Result<String> createUserByPay(String payType, String username, String account, String password, Integer server) {
+        if (username.contains("|") || account.contains("|") || password.contains("|")) {
+            return Result.paramError("用户名，账号，密码中不能包含 | 字符");
+        }
+        var preCheck = preCheckUser(account, password, server);
+        if (preCheck != null) {
+            return preCheck;
+        }
+
+        var bill = payService.createOrder(1.0, payType, "/auth/user/");
+        bill.setType("register")
+                .setParam(username + "|" + account + "|" + password + "|" + server);
+        billMapper.updateById(bill);
+
+        return Result.success(bill.getPayUrl(), "请在支付成功后直接登录");
+    }
+
+    @Override
+    public Result<UserLoginVO> userLogin(String account, String password) {
+        if (account == null || password == null) {
+            return Result.unauthorized("账号或密码错误");
+        }
+
+        var user = accountMapper.selectOne(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getAccount, account)
+                        .eq(AccountEntity::getPassword, password)
+        );
+
+        if (user != null) {
+            if (user.getDelete() == 1) {
+                return Result.forbidden("账号已被删除，请联系管理员解除");
+            }
+            return Result.success(new UserLoginVO(JWTUtils.generateTokenForUser(user)), "登录成功");
+        } else {
+            return Result.notFound("不存在的账号");
+        }
+    }
+
+    @Override
+    public Result<AccountDTO> showMyAccount(Long id) {
+        return Result.success(AccountConvert.INSTANCE.toAccountDTO(accountMapper.selectOne(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getId, id)
+        )), "获取成功");
+    }
+
+    @Override
+    public Result<String> updateMyAccount(Long id, AccountDTO accountDTO) {
+        var newAccount = AccountConvert.INSTANCE.toAccountEntity(accountDTO);
+        var oldAccount = accountMapper.selectOne(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getId, id)
+        );
+        if (oldAccount != null) {
+
+            oldAccount.setName(newAccount.getName())
+                    .setConfig(newAccount.getConfig())
+                    .setActive(newAccount.getActive())
+                    .setNotice(newAccount.getNotice());
+            accountMapper.updateById(oldAccount);
+
+            return Result.success("更新成功");
+
+        } else {
+            return Result.notFound("不存在的账号");
+        }
+    }
+
+    @Override
+    public Result<String> updateAccountAndPassword(Long id, String account, String password, Long server) {
+
+        if (account.isBlank() || password.isBlank() || server == null) {
+            return Result.paramError("不允许为空");
+        }
+
+        var accountList = accountMapper.selectList(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getAccount, account)
+        );
+        if (accountList.size() > 1) {
+            return Result.forbidden("此账号已经被使用");
+        }
+
+        var accountEntity = accountMapper.selectOne(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getId, id)
+        );
+
+        if (server == 0) {
+            if (httpService.isOfficialAccountWork(account, password)) {
+                accountEntity.setAccount(account);
+                accountEntity.setPassword(password);
+                accountEntity.setServer(server);
+                accountEntity.setUpdateTime(LocalDateTime.now());
+                accountMapper.updateById(accountEntity);
+            } else {
+                return Result.unauthorized("验证失败，账号或密码错误");
+            }
+        } else if (server == 1) {
+            if (httpService.isBiliAccountWork(account, password)) {
+                accountEntity.setAccount(account);
+                accountEntity.setPassword(password);
+                accountEntity.setServer(server);
+                accountEntity.setFreeze(0);
+                accountEntity.getBLimitDevice().clear();
+                accountEntity.setUpdateTime(LocalDateTime.now());
+                accountMapper.updateById(accountEntity);
+            } else {
+                return Result.unauthorized("验证失败，账号或密码错误");
+            }
+        }
+
+        return Result.success("更新成功");
+    }
+
+    @Override
+    public Result<String> freezeMyAccount(Long id) {
+        var account = accountMapper.selectOne(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getId, id)
+        );
+        if (account != null) {
+            account.setFreeze(1);
+            accountMapper.updateById(account);
+            dynamicInfo.getUserSanList().remove(account.getId());
+            return Result.success("冻结成功");
+        } else {
+            return Result.notFound("不存在的账号");
+        }
+    }
+
+    @Override
+    public Result<String> unfreezeMyAccount(Long id) {
+        var account = accountMapper.selectOne(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getId, id)
+        );
+        if (account != null) {
+            account.setFreeze(0);
+            accountMapper.updateById(account);
+            if (dynamicInfo.getUserMaxSanList().containsKey(account.getId())) {
+                dynamicInfo.getUserSanList().put(account.getId(),
+                        dynamicInfo.getUserMaxSanList().get(account.getId()) - 20);
+            } else {
+                dynamicInfo.getUserSanList().put(account.getId(), 80);
+                dynamicInfo.getUserMaxSanList().put(account.getId(), 100);
+            }
+            return Result.success("解冻成功");
+        } else {
+            return Result.notFound("不存在的账号");
+        }
+    }
+
+    @Override
+    public Result<PageQueryVO<LogDTO>> showMyLog(String account, Long current, Long size) {
+        return Result.success(logService.queryLogByAccount(account, current, size), "获取成功");
+    }
+
+    @Override
+    public Result<UserStatusSTO> showMyStatus(Long id) {
+        var user = accountMapper.selectOne(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getId, id)
+        );
+        if (user == null) {
+            return Result.notFound("不存在的账号");
+        }
+        if (user.getFreeze() == 1) {
+            return Result.success(new UserStatusSTO("账号已被冻结，若需继续托管请先解冻"), "获取成功");
+        }
+
+        for (Long k : dynamicInfo.getFreezeTaskList().keySet()) {
+            if (Objects.equals(k, id)) {
+                return Result.success(new UserStatusSTO("发生冲突，账号强制冷却，稍后自动重试作战"), "获取成功");
+            }
+        }
+
+        var index = 0;
+        for (AccountEntity account : dynamicInfo.getFreeTaskList()) {
+            if (account.getId().equals(id)) {
+                if (index != 0) {
+                    return Result.success(new UserStatusSTO("前方还有" + index + "个账号，请耐心等待"), "获取成功");
+                } else {
+                    return Result.success(new UserStatusSTO("等待空闲设备响应，即将作战，请勿顶号"), "获取成功");
+                }
+            }
+            index++;
+        }
+
+        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
+            if (lockTask.getAccount().getId().equals(id)) {
+                return Result.success(new UserStatusSTO("正在作战中，请勿顶号"), "获取成功");
+            }
+        }
+        var san = dynamicInfo.getUserSanList().get(id);
+        var maxSan = dynamicInfo.getUserMaxSanList().get(id);
+        LocalDateTime nextTime = LocalDateTime.now()
+                .plusMinutes((maxSan - san) * 6L);
+        String nextTimeStr = nextTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+        return Result.success(new UserStatusSTO("下一轮作战最迟将于" + nextTimeStr + "开始"), "获取成功");
+    }
+
+    @Override
+    public Result<String> showMySan(Long id) {
+        var ans = "";
+        if (!dynamicInfo.getUserSanList().containsKey(id)) {
+            ans = "账号冻结中";
+        } else if (dynamicInfo.getUserSanList().get(id).equals(dynamicInfo.getUserMaxSanList().get(id))) {
+            ans = "正在尝试作战以校准理智值";
+        } else if (dynamicInfo.getLockTaskList().stream().anyMatch(e -> e.getAccount().getId().equals(id))) {
+            ans = "等待作战结束以校准理智";
+        } else if (dynamicInfo.getUserSanList().get(id) == null || dynamicInfo.getUserMaxSanList().get(id) == null) {
+            ans = "等待作战以校准理智值";
+        } else {
+            ans = dynamicInfo.getUserSanList().get(id) + "/" + dynamicInfo.getUserMaxSanList().get(id);
+        }
+
+        return Result.success(ans, "获取成功");
+    }
+
+    @Override
+    public Result<String> useCDK(Long id, String cdk) {
+        return cdkService.activateCDK(id, cdk);
+    }
+
+    @Override
+    public Result<String> getWechatQRCode(Long id) {
+        Result<String> result = new Result<>();
+        if (enableWxPusher) {
+            var account = accountMapper.selectOne(
+                    Wrappers.<AccountEntity>lambdaQuery()
+                            .eq(AccountEntity::getId, id)
+            );
+            if (account == null) {
+                result.setCode(403);
+                result.setMsg("账号不存在");
+                return result;
+            }
+            CreateQrcodeReq createQrcodeReq = new CreateQrcodeReq();
+            createQrcodeReq.setAppToken(appToken);
+            createQrcodeReq.setExtra(String.valueOf(id));
+            createQrcodeReq.setValidTime(3600);
+            var qrcode = WxPusher.createAppTempQrcode(createQrcodeReq);
+            if (qrcode.isSuccess()) {
+                return result.setCode(200).setMsg("success").setData(qrcode.getData().getUrl());
+            } else {
+                return result.setCode(403).setMsg("获取二维码失败");
+            }
+        } else {
+            return result.setCode(403).setMsg("未开启微信推送");
+        }
+    }
+
+    @Override
+    public Result<String> forceHalt(Long id) {
+        taskService.forceHaltTask(id);
+        return Result.success("执行成功");
+    }
+
+    @Override
+    public Result<String> startNow(Long id) {
+        return Result.success(accountService.forceFightAccount(id, false));
+    }
+
+    @Override
+    public Result<Integer> getRefresh(Long id) {
+        var account = accountMapper.selectById(id);
+        return Result.success(account.getRefresh(), "获取成功");
+    }
+
+    @NotNull
+    private Result<String> preCheckUser(String account, String password, Integer server) {
+        if (accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
+                .eq(AccountEntity::getAccount, account)).size() != 0) {
+            return Result.forbidden("账号已存在，请直接登录");
+        }
+
+        if (server == 0) {
+            if (!httpService.isOfficialAccountWork(account, password)) {
+                return Result.paramError("账号或密码错误，注册需要填写的账号就是游戏账号");
+            }
+        } else if (server == 1) {
+            if (!httpService.isBiliAccountWork(account, password)) {
+                return Result.paramError("账号或密码错误，注册需要填写的账号就是游戏账号");
+            }
+        } else {
+            return Result.paramError("服务器类型错误");
+        }
+        return null;
+    }
+}

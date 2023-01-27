@@ -41,10 +41,6 @@ public class Result<T> implements Serializable {
         return restResult(null, ResponseCodeConstants.SUCCESS, msg);
     }
 
-    public static <T> Result<T> success(T data) {
-        return restResult(data, ResponseCodeConstants.SUCCESS, null);
-    }
-
     public static <T> Result<T> success(T data, String msg) {
         return restResult(data, ResponseCodeConstants.SUCCESS, msg);
     }
@@ -55,10 +51,6 @@ public class Result<T> implements Serializable {
 
     public static <T> Result<T> repeatSuccess(String msg) {
         return restResult(null, ResponseCodeConstants.REPEAT_SUCCESS, msg);
-    }
-
-    public static <T> Result<T> repeatSuccess(T data) {
-        return restResult(data, ResponseCodeConstants.REPEAT_SUCCESS, null);
     }
 
     public static <T> Result<T> repeatSuccess(T data, String msg) {
@@ -77,10 +69,6 @@ public class Result<T> implements Serializable {
         return restResult(null, ResponseCodeConstants.PARAM_ERROR, msg);
     }
 
-    public static <T> Result<T> paramError(T data) {
-        return restResult(data, ResponseCodeConstants.PARAM_ERROR, null);
-    }
-
     public static <T> Result<T> paramError(T data, String msg) {
         return restResult(data, ResponseCodeConstants.PARAM_ERROR, msg);
     }
@@ -91,10 +79,6 @@ public class Result<T> implements Serializable {
 
     public static <T> Result<T> unauthorized(String msg) {
         return restResult(null, ResponseCodeConstants.UNAUTHORIZED, msg);
-    }
-
-    public static <T> Result<T> unauthorized(T data) {
-        return restResult(data, ResponseCodeConstants.UNAUTHORIZED, null);
     }
 
     public static <T> Result<T> unauthorized(T data, String msg) {
@@ -109,10 +93,6 @@ public class Result<T> implements Serializable {
         return restResult(null, ResponseCodeConstants.FORBIDDEN, msg);
     }
 
-    public static <T> Result<T> forbidden(T data) {
-        return restResult(data, ResponseCodeConstants.FORBIDDEN, null);
-    }
-
     public static <T> Result<T> forbidden(T data, String msg) {
         return restResult(data, ResponseCodeConstants.FORBIDDEN, msg);
     }
@@ -123,10 +103,6 @@ public class Result<T> implements Serializable {
 
     public static <T> Result<T> notFound(String msg) {
         return restResult(null, ResponseCodeConstants.NOT_FOUND, msg);
-    }
-
-    public static <T> Result<T> notFound(T data) {
-        return restResult(data, ResponseCodeConstants.NOT_FOUND, null);
     }
 
     public static <T> Result<T> notFound(T data, String msg) {

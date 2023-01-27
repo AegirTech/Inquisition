@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class WXPusherServiceImpl implements WXPusherService {
 
-    @Value("${wx-pusher.app-token}")
+    @Value("${wx-pusher.app-token:}")
     private String appToken;
 
     @Override

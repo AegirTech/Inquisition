@@ -116,19 +116,19 @@ public class HttpServiceImpl implements HttpService {
         return Base64.getEncoder().encodeToString(cipher.doFinal(plain.getBytes(StandardCharsets.UTF_8)));
     }
 
-    @Value("${storage.oss.enable:fasle}")
+    @Value("${storage.oss.enable:false}")
     private boolean ossEnable;
 
-    @Value("${storage.oss.secretId}")
+    @Value("${storage.oss.secretId:}")
     private String secretId;
 
-    @Value("${storage.oss.secretKey}")
+    @Value("${storage.oss.secretKey:}")
     private String secretKey;
 
-    @Value("${storage.oss.bucket}")
+    @Value("${storage.oss.bucket:}")
     private String bucketName;
 
-    @Value("${storage.oss.region}")
+    @Value("${storage.oss.region:}")
     private String regionName;
 
     @Resource

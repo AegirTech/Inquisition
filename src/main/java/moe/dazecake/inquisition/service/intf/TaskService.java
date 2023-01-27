@@ -99,8 +99,6 @@ public interface TaskService {
 
     void forceHaltTask(Long id);
 
-    void forceHaltTask(AccountEntity account, boolean isHalt);
-
     void calculatingSan();
 
 }

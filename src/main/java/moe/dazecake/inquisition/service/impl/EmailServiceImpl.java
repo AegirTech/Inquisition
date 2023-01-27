@@ -19,7 +19,7 @@ public class EmailServiceImpl implements EmailService {
     @Resource
     private JavaMailSender mailSender;
 
-    @Value("${spring.mail.from}")
+    @Value("${spring.mail.from:}")
     private String from;
 
     @Value("${spring.mail.nickname:阿戈尔科技}")

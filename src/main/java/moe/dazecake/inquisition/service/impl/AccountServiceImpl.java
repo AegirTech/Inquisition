@@ -188,7 +188,7 @@ public class AccountServiceImpl implements AccountService {
         }
 
         //停止作战
-        taskService.forceHaltTask(account, true);
+        taskService.forceHaltTask(id);
 
         //重置动态数据
         dynamicInfo.getUserSanList().put(id, 135);

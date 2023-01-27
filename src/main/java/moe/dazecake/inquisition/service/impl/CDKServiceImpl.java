@@ -81,7 +81,7 @@ public class CDKServiceImpl implements CDKService {
     }
 
     @Override
-    public int createUserByCDK(AccountEntity accountEntity, String cdk) {
+    public Result<String> createUserByCDK(AccountEntity accountEntity, String cdk) {
 
         var cdkEntity = cdkMapper.selectOne(
                 Wrappers.<CDKEntity>lambdaQuery()
@@ -90,7 +90,7 @@ public class CDKServiceImpl implements CDKService {
         );
 
         if (cdkEntity == null) {
-            return 404;
+            return Result.notFound("激活码不存在或已使用");
         }
 
         if ("daily".equals(cdkEntity.getType())) {
@@ -118,7 +118,7 @@ public class CDKServiceImpl implements CDKService {
         dynamicInfo.getUserSanList().put(account.getId(), 135);
         dynamicInfo.getUserMaxSanList().put(account.getId(), 135);
 
-        return 200;
+        return Result.success("创建成功");
     }
 
     @Override

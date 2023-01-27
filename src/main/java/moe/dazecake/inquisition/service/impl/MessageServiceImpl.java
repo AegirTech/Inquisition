@@ -14,10 +14,10 @@ public class MessageServiceImpl implements MessageService {
     @Value("${spring.mail.enable:false}")
     boolean enableMail;
 
-    @Value("${wx-pusher.enable:fasle}")
+    @Value("${wx-pusher.enable:false}")
     boolean enableWxPusher;
 
-    @Value("${spring.mail.to}")
+    @Value("${spring.mail.to:}")
     String adminMail;
 
     @Resource

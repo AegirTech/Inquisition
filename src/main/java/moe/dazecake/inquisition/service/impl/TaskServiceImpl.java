@@ -53,7 +53,7 @@ public class TaskServiceImpl implements TaskService {
     @Value("${spring.mail.enable:false}")
     boolean enableMail;
 
-    @Value("${spring.mail.to}")
+    @Value("${spring.mail.to:}")
     String to;
 
     @Value("${wx-pusher.enable:false}")
@@ -202,6 +202,9 @@ public class TaskServiceImpl implements TaskService {
         //记录日志
         log(deviceToken, account, "WARN", "任务失败", "任务失败,请登陆面板查看失败原因: " + type, imageUrl);
 
+        //移除队列
+        dynamicInfo.getLockTaskList().removeIf(lockTask -> lockTask.getDeviceToken().equals(deviceToken));
+
         //异常处理
         errorHandle(account, deviceToken, type);
 
@@ -295,10 +298,8 @@ public class TaskServiceImpl implements TaskService {
             //记录日志
             logService.logInfo("强制解锁", "管理员强制解锁释放整个上锁队列");
 
-            return Result.success("强制解锁成功");
-        } else {
-            return Result.success("强制解锁成功");
         }
+        return Result.success("强制解锁成功");
     }
 
     //检查是否处于时间激活区间，如果是，则返回true，否则返回false
@@ -538,14 +539,12 @@ public class TaskServiceImpl implements TaskService {
 
         switch (type) {
             case ("lineBusy"): {
-                forceHaltTask(account, false);
                 dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
                 dynamicInfo.getFreeTaskList().add(account);
                 break;
             }
             case ("accountError"): {
                 if (account.getServer() == 0) {
-                    forceHaltTask(account, false);
                     if (httpService.isOfficialAccountWork(account.getAccount(), account.getPassword())) {
                         dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
                         dynamicInfo.getFreeTaskList().add(account);
@@ -557,7 +556,6 @@ public class TaskServiceImpl implements TaskService {
                         messageService.push(account, "账号异常", "您的账号密码有误，请在面板更新正确的账号密码，否则托管将无法继续进行");
                     }
                 } else if (account.getServer() == 1) {
-                    forceHaltTask(account, false);
                     if (httpService.isBiliAccountWork(account.getAccount(), account.getPassword())) {
                         messageService.push(account, "账号异常", "您近期登陆的设备较多，已被B服限制登陆，请立即修改密码并于面板更新密码,否则托管可能将无法继续进行");
                     } else {
@@ -570,7 +568,6 @@ public class TaskServiceImpl implements TaskService {
                 }
             }
             default: {
-                forceHaltTask(account, false);
                 dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
                 dynamicInfo.getFreeTaskList().add(account);
                 break;
@@ -594,32 +591,6 @@ public class TaskServiceImpl implements TaskService {
             }
         }
         dynamicInfo.getFreezeTaskList().remove(id);
-    }
-
-    // TODO: 2023/1/26 删除此用法
-    @Override
-    public void forceHaltTask(AccountEntity account, boolean notHalted) {
-        //清除等待队列
-        for (AccountEntity entity : dynamicInfo.getFreeTaskList()) {
-            if (entity.getId().equals(account.getId())) {
-                dynamicInfo.getFreeTaskList().remove(entity);
-                break;
-            }
-        }
-
-        //清除上锁队列
-        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
-            if (lockTask.getAccount().getId().equals(account.getId())) {
-                if (notHalted) {
-                    dynamicInfo.getHaltList().add(lockTask.getDeviceToken());
-                }
-                dynamicInfo.getLockTaskList().remove(lockTask);
-                break;
-            }
-        }
-
-        //清除冻结队列
-        dynamicInfo.getFreezeTaskList().remove(account.getId());
     }
 
     @Override
