@@ -5,6 +5,7 @@ import com.zjiecode.wxpusher.client.WxPusher;
 import com.zjiecode.wxpusher.client.bean.CreateQrcodeReq;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.BillMapper;
+import moe.dazecake.inquisition.mapper.ProUserMapper;
 import moe.dazecake.inquisition.mapper.mapstruct.AccountConvert;
 import moe.dazecake.inquisition.model.dto.account.AccountDTO;
 import moe.dazecake.inquisition.model.dto.log.LogDTO;
@@ -22,7 +23,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -57,6 +57,9 @@ public class UserServiceImpl implements UserService {
     @Resource
     BillMapper billMapper;
 
+    @Resource
+    ProUserMapper proUserMapper;
+
     @Value("${wx-pusher.app-token:}")
     String appToken;
 
@@ -65,9 +68,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Result<String> createUserByCDK(String cdk, String username, String account, String password, Integer server) {
-        var preCheck = preCheckUser(account, password, server);
-        if (preCheck != null) {
-            return preCheck;
+        if (accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
+                .eq(AccountEntity::getAccount, account)).size() != 0) {
+            return Result.forbidden("账号已存在，请直接登录");
         }
 
         var newAccount = new AccountEntity();
@@ -82,9 +85,14 @@ public class UserServiceImpl implements UserService {
         if (username.contains("|") || account.contains("|") || password.contains("|")) {
             return Result.paramError("用户名，账号，密码中不能包含 | 字符");
         }
-        var preCheck = preCheckUser(account, password, server);
-        if (preCheck != null) {
-            return preCheck;
+        var proUser = proUserMapper.selectById(createUserByPayDTO.getAgent());
+        if (proUser == null) {
+            return Result.notFound("代理商不存在");
+        }
+
+        if (accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
+                .eq(AccountEntity::getAccount, account)).size() != 0) {
+            return Result.forbidden("账号已存在，请直接登录");
         }
 
         var bill = payService.createOrder(1.0, createUserByPayDTO.getPayType(), "/auth/user/");
@@ -354,24 +362,4 @@ public class UserServiceImpl implements UserService {
         return Result.success(account.getRefresh(), "获取成功");
     }
 
-    @NotNull
-    private Result<String> preCheckUser(String account, String password, Integer server) {
-        if (accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
-                .eq(AccountEntity::getAccount, account)).size() != 0) {
-            return Result.forbidden("账号已存在，请直接登录");
-        }
-
-        if (server == 0) {
-            if (!httpService.isOfficialAccountWork(account, password)) {
-                return Result.paramError("账号或密码错误，注册需要填写的账号就是游戏账号");
-            }
-        } else if (server == 1) {
-            if (!httpService.isBiliAccountWork(account, password)) {
-                return Result.paramError("账号或密码错误，注册需要填写的账号就是游戏账号");
-            }
-        } else {
-            return Result.paramError("服务器类型错误");
-        }
-        return null;
-    }
 }
