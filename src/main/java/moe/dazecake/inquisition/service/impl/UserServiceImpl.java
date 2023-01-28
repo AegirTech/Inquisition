@@ -8,6 +8,7 @@ import moe.dazecake.inquisition.mapper.BillMapper;
 import moe.dazecake.inquisition.mapper.mapstruct.AccountConvert;
 import moe.dazecake.inquisition.model.dto.account.AccountDTO;
 import moe.dazecake.inquisition.model.dto.log.LogDTO;
+import moe.dazecake.inquisition.model.dto.user.CreateUserByPayDTO;
 import moe.dazecake.inquisition.model.dto.user.UserStatusSTO;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.TaskDateSet.LockTask;
@@ -77,7 +78,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Result<String> createUserByPay(String payType, String username, String account, String password, Integer server) {
+    public Result<String> createUserByPay(CreateUserByPayDTO createUserByPayDTO, String username, String account, String password, Integer server) {
         if (username.contains("|") || account.contains("|") || password.contains("|")) {
             return Result.paramError("用户名，账号，密码中不能包含 | 字符");
         }
@@ -86,9 +87,14 @@ public class UserServiceImpl implements UserService {
             return preCheck;
         }
 
-        var bill = payService.createOrder(1.0, payType, "/auth/user/");
+        var bill = payService.createOrder(1.0, createUserByPayDTO.getPayType(), "/auth/user/");
         bill.setType("register")
                 .setParam(username + "|" + account + "|" + password + "|" + server);
+        if (createUserByPayDTO.getAgent() != 0) {
+            bill.setParam(bill.getParam() + "|" + createUserByPayDTO.getAgent());
+        } else {
+            bill.setParam(bill.getParam() + "|0");
+        }
         billMapper.updateById(bill);
 
         return Result.success(bill.getPayUrl(), "请在支付成功后直接登录");

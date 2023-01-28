@@ -34,6 +34,9 @@ public class CDKServiceImpl implements CDKService {
     CDKMapper cdkMapper;
 
     @Resource
+    LogServiceImpl logService;
+
+    @Resource
     DynamicInfo dynamicInfo;
 
     @Override
@@ -108,7 +111,9 @@ public class CDKServiceImpl implements CDKService {
         accountEntity.setUpdateTime(LocalDateTime.now());
 
         cdkMapper.updateById(cdkEntity);
+        logService.logInfo("CDK使用", "使用CDK " + cdk + " 创建了账号 " + accountEntity.getAccount());
         accountMapper.insert(accountEntity);
+
 
         var account = accountMapper.selectOne(
                 Wrappers.<AccountEntity>lambdaQuery()

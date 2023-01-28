@@ -52,7 +52,7 @@ public class UserController {
     @Operation(summary = "使用在线支付创建我的账号")
     @PostMapping("/createUserByPay")
     public Result<String> createUserByPay(@RequestBody CreateUserByPayDTO createUserByPayDTO) {
-        return userService.createUserByPay(createUserByPayDTO.getPayType(),
+        return userService.createUserByPay(createUserByPayDTO,
                 createUserByPayDTO.getUsername(),
                 createUserByPayDTO.getAccount(),
                 createUserByPayDTO.getPassword(),

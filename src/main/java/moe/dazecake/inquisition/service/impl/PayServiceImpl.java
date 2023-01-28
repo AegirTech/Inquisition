@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -127,21 +128,8 @@ public class PayServiceImpl implements PayService {
             user.setExpireTime(user.getExpireTime().plusDays(Integer.parseInt(bill.getParam())));
 
             //代理佣金
-            if (user.getAgent() != null) {
-                var proUser = proUserMapper.selectById(user.getAgent());
-
-                proUser.setBalance(proUser.getBalance() +
-                        dailyPrice * Integer.parseInt(bill.getParam()) * (1 - proUser.getDiscount()));
-                proUserMapper.updateById(proUser);
-
-                var newBill = new BillEntity();
-                newBill.setOrderNo(String.valueOf(LocalDateTime.now().toInstant(ZoneOffset.ofHours(8)).toEpochMilli()))
-                        .setType("commission")
-                        .setUserId(proUser.getId())
-                        .setActualPayAmount(0 - dailyPrice * Integer.parseInt(bill.getParam()) * (1 - proUser.getDiscount()))
-                        .setState(1)
-                        .setUpdateTime(LocalDateTime.now());
-                billMapper.insert(newBill);
+            if (user.getAgent() != 0) {
+                calculateCommission(user.getAgent(), dailyPrice * Integer.parseInt(bill.getParam()));
             }
 
             accountMapper.updateById(user);
@@ -152,8 +140,13 @@ public class PayServiceImpl implements PayService {
             newUser.setAccount(bill.getParam().split("\\|")[1]);
             newUser.setPassword(bill.getParam().split("\\|")[2]);
             newUser.setServer(Long.valueOf(bill.getParam().split("\\|")[3]));
+            newUser.setAgent(Long.valueOf(bill.getParam().split("\\|")[4]));
             newUser.setExpireTime(LocalDateTime.now().plusDays(3));
             accountMapper.insert(newUser);
+            //代理佣金
+            if (newUser.getAgent() != 0) {
+                calculateCommission(newUser.getAgent(), 1.0);
+            }
             return true;
         }
         return false;
@@ -185,12 +178,11 @@ public class PayServiceImpl implements PayService {
 
                 if (billCallBackSolver(bill)) {
                     log.info("[支付回调]: 支付成功");
-                    return "success";
                 } else {
                     log.info("[支付回调]: 支付成功, 解决失败");
                     messageService.pushAdmin("支付成功, 但是解决失败", "支付成功, 但是解决失败");
-                    return "success";
                 }
+                return "success";
 
 
             }
@@ -216,5 +208,21 @@ public class PayServiceImpl implements PayService {
                 .setParam(String.valueOf(30 * mo));
         billMapper.updateById(bill);
         return Result.success(bill.getPayUrl());
+    }
+
+    @NotNull
+    private void calculateCommission(Long id, Double rawAmount) {
+        var proUser = proUserMapper.selectById(id);
+        proUser.setBalance(proUser.getBalance() + rawAmount * (1 - proUser.getDiscount()));
+        proUserMapper.updateById(proUser);
+
+        var newBill = new BillEntity();
+        newBill.setOrderNo(String.valueOf(LocalDateTime.now().toInstant(ZoneOffset.ofHours(8)).toEpochMilli()))
+                .setType("commission")
+                .setUserId(proUser.getId())
+                .setActualPayAmount(0 - rawAmount * (1 - proUser.getDiscount()))
+                .setState(1)
+                .setUpdateTime(LocalDateTime.now());
+        billMapper.insert(newBill);
     }
 }

@@ -2,6 +2,7 @@ package moe.dazecake.inquisition.service.intf;
 
 import moe.dazecake.inquisition.model.dto.account.AccountDTO;
 import moe.dazecake.inquisition.model.dto.log.LogDTO;
+import moe.dazecake.inquisition.model.dto.user.CreateUserByPayDTO;
 import moe.dazecake.inquisition.model.dto.user.UserStatusSTO;
 import moe.dazecake.inquisition.model.vo.UserLoginVO;
 import moe.dazecake.inquisition.model.vo.query.PageQueryVO;
@@ -26,16 +27,16 @@ public interface UserService {
     /**
      * 通过支付创建用户
      *
-     * @param payType  支付类型
-     * @param username 用户名
-     * @param account  账号
-     * @param password 密码
-     * @param server   服务器
+     * @param createUserByPayDTO 支付参数
+     * @param username           用户名
+     * @param account            账号
+     * @param password           密码
+     * @param server             服务器
      * @return: moe.dazecake.inquisition.utils.Result<java.lang.String>
      * @author DazeCake
      * @date 2023/1/27 20:52
      */
-    Result<String> createUserByPay(String payType, String username, String account, String password, Integer server);
+    Result<String> createUserByPay(CreateUserByPayDTO createUserByPayDTO, String username, String account, String password, Integer server);
 
     /**
      * 用户登录

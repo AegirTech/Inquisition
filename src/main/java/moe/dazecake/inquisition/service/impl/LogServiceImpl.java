@@ -35,8 +35,8 @@ public class LogServiceImpl implements LogService {
         logEntity.setTime(LocalDateTime.now());
         logEntity.setDelete(0);
         if (isSystem) {
-            logEntity.setTaskType("system");
-            logEntity.setFrom("system");
+            logEntity.setTaskType("SYSTEM");
+            logEntity.setFrom("SYSTEM");
         } else {
             specialScan(addLogDTO);
         }
