@@ -217,6 +217,7 @@ public class UserServiceImpl implements UserService {
             account.setFreeze(1);
             accountMapper.updateById(account);
             dynamicInfo.getUserSanList().remove(account.getId());
+            taskService.forceHaltTask(account.getId());
             return Result.success("冻结成功");
         } else {
             return Result.notFound("不存在的账号");
