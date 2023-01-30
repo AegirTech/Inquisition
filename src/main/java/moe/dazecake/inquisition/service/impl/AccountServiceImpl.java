@@ -90,7 +90,7 @@ public class AccountServiceImpl implements AccountService {
         var account = accountMapper.selectById(accountDTO.getId());
 
         if (account != null) {
-            accountMapper.updateById(account);
+            accountMapper.updateById(AccountConvert.INSTANCE.toAccountEntity(accountDTO));
         }
     }
 
