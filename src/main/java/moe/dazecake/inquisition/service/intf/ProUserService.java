@@ -25,6 +25,15 @@ public interface ProUserService {
     void CreateProUser(CreateProUserDTO createProUserDTO);
 
     /**
+     * 分页查询高级用户账号
+     *
+     * @return: moe.dazecake.inquisition.utils.Result<moe.dazecake.inquisition.model.vo.query.PageQueryVO < moe.dazecake.inquisition.model.dto.prouser.ProUserDTO>>
+     * @author DazeCake
+     * @date 2023/1/31 20:29
+     */
+    Result<PageQueryVO<ProUserDTO>> getAllProUser(Long current, Long size);
+
+    /**
      * 代理账号登录
      *
      * @param proUserLoginDTO 代理账号密码

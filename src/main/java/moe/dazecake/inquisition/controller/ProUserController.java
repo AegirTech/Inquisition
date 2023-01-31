@@ -41,6 +41,13 @@ public class ProUserController {
         return Result.success("创建成功");
     }
 
+    @Login
+    @Operation(summary = "分页查询高级用户账号")
+    @GetMapping("/getAllProUser")
+    public Result<PageQueryVO<ProUserDTO>> getAllProUser(Long current, Long size) {
+        return proUserService.getAllProUser(current, size);
+    }
+
     @Operation(summary = "登陆高级用户账号")
     @PostMapping("/proUserLogin")
     public Result<ProUserLoginVO> proUserLogin(@RequestBody ProUserLoginDTO proUserLoginDTO) {

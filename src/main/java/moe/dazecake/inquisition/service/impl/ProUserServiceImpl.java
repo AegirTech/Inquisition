@@ -82,6 +82,12 @@ public class ProUserServiceImpl implements ProUserService {
     }
 
     @Override
+    public Result<PageQueryVO<ProUserDTO>> getAllProUser(Long current, Long size) {
+        var data = proUserMapper.selectPage(new Page<>(current, size), null);
+        return Result.success(getProUserVOPageQueryVO(data), "查询成功");
+    }
+
+    @Override
     public Result<ProUserLoginVO> loginProUser(ProUserLoginDTO proUserLoginDTO) {
         if (proUserLoginDTO.getUsername() == null || proUserLoginDTO.getPassword() == null) {
             return Result.paramError("用户名或密码不能为空");
@@ -283,5 +289,17 @@ public class ProUserServiceImpl implements ProUserService {
             return Result.forbidden("该用户已过期");
         }
         return Result.success("检查通过");
+    }
+
+    @org.jetbrains.annotations.NotNull
+    public PageQueryVO<ProUserDTO> getProUserVOPageQueryVO(Page<ProUserEntity> data) {
+        var result = new PageQueryVO<ProUserDTO>();
+        result.setCurrent(data.getCurrent());
+        result.setTotal(data.getPages());
+
+        for (ProUserEntity user : data.getRecords()) {
+            result.getRecords().add(ProUserConvert.INSTANCE.toProUserDTO(user));
+        }
+        return result;
     }
 }
