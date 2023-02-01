@@ -142,7 +142,8 @@ public class DeviceServiceImpl implements DeviceService {
     private PageQueryVO<DeviceVO> getDevicePageQueryVO(Page<DeviceEntity> data) {
         var result = new PageQueryVO<DeviceVO>();
         result.setCurrent(data.getCurrent());
-        result.setTotal(data.getPages());
+        result.setPage(data.getPages());
+        result.setTotal(data.getTotal());
         for (DeviceEntity record : data.getRecords()) {
             result.getRecords().add(DeviceConvert.INSTANCE.toDeviceVO(record));
         }

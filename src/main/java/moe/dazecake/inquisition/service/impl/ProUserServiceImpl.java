@@ -295,7 +295,8 @@ public class ProUserServiceImpl implements ProUserService {
     public PageQueryVO<ProUserDTO> getProUserVOPageQueryVO(Page<ProUserEntity> data) {
         var result = new PageQueryVO<ProUserDTO>();
         result.setCurrent(data.getCurrent());
-        result.setTotal(data.getPages());
+        result.setPage(data.getPages());
+        result.setTotal(data.getTotal());
 
         for (ProUserEntity user : data.getRecords()) {
             result.getRecords().add(ProUserConvert.INSTANCE.toProUserDTO(user));

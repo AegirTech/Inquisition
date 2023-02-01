@@ -99,6 +99,7 @@ public class LogServiceImpl implements LogService {
     public PageQueryVO<LogDTO> getLogPageQueryVO(Page<LogEntity> data) {
         var result = new PageQueryVO<LogDTO>();
         result.setCurrent(data.getCurrent());
+        result.setPage(data.getPages());
         result.setTotal(data.getTotal());
         for (LogEntity record : data.getRecords()) {
             result.getRecords().add(LogConvert.INSTANCE.toLogDTO(record));

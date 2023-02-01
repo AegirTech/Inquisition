@@ -201,7 +201,8 @@ public class AccountServiceImpl implements AccountService {
     public PageQueryVO<AccountWithSanVO> getAccountWithSanVOPageQueryVO(Page<AccountEntity> data) {
         var result = new PageQueryVO<AccountWithSanVO>();
         result.setCurrent(data.getCurrent());
-        result.setTotal(data.getPages());
+        result.setPage(data.getPages());
+        result.setTotal(data.getTotal());
 
         for (AccountEntity user : data.getRecords()) {
             if (dynamicInfo.getUserSanList().containsKey(user.getId())) {
