@@ -181,6 +181,16 @@ public class TaskServiceImpl implements TaskService {
             emailService.sendHtmlMail(to, "肉鸽任务完成", msg);
         }
 
+        if (account.getTaskType().equals("sand_fire") && enableMail) {
+            //发送邮件通知
+            String msg = "<p>生息演算任务已完成<p>\n" +
+                    "<p>用户名称: " + account.getName() + "<p>\n" +
+                    "<p>用户账号: " + account.getAccount() + "<p>\n" +
+                    "<p>服务器: " + account.getServer() + "<p>\n" +
+                    "<img src=\"" + imageUrl + "\" alt=\"screenshots\">";
+            emailService.sendHtmlMail(to, "生息演算任务完成", msg);
+        }
+
         //移除队列
         dynamicInfo.getLockTaskList().removeIf(lockTask -> lockTask.getDeviceToken().equals(deviceToken));
 
@@ -502,6 +512,10 @@ public class TaskServiceImpl implements TaskService {
                 lockTask.setAccount(account);
                 lockTask.setExpirationTime(localDateTime.plusHours(72));
                 break;
+            case "sand_fire":
+                lockTask.setAccount(account);
+                lockTask.setExpirationTime(localDateTime.plusHours(24));
+                break;
         }
         dynamicInfo.getLockTaskList().add(lockTask);
     }
@@ -513,8 +527,10 @@ public class TaskServiceImpl implements TaskService {
         String type = "";
         if (Objects.equals(account.getTaskType(), "daily")) {
             type = "每日";
-        } else if (Objects.equals(account.getTaskType(), "rogue")) {
+        } else if (Objects.equals(account.getTaskType(), "rogue") || Objects.equals(account.getTaskType(), "rogue2")) {
             type = "肉鸽";
+        } else if (Objects.equals(account.getTaskType(), "sand_fire")) {
+            type = "生息演算";
         }
 
         String detail =
@@ -568,7 +584,7 @@ public class TaskServiceImpl implements TaskService {
                 }
             }
             default: {
-                dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusHours(1));
+                dynamicInfo.getFreezeTaskList().put(account.getId(), LocalDateTime.now().plusMinutes(10));
                 dynamicInfo.getFreeTaskList().add(account);
                 break;
             }

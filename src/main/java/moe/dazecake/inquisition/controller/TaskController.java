@@ -49,36 +49,36 @@ public class TaskController {
         return taskService.failTask(deviceToken, type, imageUrl);
     }
 
-//    @Login
-//    @Operation(summary = "临时增加任务")
-//    @PostMapping("/tempAddTask")
-//    public Result<String> tempAddTask(@RequestBody AccountEntity accountEntity) {
-//        Result<String> result = new Result<>();
-//
-//        long minIndex = 0L;
-//
-//        for (AccountEntity account : dynamicInfo.getFreeTaskList()) {
-//            if (minIndex > account.getId()) {
-//                minIndex = account.getId();
-//            }
-//        }
-//
-//        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
-//            if (minIndex > lockTask.getAccount().getId()) {
-//                minIndex = lockTask.getAccount().getId();
-//            }
-//        }
-//
-//        minIndex--;
-//
-//        accountEntity.setId(minIndex);
-//
-//        dynamicInfo.getFreeTaskList().add(0, accountEntity);
-//
-//        return result.setCode(200)
-//                .setMsg("success")
-//                .setData(null);
-//    }
+    @Login
+    @Operation(summary = "临时增加任务")
+    @PostMapping("/tempAddTask")
+    public Result<String> tempAddTask(@RequestBody AccountEntity accountEntity) {
+        Result<String> result = new Result<>();
+
+        long minIndex = 0L;
+
+        for (AccountEntity account : dynamicInfo.getFreeTaskList()) {
+            if (minIndex > account.getId()) {
+                minIndex = account.getId();
+            }
+        }
+
+        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
+            if (minIndex > lockTask.getAccount().getId()) {
+                minIndex = lockTask.getAccount().getId();
+            }
+        }
+
+        minIndex--;
+
+        accountEntity.setId(minIndex);
+
+        dynamicInfo.getFreeTaskList().add(0, accountEntity);
+
+        return result.setCode(200)
+                .setMsg("success")
+                .setData(null);
+    }
 
     @Login
     @Operation(summary = "临时插队任务")
