@@ -627,6 +627,13 @@ public class TaskServiceImpl implements TaskService {
 
             var account = accountMapper.selectById(id);
 
+            //无效账号判空
+            if (account == null) {
+                dynamicInfo.getUserSanList().remove(id);
+                dynamicInfo.getUserMaxSanList().remove(id);
+                continue;
+            }
+
             //检查是否已删除
             if (account.getDelete() == 1) {
                 entryIterator.remove();

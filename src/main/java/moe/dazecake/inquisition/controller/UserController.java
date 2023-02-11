@@ -41,7 +41,7 @@ public class UserController {
 
     @Operation(summary = "使用CDK创建我的账号")
     @PostMapping("/createUserByCDK")
-    public Result<String> createUserByCDK(@RequestBody CreateUserByCDKDTO createUserByCDKDTO) {
+    public synchronized Result<String> createUserByCDK(@RequestBody CreateUserByCDKDTO createUserByCDKDTO) {
         return userService.createUserByCDK(createUserByCDKDTO.getCdk(),
                 createUserByCDKDTO.getUsername(),
                 createUserByCDKDTO.getAccount(),
@@ -51,7 +51,7 @@ public class UserController {
 
     @Operation(summary = "使用在线支付创建我的账号")
     @PostMapping("/createUserByPay")
-    public Result<String> createUserByPay(@RequestBody CreateUserByPayDTO createUserByPayDTO) {
+    public synchronized Result<String> createUserByPay(@RequestBody CreateUserByPayDTO createUserByPayDTO) {
         return userService.createUserByPay(createUserByPayDTO,
                 createUserByPayDTO.getUsername(),
                 createUserByPayDTO.getAccount(),
@@ -132,8 +132,8 @@ public class UserController {
     @UserLogin
     @Operation(summary = "使用CDK")
     @PostMapping("/useCDK")
-    public Result<String> useCDK(@RequestHeader("Authorization") String token,
-                                 @RequestBody RawCDKDTO rawCDKDTO) {
+    public synchronized Result<String> useCDK(@RequestHeader("Authorization") String token,
+                                              @RequestBody RawCDKDTO rawCDKDTO) {
         return userService.useCDK(JWTUtils.getId(token), rawCDKDTO.getCdk());
     }
 
