@@ -171,7 +171,7 @@ public class TaskServiceImpl implements TaskService {
         messageService.push(account, "任务完成", "任务完成，可登陆面板查看作战结果");
 
         //管理员推送消息推送
-        if (account.getTaskType().equals("rogue") && enableMail) {
+        if (account.getTaskType().equals("rogue") || account.getTaskType().equals("rogue2") && enableMail) {
             //发送邮件通知
             String msg = "<p>肉鸽任务已完成<p>\n" +
                     "<p>用户名称: " + account.getName() + "<p>\n" +
