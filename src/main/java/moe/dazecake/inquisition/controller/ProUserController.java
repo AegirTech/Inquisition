@@ -48,6 +48,13 @@ public class ProUserController {
         return proUserService.getAllProUser(current, size);
     }
 
+    @Login
+    @Operation(summary = "更新高级用户账号")
+    @PostMapping("/updateProUser")
+    public Result<String> updateProUser(@RequestBody ProUserDTO proUserDTO) {
+        return proUserService.updateProUser(proUserDTO);
+    }
+
     @Operation(summary = "登陆高级用户账号")
     @PostMapping("/proUserLogin")
     public Result<ProUserLoginVO> proUserLogin(@RequestBody ProUserLoginDTO proUserLoginDTO) {

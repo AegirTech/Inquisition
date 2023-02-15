@@ -34,6 +34,16 @@ public interface ProUserService {
     Result<PageQueryVO<ProUserDTO>> getAllProUser(Long current, Long size);
 
     /**
+     * 更新高级用户信息
+     *
+     * @param proUserDTO 高级用户信息
+     * @return: moe.dazecake.inquisition.utils.Result<java.lang.String>
+     * @author DazeCake
+     * @date 2023/2/15 22:02
+     */
+    Result<String> updateProUser(ProUserDTO proUserDTO);
+
+    /**
      * 代理账号登录
      *
      * @param proUserLoginDTO 代理账号密码

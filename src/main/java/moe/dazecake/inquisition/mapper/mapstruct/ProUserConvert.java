@@ -21,5 +21,7 @@ public interface ProUserConvert {
     })
     ProUserEntity toProUserEntity(CreateProUserDTO createProUserDTO);
 
+    ProUserEntity toProUserEntity(ProUserDTO proUserDTO);
+
     ProUserDTO toProUserDTO(ProUserEntity proUserEntity);
 }

@@ -88,6 +88,14 @@ public class ProUserServiceImpl implements ProUserService {
     }
 
     @Override
+    public Result<String> updateProUser(ProUserDTO proUserDTO) {
+        var proUserEntity = ProUserConvert.INSTANCE.toProUserEntity(proUserDTO);
+        proUserEntity.setPassword(Encoder.MD5(proUserEntity.getPassword() + salt));
+        proUserMapper.updateById(proUserEntity);
+        return Result.success("修改成功");
+    }
+
+    @Override
     public Result<ProUserLoginVO> loginProUser(ProUserLoginDTO proUserLoginDTO) {
         if (proUserLoginDTO.getUsername() == null || proUserLoginDTO.getPassword() == null) {
             return Result.paramError("用户名或密码不能为空");
