@@ -3,10 +3,7 @@ package moe.dazecake.inquisition.service.intf;
 import moe.dazecake.inquisition.model.dto.account.AccountDTO;
 import moe.dazecake.inquisition.model.dto.cdk.CreateCDKDTO;
 import moe.dazecake.inquisition.model.dto.log.LogDTO;
-import moe.dazecake.inquisition.model.dto.prouser.CreateProUserDTO;
-import moe.dazecake.inquisition.model.dto.prouser.ProUserDTO;
-import moe.dazecake.inquisition.model.dto.prouser.ProUserLoginDTO;
-import moe.dazecake.inquisition.model.dto.prouser.UpdateProUserPasswordDTO;
+import moe.dazecake.inquisition.model.dto.prouser.*;
 import moe.dazecake.inquisition.model.vo.account.AccountWithSanVO;
 import moe.dazecake.inquisition.model.vo.cdk.CDKListVO;
 import moe.dazecake.inquisition.model.vo.prouser.ProUserLoginVO;
@@ -186,4 +183,16 @@ public interface ProUserService {
      * @date 2023/1/26 22:36
      */
     Result<String> renewSubUserDaily(Long id, Long userID, Integer mo);
+
+    /**
+     * 手动创建用户
+     *
+     * @param name     昵称
+     * @param account  账号
+     * @param password 密码
+     * @param server   服务器
+     * @param days     时长
+     * @return
+     */
+    Result<String> createSubUserByProUser(Long id,String name, String account, String password, Long server, Integer days);
 }

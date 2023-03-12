@@ -10,10 +10,7 @@ import moe.dazecake.inquisition.model.dto.cdk.ActiveAccountCDKDTO;
 import moe.dazecake.inquisition.model.dto.cdk.CreateCDKDTO;
 import moe.dazecake.inquisition.model.dto.log.LogDTO;
 import moe.dazecake.inquisition.model.dto.pay.ProUserRenewalSubUserDTO;
-import moe.dazecake.inquisition.model.dto.prouser.CreateProUserDTO;
-import moe.dazecake.inquisition.model.dto.prouser.ProUserDTO;
-import moe.dazecake.inquisition.model.dto.prouser.ProUserLoginDTO;
-import moe.dazecake.inquisition.model.dto.prouser.UpdateProUserPasswordDTO;
+import moe.dazecake.inquisition.model.dto.prouser.*;
 import moe.dazecake.inquisition.model.vo.account.AccountWithSanVO;
 import moe.dazecake.inquisition.model.vo.cdk.CDKListVO;
 import moe.dazecake.inquisition.model.vo.prouser.ProUserLoginVO;
@@ -150,6 +147,21 @@ public class ProUserController {
     public Result<String> createCdkByProUser(@RequestHeader("Authorization") String token,
                                              @RequestBody CreateCDKDTO createCDKDTO) {
         return proUserService.createCdkByProUser(JWTUtils.getId(token), createCDKDTO);
+    }
+
+    @ProUserLogin
+    @Operation(summary = "pro_user扣除余额创建用户")
+    @PostMapping("/createSubUserByProUser")
+    public Result<String> createSubUserByProUser(@RequestHeader("Authorization") String token,
+                                                 @RequestBody CreateUserByProUserDTO createUserByProUserDTO) {
+        return proUserService.createSubUserByProUser(
+                JWTUtils.getId(token),
+                createUserByProUserDTO.getName(),
+                createUserByProUserDTO.getAccount(),
+                createUserByProUserDTO.getPassword(),
+                createUserByProUserDTO.getServer(),
+                createUserByProUserDTO.getDays()
+        );
     }
 
     @ProUserLogin

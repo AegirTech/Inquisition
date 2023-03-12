@@ -16,4 +16,6 @@ public class AddAccountDTO {
     private Long server;
 
     private LocalDateTime expireTime;
+
+    private Long agent;
 }

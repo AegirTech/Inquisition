@@ -39,6 +39,9 @@ public class AccountServiceImpl implements AccountService {
                 .setPassword(addAccountDTO.getPassword())
                 .setServer(addAccountDTO.getServer())
                 .setExpireTime(addAccountDTO.getExpireTime());
+        if (addAccountDTO.getAgent() != null) {
+            accountEntity.setAgent(addAccountDTO.getAgent());
+        }
 
         accountMapper.insert(accountEntity);
     }

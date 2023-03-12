@@ -156,7 +156,8 @@ public class CDKServiceImpl implements CDKService {
                         .eq(CDKEntity::getTag, keyword);
             case AGENT:
                 return Wrappers.<CDKEntity>lambdaQuery()
-                        .eq(CDKEntity::getAgent, keyword);
+                        .eq(CDKEntity::getAgent, keyword)
+                        .eq(CDKEntity::getUsed,0);
         }
         return null;
     }

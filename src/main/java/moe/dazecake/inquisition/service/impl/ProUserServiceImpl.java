@@ -10,6 +10,7 @@ import moe.dazecake.inquisition.mapper.ProUserMapper;
 import moe.dazecake.inquisition.mapper.mapstruct.AccountConvert;
 import moe.dazecake.inquisition.mapper.mapstruct.ProUserConvert;
 import moe.dazecake.inquisition.model.dto.account.AccountDTO;
+import moe.dazecake.inquisition.model.dto.account.AddAccountDTO;
 import moe.dazecake.inquisition.model.dto.cdk.CreateCDKDTO;
 import moe.dazecake.inquisition.model.dto.log.LogDTO;
 import moe.dazecake.inquisition.model.dto.prouser.CreateProUserDTO;
@@ -282,6 +283,29 @@ public class ProUserServiceImpl implements ProUserService {
         }
         accountMapper.updateById(subUser);
         return Result.success("续费成功");
+    }
+
+    @Override
+    public Result<String> createSubUserByProUser(Long id, String name, String account, String password, Long server, Integer days) {
+        var proUser = proUserMapper.selectById(id);
+        //检查余额
+        if (proUser.getBalance() < days * dailyPrice * proUser.getDiscount()) {
+            return Result.forbidden("余额不足");
+        }
+        //扣除余额
+        proUser.setBalance(proUser.getBalance() - days * dailyPrice * proUser.getDiscount());
+        proUserMapper.updateById(proUser);
+
+        //创建用户
+        AddAccountDTO addAccountDTO = new AddAccountDTO();
+        addAccountDTO.setName(name);
+        addAccountDTO.setAccount(account);
+        addAccountDTO.setPassword(password);
+        addAccountDTO.setServer(server);
+        addAccountDTO.setExpireTime(LocalDateTime.now().plusDays(days));
+        addAccountDTO.setAgent(id);
+        accountService.addAccount(addAccountDTO);
+        return Result.success("创建成功");
     }
 
     @NotNull
