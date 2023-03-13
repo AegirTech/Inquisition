@@ -206,7 +206,7 @@ public class PayServiceImpl implements PayService {
                 .setType("daily")
                 .setParam(String.valueOf(30 * mo));
         billMapper.updateById(bill);
-        return Result.success(bill.getPayUrl());
+        return Result.success(bill.getPayUrl(), "获取成功");
     }
 
     @NotNull

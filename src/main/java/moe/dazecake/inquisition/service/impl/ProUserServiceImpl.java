@@ -250,6 +250,9 @@ public class ProUserServiceImpl implements ProUserService {
         proUser.setBalance(proUser.getBalance() - createCDKDTO.getCount() * dailyPrice * createCDKDTO.getParam() * proUser.getDiscount());
         proUserMapper.updateById(proUser);
 
+        createCDKDTO.setAgent(id);
+        createCDKDTO.setIsAgent(true);
+
         cdkService.createCDK(createCDKDTO);
         return Result.success("创建成功");
     }
