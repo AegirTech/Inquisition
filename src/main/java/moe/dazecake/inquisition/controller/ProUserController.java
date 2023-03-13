@@ -21,6 +21,7 @@ import moe.dazecake.inquisition.utils.Result;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 
 @Tag(name = "高级用户接口")
 @ResponseBody
@@ -71,6 +72,13 @@ public class ProUserController {
     public Result<String> updateProUserPassword(@RequestHeader("Authorization") String token,
                                                 @RequestBody UpdateProUserPasswordDTO updateProUserPasswordDTO) {
         return proUserService.updateProUserPassword(JWTUtils.getId(token), updateProUserPasswordDTO);
+    }
+
+    @ProUserLogin
+    @Operation(summary = "获取近期到期的附属用户")
+    @GetMapping("/getRecentlyExpiredUsers")
+    public Result<ArrayList<AccountDTO>> getRecentlyExpiredUsers(@RequestHeader("Authorization") String token) {
+        return proUserService.getRecentlyExpiredUsers(JWTUtils.getId(token));
     }
 
     @ProUserLogin

@@ -3,12 +3,17 @@ package moe.dazecake.inquisition.service.intf;
 import moe.dazecake.inquisition.model.dto.account.AccountDTO;
 import moe.dazecake.inquisition.model.dto.cdk.CreateCDKDTO;
 import moe.dazecake.inquisition.model.dto.log.LogDTO;
-import moe.dazecake.inquisition.model.dto.prouser.*;
+import moe.dazecake.inquisition.model.dto.prouser.CreateProUserDTO;
+import moe.dazecake.inquisition.model.dto.prouser.ProUserDTO;
+import moe.dazecake.inquisition.model.dto.prouser.ProUserLoginDTO;
+import moe.dazecake.inquisition.model.dto.prouser.UpdateProUserPasswordDTO;
 import moe.dazecake.inquisition.model.vo.account.AccountWithSanVO;
 import moe.dazecake.inquisition.model.vo.cdk.CDKListVO;
 import moe.dazecake.inquisition.model.vo.prouser.ProUserLoginVO;
 import moe.dazecake.inquisition.model.vo.query.PageQueryVO;
 import moe.dazecake.inquisition.utils.Result;
+
+import java.util.ArrayList;
 
 public interface ProUserService {
 
@@ -194,5 +199,15 @@ public interface ProUserService {
      * @param days     时长
      * @return
      */
-    Result<String> createSubUserByProUser(Long id,String name, String account, String password, Long server, Integer days);
+    Result<String> createSubUserByProUser(Long id, String name, String account, String password, Long server, Integer days);
+
+    /**
+     * 获取最近到期的用户
+     *
+     * @param id 代理账号ID
+     * @return: moe.dazecake.inquisition.utils.Result<java.util.ArrayList < moe.dazecake.inquisition.model.dto.account.AccountDTO>>
+     * @author DazeCake
+     * @date 2023/3/13 22:09
+     */
+    Result<ArrayList<AccountDTO>> getRecentlyExpiredUsers(Long id);
 }

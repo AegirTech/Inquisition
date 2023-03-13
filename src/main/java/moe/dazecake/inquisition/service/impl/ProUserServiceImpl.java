@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Service
 public class ProUserServiceImpl implements ProUserService {
@@ -309,6 +310,20 @@ public class ProUserServiceImpl implements ProUserService {
         addAccountDTO.setAgent(id);
         accountService.addAccount(addAccountDTO);
         return Result.success("创建成功");
+    }
+
+    @Override
+    public Result<ArrayList<AccountDTO>> getRecentlyExpiredUsers(Long id) {
+        var proUser = proUserMapper.selectById(id);
+        if (proUser == null) {
+            return Result.notFound("未找到该用户");
+        }
+        var result = new ArrayList<AccountDTO>();
+        var list = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery().eq(AccountEntity::getAgent, id).lt(AccountEntity::getExpireTime, LocalDateTime.now().plusDays(7)));
+        for (AccountEntity accountEntity : list) {
+            result.add(AccountConvert.INSTANCE.toAccountDTO(accountEntity));
+        }
+        return Result.success(result, "查询成功");
     }
 
     @NotNull
