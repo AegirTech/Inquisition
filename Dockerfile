@@ -6,4 +6,4 @@ COPY src/main/resources/application.yml /config/application.yml
 
 EXPOSE 2000
 
-ENTRYPOINT ["java", "-jar", "-Duser.timezone=Asia/Shanghai","--illegal-access=deny","--add-opens java.base/java.lang=ALL-UNNAMED", "/Inquisition.jar"]
+ENTRYPOINT ["java", "-jar", "-Duser.timezone=Asia/Shanghai", "/Inquisition.jar"]
