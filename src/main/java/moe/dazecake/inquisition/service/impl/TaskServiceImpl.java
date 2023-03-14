@@ -209,6 +209,10 @@ public class TaskServiceImpl implements TaskService {
                 .findFirst()
                 .orElseThrow().getAccount();
 
+        if (account == null) {
+            return Result.success("任务不存在");
+        }
+
         //记录日志
         log(deviceToken, account, "WARN", "任务失败", "任务失败,请登陆面板查看失败原因: " + type, imageUrl);
 

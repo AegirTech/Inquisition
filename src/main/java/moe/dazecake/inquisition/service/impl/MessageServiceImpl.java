@@ -1,6 +1,7 @@
 package moe.dazecake.inquisition.service.impl;
 
 import com.zjiecode.wxpusher.client.bean.Message;
+import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.service.intf.MessageService;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
+@Slf4j
 @Service
 public class MessageServiceImpl implements MessageService {
 
@@ -39,8 +41,13 @@ public class MessageServiceImpl implements MessageService {
 
         //邮件推送
         if (enableMail && account.getNotice().getMail().getEnable()) {
-            emailService.sendSimpleMail(account.getNotice().getMail().getText(), title,
-                    content);
+            try {
+                emailService.sendSimpleMail(account.getNotice().getMail().getText(), title,
+                        content);
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.warn("邮件推送失败 " + account.getAccount() + ": " + account.getNotice().getMail().getText());
+            }
         }
     }
 

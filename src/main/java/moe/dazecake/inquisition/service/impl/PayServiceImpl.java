@@ -128,8 +128,12 @@ public class PayServiceImpl implements PayService {
             user.setExpireTime(user.getExpireTime().plusDays(Integer.parseInt(bill.getParam())));
 
             //代理佣金
-            if (user.getAgent() != 0) {
-                calculateCommission(user.getAgent(), dailyPrice * Integer.parseInt(bill.getParam()));
+            if (user.getAgent() != null) {
+                if (user.getAgent() != 0) {
+                    calculateCommission(user.getAgent(), dailyPrice * Integer.parseInt(bill.getParam()));
+                }
+            } else {
+                user.setAgent(0L);
             }
 
             accountMapper.updateById(user);
