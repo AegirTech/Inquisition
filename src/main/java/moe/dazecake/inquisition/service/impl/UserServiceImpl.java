@@ -85,9 +85,11 @@ public class UserServiceImpl implements UserService {
         if (username.contains("|") || account.contains("|") || password.contains("|")) {
             return Result.paramError("用户名，账号，密码中不能包含 | 字符");
         }
-        var proUser = proUserMapper.selectById(createUserByPayDTO.getAgent());
-        if (proUser == null) {
-            return Result.notFound("代理商不存在");
+        if (createUserByPayDTO.getAgent() != 0) {
+            var proUser = proUserMapper.selectById(createUserByPayDTO.getAgent());
+            if (proUser == null) {
+                return Result.notFound("代理商不存在");
+            }
         }
 
         if (accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()

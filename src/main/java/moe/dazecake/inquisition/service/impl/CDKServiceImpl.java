@@ -105,6 +105,8 @@ public class CDKServiceImpl implements CDKService {
         cdkEntity.setUsed(1);
         if (cdkEntity.getIsAgent() == 1) {
             accountEntity.setAgent(cdkEntity.getAgent());
+        } else {
+            accountEntity.setAgent(0L);
         }
 
         accountEntity.setCreateTime(LocalDateTime.now());
