@@ -2,6 +2,8 @@ package moe.dazecake.inquisition.utils;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
 import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.AdminMapper;
@@ -24,6 +26,7 @@ import java.io.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import static moe.dazecake.inquisition.utils.JWTUtils.SECRET;
@@ -62,7 +65,8 @@ public class RunScript implements ApplicationRunner {
         File file = new File("config" + File.separator + "data.json");
         if (file.exists()) {
             log.info("检测到数据文件，正在读取...");
-            Gson gson = new Gson();
+            Gson gson = new GsonBuilder().registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, type, jsonDeserializationContext) ->
+                    ZonedDateTime.parse(json.getAsJsonPrimitive().getAsString()).toLocalDateTime()).create();
             dynamicInfo.load(gson.fromJson(new BufferedReader(new FileReader(file)), DynamicInfo.class));
 
             log.info("读取完成");
@@ -139,7 +143,8 @@ public class RunScript implements ApplicationRunner {
     @PreDestroy
     public void destroy() {
         log.info("正在保存数据...");
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, type, jsonDeserializationContext) ->
+                ZonedDateTime.parse(json.getAsJsonPrimitive().getAsString()).toLocalDateTime()).create();
         String str = gson.toJson(dynamicInfo);
         try {
             var printWriter = new PrintWriter("config" + File.separator + "data.json");
