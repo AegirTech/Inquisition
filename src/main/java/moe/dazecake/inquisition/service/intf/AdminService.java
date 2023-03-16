@@ -1,5 +1,6 @@
 package moe.dazecake.inquisition.service.intf;
 
+import moe.dazecake.inquisition.model.dto.admin.ChangeAdminPasswordDTO;
 import moe.dazecake.inquisition.model.dto.admin.LoginAdminDTO;
 import moe.dazecake.inquisition.model.vo.admin.AddProUserBalanceDTO;
 import moe.dazecake.inquisition.model.vo.admin.AdminLoginVO;
@@ -16,6 +17,8 @@ public interface AdminService {
      * @date 2023/1/26 10:23
      */
     Result<AdminLoginVO> loginAdmin(LoginAdminDTO loginAdminDTO);
+
+    Result<String> updateAdminPassword(ChangeAdminPasswordDTO changeAdminPasswordDTO);
 
     /**
      * 增加代理用户余额

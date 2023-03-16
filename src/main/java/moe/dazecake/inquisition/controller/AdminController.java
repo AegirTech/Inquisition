@@ -3,6 +3,7 @@ package moe.dazecake.inquisition.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
+import moe.dazecake.inquisition.model.dto.admin.ChangeAdminPasswordDTO;
 import moe.dazecake.inquisition.model.dto.admin.LoginAdminDTO;
 import moe.dazecake.inquisition.model.vo.admin.AddProUserBalanceDTO;
 import moe.dazecake.inquisition.model.vo.admin.AdminLoginVO;
@@ -27,6 +28,13 @@ public class AdminController {
     @PostMapping("/adminLogin")
     public Result<AdminLoginVO> adminLogin(@RequestBody LoginAdminDTO loginAdminDTO) {
         return adminService.loginAdmin(loginAdminDTO);
+    }
+
+    @Login
+    @Operation(summary = "修改管理员密码")
+    @PostMapping("/changeAdminPassword")
+    public Result<String> changeAdminPassword(@RequestBody ChangeAdminPasswordDTO changeAdminPasswordDTO) {
+        return adminService.updateAdminPassword(changeAdminPasswordDTO);
     }
 
     @Login

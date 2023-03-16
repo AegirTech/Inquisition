@@ -3,6 +3,7 @@ package moe.dazecake.inquisition.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import moe.dazecake.inquisition.mapper.AdminMapper;
 import moe.dazecake.inquisition.mapper.ProUserMapper;
+import moe.dazecake.inquisition.model.dto.admin.ChangeAdminPasswordDTO;
 import moe.dazecake.inquisition.model.dto.admin.LoginAdminDTO;
 import moe.dazecake.inquisition.model.entity.AdminEntity;
 import moe.dazecake.inquisition.model.vo.admin.AddProUserBalanceDTO;
@@ -40,6 +41,27 @@ public class AdminServiceImpl implements AdminService {
 
         if (admin != null) {
             return Result.success(new AdminLoginVO(JWTUtils.generateTokenForAdmin(admin)), "登录成功");
+        } else {
+            return Result.unauthorized("用户名或密码错误");
+        }
+    }
+
+    @Override
+    public Result<String> updateAdminPassword(ChangeAdminPasswordDTO changeAdminPasswordDTO) {
+        if (changeAdminPasswordDTO.getUsername() == null || changeAdminPasswordDTO.getOldPassword() == null || changeAdminPasswordDTO.getNewPassword() == null) {
+            return Result.paramError("用户名或密码为空");
+        }
+
+        var admin = adminMapper.selectOne(
+                Wrappers.<AdminEntity>lambdaQuery()
+                        .eq(AdminEntity::getUsername, changeAdminPasswordDTO.getUsername())
+                        .eq(AdminEntity::getPassword, Encoder.MD5(changeAdminPasswordDTO.getOldPassword() + salt))
+        );
+
+        if (admin != null) {
+            admin.setPassword(Encoder.MD5(changeAdminPasswordDTO.getNewPassword() + salt));
+            adminMapper.updateById(admin);
+            return Result.success("修改成功");
         } else {
             return Result.unauthorized("用户名或密码错误");
         }

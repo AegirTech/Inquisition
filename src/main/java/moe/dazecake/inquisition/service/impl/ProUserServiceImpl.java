@@ -186,6 +186,7 @@ public class ProUserServiceImpl implements ProUserService {
                 new Page<>(current, size),
                 Wrappers.<LogEntity>lambdaQuery()
                         .eq(LogEntity::getAccount, subUser.getAccount())
+                        .orderByDesc(LogEntity::getId)
         );
         return Result.success(logService.getLogPageQueryVO(data), "查询成功");
     }
