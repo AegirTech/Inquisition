@@ -3,6 +3,7 @@ package moe.dazecake.inquisition.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
+import moe.dazecake.inquisition.model.dto.log.AddImageDTO;
 import moe.dazecake.inquisition.model.dto.log.AddLogDTO;
 import moe.dazecake.inquisition.model.dto.log.LogDTO;
 import moe.dazecake.inquisition.model.dto.log.LogIDDTO;
@@ -26,6 +27,12 @@ public class LogController {
     public Result<String> addLog(@RequestBody AddLogDTO addLogDTO) {
         logService.addLog(addLogDTO, false);
         return Result.success("添加成功");
+    }
+
+    @Operation(summary = "上传图片")
+    @PostMapping("/uploadImage")
+    public Result<String> uploadImage(@RequestBody AddImageDTO addImageDTO) {
+        return logService.uploadImage(addImageDTO);
     }
 
     @Login

@@ -3,14 +3,18 @@ package moe.dazecake.inquisition.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import moe.dazecake.inquisition.mapper.AccountMapper;
+import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
 import moe.dazecake.inquisition.mapper.mapstruct.LogConvert;
+import moe.dazecake.inquisition.model.dto.log.AddImageDTO;
 import moe.dazecake.inquisition.model.dto.log.AddLogDTO;
 import moe.dazecake.inquisition.model.dto.log.LogDTO;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
+import moe.dazecake.inquisition.model.entity.DeviceEntity;
 import moe.dazecake.inquisition.model.entity.LogEntity;
 import moe.dazecake.inquisition.model.vo.query.PageQueryVO;
 import moe.dazecake.inquisition.service.intf.LogService;
+import moe.dazecake.inquisition.utils.Result;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -28,6 +32,12 @@ public class LogServiceImpl implements LogService {
     @Resource
     MessageServiceImpl messageService;
 
+    @Resource
+    DeviceMapper deviceMapper;
+
+    @Resource
+    ImageServiceImpl imageService;
+
     @Override
     public void addLog(AddLogDTO addLogDTO, boolean isSystem) {
         var logEntity = LogConvert.INSTANCE.toLogEntity(addLogDTO);
@@ -41,6 +51,16 @@ public class LogServiceImpl implements LogService {
             specialScan(addLogDTO);
         }
         logMapper.insert(logEntity);
+    }
+
+    @Override
+    public Result<String> uploadImage(AddImageDTO addImageDTO) {
+        var device = deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
+                .eq(DeviceEntity::getDeviceToken, addImageDTO.getDeviceToken()));
+        if (device == null) {
+            return Result.notFound("设备不存在");
+        }
+        return imageService.uploadImageToCos(addImageDTO.getBase64Image());
     }
 
     @Override

@@ -1,8 +1,10 @@
 package moe.dazecake.inquisition.service.intf;
 
+import moe.dazecake.inquisition.model.dto.log.AddImageDTO;
 import moe.dazecake.inquisition.model.dto.log.AddLogDTO;
 import moe.dazecake.inquisition.model.dto.log.LogDTO;
 import moe.dazecake.inquisition.model.vo.query.PageQueryVO;
+import moe.dazecake.inquisition.utils.Result;
 
 public interface LogService {
 
@@ -15,6 +17,16 @@ public interface LogService {
      * @date 2023/1/26 16:28
      */
     void addLog(AddLogDTO addLogDTO, boolean isSystem);
+
+    /**
+     * 上传图片
+     *
+     * @param addImageDTO 图片体
+     * @return: Result<String>
+     * @author DazeCake
+     * @date 2023/3/17 15:12
+     */
+    Result<String> uploadImage(AddImageDTO addImageDTO);
 
     void logInfo(String title, String detail);
 
