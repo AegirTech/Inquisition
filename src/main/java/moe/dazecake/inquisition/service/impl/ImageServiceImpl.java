@@ -8,6 +8,7 @@ import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.region.Region;
 import moe.dazecake.inquisition.service.intf.ImageService;
 import moe.dazecake.inquisition.utils.Result;
+import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Base64;
 import java.util.Date;
 
 @Service
@@ -51,7 +51,8 @@ public class ImageServiceImpl implements ImageService {
             var fileName = String.valueOf(System.currentTimeMillis());
             var file = File.createTempFile(fileName, ".png");
             var fos = new FileOutputStream(file);
-            fos.write(Base64.getDecoder().decode(base64Image));
+            //base64解码并写入文件
+            fos.write(Base64.decodeBase64(base64Image));
             fos.flush();
             fos.close();
 
