@@ -8,6 +8,7 @@ import com.gitee.sunchenbin.mybatis.actable.annotation.Column;
 import com.gitee.sunchenbin.mybatis.actable.annotation.IsAutoIncrement;
 import com.gitee.sunchenbin.mybatis.actable.annotation.IsKey;
 import com.gitee.sunchenbin.mybatis.actable.annotation.IsNotNull;
+import com.gitee.sunchenbin.mybatis.actable.constants.MySqlTypeConstant;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -48,7 +49,7 @@ public class LogEntity {
     @Schema(description = "日志细节")
     String detail;
 
-    @Column(name = "image_url", comment = "图片")
+    @Column(name = "image_url", comment = "图片", type = MySqlTypeConstant.TEXT)
     @Schema(description = "图片")
     String imageUrl;
 
