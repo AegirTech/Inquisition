@@ -67,7 +67,7 @@ public class ImageServiceImpl implements ImageService {
 
             URL url = cosClient.generatePresignedUrl(bucketName, fileName + ".png", expirationDate, method);
 
-            return Result.success("上传成功", url.toString());
+            return Result.success(url.toString(), "上传成功");
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
