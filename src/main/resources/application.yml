@@ -41,3 +41,19 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# wxpusher配置
+wx-pusher:
+  enable: false
+  app-token: AT_XXXXX
+
+# 腾讯云COS存储配置 用于存储日志截图 需要自行配置删除规则
+storage:
+  oss:
+    enable: false
+    secretId: xxxx
+    secretKey: xxxx
+    bucket: xxx-xxx
+    region: xxx
+inquisition:
+  secret: xxx # 用于加密token 建议使用系统随机生成的
