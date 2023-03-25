@@ -80,13 +80,14 @@ public interface ProUserService {
      * 查询所有子账号
      *
      * @param id      代理账号ID
+     * @param type    子账号类型
      * @param current 当前页
      * @param size    每页大小
-     * @return: moe.dazecake.inquisition.utils.Result<moe.dazecake.inquisition.model.vo.query.PageQueryVO < moe.dazecake.inquisition.model.dto.account.AccountDTO>>
+     * @return: moe.dazecake.inquisition.utils.Result<moe.dazecake.inquisition.model.vo.query.PageQueryVO < moe.dazecake.inquisition.model.vo.account.AccountWithSanVO>>
      * @author DazeCake
-     * @date 2023/1/26 20:22
+     * @date 2023/3/25 18:30
      */
-    Result<PageQueryVO<AccountWithSanVO>> queryAllSubUser(Long id, Integer current, Integer size);
+    Result<PageQueryVO<AccountWithSanVO>> queryAllSubUser(Long id, String type, Integer current, Integer size);
 
     /**
      * 通过账号查询子账号

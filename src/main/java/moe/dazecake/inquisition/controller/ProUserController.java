@@ -85,9 +85,10 @@ public class ProUserController {
     @Operation(summary = "分页显示代理商的附属用户")
     @GetMapping("/getSubUserList")
     public Result<PageQueryVO<AccountWithSanVO>> getSubUserList(@RequestHeader("Authorization") String token,
+                                                                @RequestParam String type,
                                                                 @RequestParam Integer current,
                                                                 @RequestParam Integer size) {
-        return proUserService.queryAllSubUser(JWTUtils.getId(token), current, size);
+        return proUserService.queryAllSubUser(JWTUtils.getId(token), type, current, size);
     }
 
     @ProUserLogin

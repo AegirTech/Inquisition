@@ -138,12 +138,34 @@ public class ProUserServiceImpl implements ProUserService {
     }
 
     @Override
-    public Result<PageQueryVO<AccountWithSanVO>> queryAllSubUser(Long id, Integer current, Integer size) {
-        var data = accountMapper.selectPage(
-                new Page<>(current, size),
-                Wrappers.<AccountEntity>lambdaQuery()
-                        .eq(AccountEntity::getAgent, id)
-        );
+    public Result<PageQueryVO<AccountWithSanVO>> queryAllSubUser(Long id, String type, Integer current, Integer size) {
+        var wrapper = Wrappers.<AccountEntity>lambdaQuery();
+        switch (type) {
+            case "all":
+                wrapper.eq(AccountEntity::getAgent, id);
+                break;
+            case "active":
+                wrapper.eq(AccountEntity::getAgent, id)
+                        .gt(AccountEntity::getExpireTime, LocalDateTime.now())
+                        .eq(AccountEntity::getDelete, 0);
+                break;
+            case "expired":
+                wrapper.eq(AccountEntity::getAgent, id)
+                        .lt(AccountEntity::getExpireTime, LocalDateTime.now())
+                        .eq(AccountEntity::getDelete, 0);
+                break;
+            case "frozen":
+                wrapper.eq(AccountEntity::getAgent, id)
+                        .eq(AccountEntity::getFreeze, 1)
+                        .eq(AccountEntity::getDelete, 0);
+            case "deleted":
+                wrapper.eq(AccountEntity::getAgent, id)
+                        .eq(AccountEntity::getDelete, 1);
+                break;
+            default:
+                return Result.paramError("参数错误");
+        }
+        var data = accountMapper.selectPage(new Page<>(current, size), wrapper);
         return Result.success(accountService.getAccountWithSanVOPageQueryVO(data), "查询成功");
     }
 
