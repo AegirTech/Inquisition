@@ -297,6 +297,12 @@ public class ProUserServiceImpl implements ProUserService {
         if (proUser.getBalance() < days * dailyPrice * proUser.getDiscount()) {
             return Result.forbidden("余额不足");
         }
+
+        //检查重复用户
+        if (accountMapper.selectOne(Wrappers.<AccountEntity>lambdaQuery().eq(AccountEntity::getAccount, account)) != null) {
+            return Result.forbidden("该账号已存在，不允许重复创建");
+        }
+
         //扣除余额
         proUser.setBalance(proUser.getBalance() - days * dailyPrice * proUser.getDiscount());
         proUserMapper.updateById(proUser);
