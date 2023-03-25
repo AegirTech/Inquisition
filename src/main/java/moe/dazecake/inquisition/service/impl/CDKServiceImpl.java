@@ -39,6 +39,9 @@ public class CDKServiceImpl implements CDKService {
     @Resource
     DynamicInfo dynamicInfo;
 
+    @Resource
+    AccountServiceImpl accountService;
+
     @Override
     public Result<String> activateCDK(Long id, String cdk) {
 
@@ -122,8 +125,7 @@ public class CDKServiceImpl implements CDKService {
                         .eq(AccountEntity::getAccount, accountEntity.getAccount())
                         .eq(AccountEntity::getPassword, accountEntity.getPassword())
         );
-        dynamicInfo.getUserSanList().put(account.getId(), 135);
-        dynamicInfo.getUserMaxSanList().put(account.getId(), 135);
+        accountService.forceFightAccount(account.getId(), true);
 
         return Result.success("创建成功");
     }

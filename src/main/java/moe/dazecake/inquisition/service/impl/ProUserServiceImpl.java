@@ -338,6 +338,8 @@ public class ProUserServiceImpl implements ProUserService {
         addAccountDTO.setExpireTime(LocalDateTime.now().plusDays(days));
         addAccountDTO.setAgent(id);
         accountService.addAccount(addAccountDTO);
+        var userId = accountMapper.selectOne(Wrappers.<AccountEntity>lambdaQuery().eq(AccountEntity::getAccount, account)).getId();
+        accountService.forceFightAccount(userId, true);
         return Result.success("创建成功");
     }
 

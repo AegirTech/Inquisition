@@ -65,6 +65,9 @@ public class PayServiceImpl implements PayService {
     @Resource
     MessageServiceImpl messageService;
 
+    @Resource
+    AccountServiceImpl accountService;
+
     @Override
     public BillEntity createOrder(Double amount, String payType, String returnPath) {
         if (!enablePay || merchantNum.equals("") || backUrl.equals("") || payToken.equals("")) {
@@ -147,6 +150,10 @@ public class PayServiceImpl implements PayService {
             newUser.setAgent(Long.valueOf(bill.getParam().split("\\|")[4]));
             newUser.setExpireTime(LocalDateTime.now().plusDays(3));
             accountMapper.insert(newUser);
+            var userId = accountMapper.selectOne(
+                    Wrappers.<AccountEntity>lambdaQuery()
+                            .eq(AccountEntity::getAccount, newUser.getAccount())).getId();
+            accountService.forceFightAccount(userId, true);
             //代理佣金
             if (newUser.getAgent() != 0) {
                 calculateCommission(newUser.getAgent(), 1.0);
