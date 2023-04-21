@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'moe.dazecake'
-version = '1.2.2'
+version = '1.2.3'
 sourceCompatibility = '11'
 
 configurations {
