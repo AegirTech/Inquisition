@@ -115,7 +115,11 @@ public class DynamicInfo {
 
     //置空用户理智
     public void setUserSanZero(Long userId) {
-        userSanInfoMap.get(userId).setSan(0);
+        if (userSanInfoMap.get(userId) == null) {
+            userSanInfoMap.put(userId, new UserSan(0, 135));
+        } else {
+            userSanInfoMap.get(userId).setSan(0);
+        }
     }
 
     //增加用户理智
