@@ -9,7 +9,6 @@ import moe.dazecake.inquisition.model.dto.account.AccountDTO;
 import moe.dazecake.inquisition.model.dto.log.AddLogDTO;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.DeviceEntity;
-import moe.dazecake.inquisition.model.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.model.local.UserSan;
 import moe.dazecake.inquisition.service.intf.TaskService;
 import moe.dazecake.inquisition.utils.DynamicInfo;
@@ -494,8 +493,6 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void lockTask(String deviceToken, AccountEntity account) {
         LocalDateTime localDateTime = LocalDateTime.now();
-        var lockTask = new LockTask();
-        lockTask.setDeviceToken(deviceToken);
         switch (account.getTaskType()) {
             case "daily":
                 dynamicInfo.addWorkUser(account.getId(),deviceToken,localDateTime.plusHours(2));
@@ -589,8 +586,9 @@ public class TaskServiceImpl implements TaskService {
         }
         for (Long worker : dynamicInfo.getWorkUserList()) {
             if (worker.equals(id)) {
+                var waitHaltDevice = dynamicInfo.getWorkUserInfoMap().get(worker).getDeviceToken();
                 dynamicInfo.removeWorkUser(worker);
-                dynamicInfo.getHaltList().add(dynamicInfo.getWorkUserInfoMap().get(worker).getDeviceToken());
+                dynamicInfo.getHaltList().add(waitHaltDevice);
                 break;
             }
         }

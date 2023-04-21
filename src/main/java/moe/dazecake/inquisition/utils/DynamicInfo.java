@@ -71,19 +71,28 @@ public class DynamicInfo {
 
     //获取所有等待队列详细信息
     public ArrayList<AccountEntity> getAllWaitUserInfo() {
-        return new ArrayList<>(accountMapper.selectBatchIds(waitUserList));
+        if (waitUserList.size() != 0) {
+            return new ArrayList<>(accountMapper.selectBatchIds(waitUserList));
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     //获取所有工作队列详细信息
     public ArrayList<LockTask> getAllWorkUserInfo() {
-        var workers = new ArrayList<>(accountMapper.selectBatchIds(workUserList));
-        var lockTasks = new ArrayList<LockTask>();
-        for (var worker : workers) {
-            lockTasks.add(new LockTask(workUserInfoMap.get(worker.getId()).getDeviceToken(),
-                    worker,
-                    workUserInfoMap.get(worker.getId()).getExpirationTime()));
+        if (workUserList.size() != 0) {
+            var workers = new ArrayList<>(accountMapper.selectBatchIds(workUserList));
+            var lockTasks = new ArrayList<LockTask>();
+            for (var worker : workers) {
+                lockTasks.add(new LockTask(workUserInfoMap.get(worker.getId()).getDeviceToken(),
+                        worker,
+                        workUserInfoMap.get(worker.getId()).getExpirationTime()));
+            }
+            return lockTasks;
+        } else {
+            return new ArrayList<>();
         }
-        return lockTasks;
+
     }
 
     //增加work队列
