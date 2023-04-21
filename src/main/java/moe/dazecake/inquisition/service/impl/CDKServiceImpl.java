@@ -80,8 +80,7 @@ public class CDKServiceImpl implements CDKService {
         cdkMapper.updateById(cdkEntity);
         accountMapper.updateById(accountEntity);
 
-        dynamicInfo.getUserSanList().put(accountEntity.getId(), 135);
-        dynamicInfo.getUserMaxSanList().put(accountEntity.getId(), 135);
+        dynamicInfo.setUserSan(accountEntity.getId(), 135, 135);
 
         return Result.success("激活成功");
     }
@@ -161,7 +160,7 @@ public class CDKServiceImpl implements CDKService {
             case AGENT:
                 return Wrappers.<CDKEntity>lambdaQuery()
                         .eq(CDKEntity::getAgent, keyword)
-                        .eq(CDKEntity::getUsed,0);
+                        .eq(CDKEntity::getUsed, 0);
         }
         return null;
     }

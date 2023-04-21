@@ -6,7 +6,6 @@ import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.DeviceEntity;
-import moe.dazecake.inquisition.model.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.service.impl.ChinacServiceImpl;
 import moe.dazecake.inquisition.service.impl.LogServiceImpl;
 import moe.dazecake.inquisition.service.impl.MessageServiceImpl;
@@ -75,8 +74,8 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                 () -> {
                     //log.info("正在巡检队列: " + LocalDateTime.now().toLocalTime());
                     //检查等待队列中是否存在重复项，若存在删除多余的重复项
-                    LinkedHashSet<AccountEntity> set = new LinkedHashSet<>(dynamicInfo.freeTaskList);
-                    dynamicInfo.freeTaskList = new ArrayList<>(set);
+                    LinkedHashSet<Long> set = new LinkedHashSet<>(dynamicInfo.getWaitUserList());
+                    dynamicInfo.setWaitUserList(new ArrayList<>(set));
                 },
                 triggerContext -> new CronTrigger("0 */1 * * * *").nextExecutionTime(triggerContext)
         );
@@ -91,13 +90,13 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
         //设备离线监控
         taskRegistrar.addTriggerTask(
                 () -> {
-                    for (java.util.Map.Entry<String, Integer> count : dynamicInfo.getCounter().entrySet()) {
+                    for (java.util.Map.Entry<String, Integer> count : dynamicInfo.getDeviceCounterMap().entrySet()) {
 
                         var token = count.getKey();
                         var num = count.getValue();
 
                         --num;
-                        dynamicInfo.getCounter().put(token, num);
+                        dynamicInfo.getDeviceCounterMap().put(token, num);
 
                         if (num == 0) {
                             dynamicInfo.getDeviceStatusMap().put(token, 0);
@@ -121,7 +120,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                         } else if (num == 86400) {
                             //超时24h，移除设备
                             dynamicInfo.getDeviceStatusMap().remove(token);
-                            dynamicInfo.getCounter().remove(token);
+                            dynamicInfo.getDeviceCounterMap().remove(token);
 
                             var device = deviceMapper.selectOne(
                                     Wrappers.<DeviceEntity>lambdaQuery()
@@ -149,11 +148,11 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                     //log.info("任务超时检测");
                     LocalDateTime nowTime = LocalDateTime.now();
                     int num = 0;
-                    for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
-                        if (lockTask.getExpirationTime().isBefore(nowTime)) {
+                    for (Long worker : dynamicInfo.getWorkUserList()) {
+                        if (dynamicInfo.getWorkUserExpireTime(worker).isBefore(nowTime)) {
                             //记录日志
                             logService.logWarn("任务超时", "");
-                            taskService.forceHaltTask(lockTask.getAccount().getId());
+                            taskService.forceHaltTask(worker);
                             num++;
                         }
                     }
@@ -305,10 +304,9 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                     );
                     accountList.forEach(
                             (account) -> {
-                                if (!dynamicInfo.getUserSanList().containsKey(account.getId()) || !dynamicInfo.getUserMaxSanList().containsKey(account.getId())) {
+                                if (!dynamicInfo.getUserSanInfoMap().containsKey(account.getId())) {
                                     log.info("【异常账号检测】 异常账号: " + account.getAccount() + " " + account.getAccount());
-                                    dynamicInfo.getUserSanList().put(account.getId(), 135);
-                                    dynamicInfo.getUserMaxSanList().put(account.getId(), 135);
+                                    dynamicInfo.setUserSan(account.getId(), 135, 135);
                                 }
                             }
                     );

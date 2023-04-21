@@ -11,7 +11,6 @@ import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.AdminEntity;
 import moe.dazecake.inquisition.model.entity.DeviceEntity;
 import moe.dazecake.inquisition.service.impl.ChinacServiceImpl;
-import moe.dazecake.inquisition.service.impl.HttpServiceImpl;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
@@ -43,9 +42,6 @@ public class RunScript implements ApplicationRunner {
 
     @Resource
     AdminMapper adminMapper;
-
-    @Resource
-    HttpServiceImpl httpService;
 
     @Resource
     ChinacServiceImpl chinacService;
@@ -85,7 +81,7 @@ public class RunScript implements ApplicationRunner {
             devices.forEach(
                     device -> {
                         dynamicInfo.getDeviceStatusMap().put(device.getDeviceToken(), 0);
-                        dynamicInfo.getCounter().put(device.getDeviceToken(), 1);
+                        dynamicInfo.getDeviceCounterMap().put(device.getDeviceToken(), 1);
                     }
             );
             if (enableAutoDeviceManage) {
@@ -109,7 +105,7 @@ public class RunScript implements ApplicationRunner {
                         deviceMapper.insert(newDevice);
                         log.info("同步设备 " + newDevice.getDeviceToken());
                         dynamicInfo.getDeviceStatusMap().put(newDevice.getDeviceToken(), 0);
-                        dynamicInfo.getCounter().put(newDevice.getDeviceToken(), 1);
+                        dynamicInfo.getDeviceCounterMap().put(newDevice.getDeviceToken(), 1);
                     }
                 }
             }
@@ -119,11 +115,8 @@ public class RunScript implements ApplicationRunner {
                     .eq(AccountEntity::getTaskType, "daily")
                     .ge(AccountEntity::getExpireTime, LocalDateTime.now())
             )) {
-                dynamicInfo.getUserSanList().put(account.getId(), 0);
-                dynamicInfo.getUserMaxSanList().put(account.getId(), 135);
+                dynamicInfo.setUserSanZero(account.getId());
             }
-
-            httpService.updateLatestMD5();
 
         }
         if (!secret.equals("")) {

@@ -18,11 +18,11 @@ public class HeartBeatServiceImpl implements HeartBeatService {
     public Result<String> postHeartBeat(HeartBeatDTO heartBeat) {
         Result<String> result = new Result<>();
         //状态更新
-        dynamicInfo.getCounter().put(heartBeat.getDeviceToken(), 3);
+        dynamicInfo.getDeviceCounterMap().put(heartBeat.getDeviceToken(), 3);
         dynamicInfo.getDeviceStatusMap().put(heartBeat.getDeviceToken(), heartBeat.getStatus());
 
 
-        if (dynamicInfo.getFreeTaskList().isEmpty()) {
+        if (dynamicInfo.getWaitUserList().isEmpty()) {
             result.setCode(200);
         } else {
             result.setCode(201);

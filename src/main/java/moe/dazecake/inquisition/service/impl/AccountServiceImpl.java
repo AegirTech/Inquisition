@@ -7,7 +7,6 @@ import moe.dazecake.inquisition.mapper.mapstruct.AccountConvert;
 import moe.dazecake.inquisition.model.dto.account.AccountDTO;
 import moe.dazecake.inquisition.model.dto.account.AddAccountDTO;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
-import moe.dazecake.inquisition.model.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.model.vo.account.AccountWithSanVO;
 import moe.dazecake.inquisition.model.vo.query.PageQueryVO;
 import moe.dazecake.inquisition.service.intf.AccountService;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.Objects;
 
 @Service
 public class AccountServiceImpl implements AccountService {
@@ -147,22 +147,22 @@ public class AccountServiceImpl implements AccountService {
             account.setFreeze(0);
         }
         //插队检查
-        for (AccountEntity freeTask : dynamicInfo.getFreeTaskList()) {
-            if (freeTask.getId().equals(id)) {
-                var freeListIterator = dynamicInfo.getFreeTaskList().iterator();
+        for (Long userId : dynamicInfo.getWaitUserList()) {
+            if (Objects.equals(userId, id)) {
+                var freeListIterator = dynamicInfo.getWaitUserList().iterator();
                 while (freeListIterator.hasNext()) {
                     var insertTask = freeListIterator.next();
-                    if (insertTask.getId().equals(id)) {
+                    if (insertTask.equals(id)) {
                         freeListIterator.remove();
-                        dynamicInfo.getFreeTaskList().add(0, insertTask);
+                        dynamicInfo.getWaitUserList().add(0, insertTask);
                         return "插队成功";
                     }
                 }
             }
         }
         //上锁检查
-        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
-            if (lockTask.getAccount().getId().equals(id)) {
+        for (Long worker : dynamicInfo.getWorkUserList()) {
+            if (worker.equals(id)) {
                 return "已经在作战中";
             }
         }
@@ -173,8 +173,8 @@ public class AccountServiceImpl implements AccountService {
             }
         }
         //执行
-        dynamicInfo.getFreeTaskList().add(0, account);
-        dynamicInfo.getUserSanList().put(id, 0);
+        dynamicInfo.getWaitUserList().add(0, account.getId());
+        dynamicInfo.setUserSanZero(account.getId());
         account = accountMapper.selectById(id);
         account.setRefresh(account.getRefresh() - 1);
         accountMapper.updateById(account);
@@ -194,8 +194,7 @@ public class AccountServiceImpl implements AccountService {
         taskService.forceHaltTask(id);
 
         //重置动态数据
-        dynamicInfo.getUserSanList().put(id, 135);
-        dynamicInfo.getUserMaxSanList().put(id, 135);
+        dynamicInfo.setUserSan(id, 135, 135);
 
         return "重置成功";
     }
@@ -208,9 +207,11 @@ public class AccountServiceImpl implements AccountService {
         result.setTotal(data.getTotal());
 
         for (AccountEntity user : data.getRecords()) {
-            if (dynamicInfo.getUserSanList().containsKey(user.getId())) {
-                result.getRecords().add(AccountConvert.INSTANCE.toAccountWithSanVO(user, dynamicInfo.getUserSanList().get(user.getId()) + "/" + dynamicInfo.getUserMaxSanList()
-                        .get(user.getId())));
+            if (dynamicInfo.getUserSanInfoMap().containsKey(user.getId())) {
+                result.getRecords().add(AccountConvert.INSTANCE.toAccountWithSanVO(
+                        user,
+                        dynamicInfo.getUserSanInfoMap().get(user.getId()).getSan() + "/" + dynamicInfo.getUserSanInfoMap().get(user.getId()).getMaxSan())
+                );
             } else {
                 result.getRecords().add(AccountConvert.INSTANCE.toAccountWithSanVO(user, ""));
             }

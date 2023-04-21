@@ -20,7 +20,6 @@ import moe.dazecake.inquisition.model.dto.prouser.UpdateProUserPasswordDTO;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.LogEntity;
 import moe.dazecake.inquisition.model.entity.ProUserEntity;
-import moe.dazecake.inquisition.model.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.model.vo.account.AccountWithSanVO;
 import moe.dazecake.inquisition.model.vo.cdk.CDKListVO;
 import moe.dazecake.inquisition.model.vo.prouser.ProUserLoginVO;
@@ -219,21 +218,21 @@ public class ProUserServiceImpl implements ProUserService {
         if (preCheckResult.getCode() != ResponseCodeConstants.SUCCESS) {
             return preCheckResult;
         }
-        dynamicInfo.getFreezeTaskList().remove(userID);
-        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
-            if (lockTask.getAccount().getId().equals(userID)) {
+        dynamicInfo.getFreezeUserInfoMap().get(userID);
+        for (Long worker : dynamicInfo.getWorkUserList()) {
+            if (worker.equals(userID)) {
                 return Result.success("该用户已经在作战中");
             }
         }
-        for (AccountEntity freeTask : dynamicInfo.getFreeTaskList()) {
-            if (freeTask.getId().equals(userID)) {
-                dynamicInfo.getFreeTaskList().remove(freeTask);
-                dynamicInfo.getFreeTaskList().add(0, freeTask);
+        for (Long waiter : dynamicInfo.getWaitUserList()) {
+            if (waiter.equals(userID)) {
+                dynamicInfo.getWaitUserList().remove(waiter);
+                dynamicInfo.getWaitUserList().add(0, waiter);
                 return Result.success("插队成功");
             }
         }
-        dynamicInfo.getFreeTaskList().add(0, accountMapper.selectById(userID));
-        dynamicInfo.getUserSanList().put(userID, 0);
+        dynamicInfo.getWaitUserList().add(0, userID);
+        dynamicInfo.setUserSanZero(userID);
         return Result.success("立即作战成功");
     }
 

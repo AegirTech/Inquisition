@@ -50,37 +50,6 @@ public class TaskController {
     }
 
     @Login
-    @Operation(summary = "临时增加任务")
-    @PostMapping("/tempAddTask")
-    public Result<String> tempAddTask(@RequestBody AccountEntity accountEntity) {
-        Result<String> result = new Result<>();
-
-        long minIndex = 0L;
-
-        for (AccountEntity account : dynamicInfo.getFreeTaskList()) {
-            if (minIndex > account.getId()) {
-                minIndex = account.getId();
-            }
-        }
-
-        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
-            if (minIndex > lockTask.getAccount().getId()) {
-                minIndex = lockTask.getAccount().getId();
-            }
-        }
-
-        minIndex--;
-
-        accountEntity.setId(minIndex);
-
-        dynamicInfo.getFreeTaskList().add(0, accountEntity);
-
-        return result.setCode(200)
-                .setMsg("success")
-                .setData(null);
-    }
-
-    @Login
     @Operation(summary = "临时插队任务")
     @PostMapping("/tempInsertTask")
     public Result<String> tempInsertTask(@RequestBody AccountIDDTO accountIDDTO) {
@@ -98,21 +67,21 @@ public class TaskController {
     @Operation(summary = "查询待分配任务列表")
     @GetMapping("/showFreeTaskList")
     public Result<ArrayList<AccountEntity>> showTaskList() {
-        return Result.success(dynamicInfo.getFreeTaskList(), "查询成功");
+        return Result.success(dynamicInfo.getAllWaitUserInfo(), "查询成功");
     }
 
     @Login
     @Operation(summary = "查询已分配任务列表")
     @GetMapping("/showLockTaskList")
     public Result<ArrayList<LockTask>> showLockTaskList() {
-        return Result.success(dynamicInfo.getLockTaskList(), "查询成功");
+        return Result.success(dynamicInfo.getAllWorkUserInfo(), "查询成功");
     }
 
     @Login
     @Operation(summary = "查询已冻结任务列表")
     @GetMapping("/showFreezeTaskList")
     public Result<HashMap<Long, LocalDateTime>> showFreezeTaskList() {
-        return Result.success(dynamicInfo.getFreezeTaskList(), "查询成功");
+        return Result.success(dynamicInfo.getFreezeUserInfoMap(), "查询成功");
     }
 
     @Login

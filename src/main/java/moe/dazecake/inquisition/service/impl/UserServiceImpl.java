@@ -12,7 +12,6 @@ import moe.dazecake.inquisition.model.dto.log.LogDTO;
 import moe.dazecake.inquisition.model.dto.user.CreateUserByPayDTO;
 import moe.dazecake.inquisition.model.dto.user.UserStatusSTO;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
-import moe.dazecake.inquisition.model.entity.TaskDateSet.LockTask;
 import moe.dazecake.inquisition.model.vo.UserLoginVO;
 import moe.dazecake.inquisition.model.vo.query.PageQueryVO;
 import moe.dazecake.inquisition.service.intf.UserService;
@@ -218,7 +217,7 @@ public class UserServiceImpl implements UserService {
         if (account != null) {
             account.setFreeze(1);
             accountMapper.updateById(account);
-            dynamicInfo.getUserSanList().remove(account.getId());
+            dynamicInfo.getUserSanInfoMap().remove(account.getId());
             taskService.forceHaltTask(account.getId());
             return Result.success("冻结成功");
         } else {
@@ -235,12 +234,10 @@ public class UserServiceImpl implements UserService {
         if (account != null) {
             account.setFreeze(0);
             accountMapper.updateById(account);
-            if (dynamicInfo.getUserMaxSanList().containsKey(account.getId())) {
-                dynamicInfo.getUserSanList().put(account.getId(),
-                        dynamicInfo.getUserMaxSanList().get(account.getId()) - 20);
+            if (dynamicInfo.getUserSanInfoMap().containsKey(account.getId())) {
+                dynamicInfo.setUserSanZero(account.getId());
             } else {
-                dynamicInfo.getUserSanList().put(account.getId(), 80);
-                dynamicInfo.getUserMaxSanList().put(account.getId(), 100);
+                dynamicInfo.setUserSan(account.getId(), 0, 135);
             }
             return Result.success("解冻成功");
         } else {
@@ -266,15 +263,15 @@ public class UserServiceImpl implements UserService {
             return Result.success(new UserStatusSTO("账号已被冻结，若需继续托管请先解冻"), "获取成功");
         }
 
-        for (Long k : dynamicInfo.getFreezeTaskList().keySet()) {
+        for (Long k : dynamicInfo.getFreezeUserInfoMap().keySet()) {
             if (Objects.equals(k, id)) {
-                return Result.success(new UserStatusSTO("发生冲突，账号强制冷却，稍后自动重试作战"), "获取成功");
+                return Result.success(new UserStatusSTO("发生冲突，账号强制冷却，稍后将自动重试作战"), "获取成功");
             }
         }
 
         var index = 0;
-        for (AccountEntity account : dynamicInfo.getFreeTaskList()) {
-            if (account.getId().equals(id)) {
+        for (Long waiter : dynamicInfo.getWaitUserList()) {
+            if (waiter.equals(id)) {
                 if (index != 0) {
                     return Result.success(new UserStatusSTO("前方还有" + index + "个账号，请耐心等待"), "获取成功");
                 } else {
@@ -284,13 +281,13 @@ public class UserServiceImpl implements UserService {
             index++;
         }
 
-        for (LockTask lockTask : dynamicInfo.getLockTaskList()) {
-            if (lockTask.getAccount().getId().equals(id)) {
+        for (Long worker : dynamicInfo.getWorkUserList()) {
+            if (worker.equals(id)) {
                 return Result.success(new UserStatusSTO("正在作战中，请勿顶号"), "获取成功");
             }
         }
-        var san = dynamicInfo.getUserSanList().get(id);
-        var maxSan = dynamicInfo.getUserMaxSanList().get(id);
+        var san = dynamicInfo.getUserSanInfoMap().get(id).getSan();
+        var maxSan = dynamicInfo.getUserSanInfoMap().get(id).getMaxSan();
 
         if (san == null || maxSan == null) {
             return Result.success(new UserStatusSTO("无法获取理智状态，请尝试使用立即作战重新校准理智"), "获取成功");
@@ -306,16 +303,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public Result<String> showMySan(Long id) {
         var ans = "";
-        if (!dynamicInfo.getUserSanList().containsKey(id)) {
+        if (dynamicInfo.getFreezeUserInfoMap().containsKey(id)) {
             ans = "账号冻结中";
-        } else if (dynamicInfo.getUserSanList().get(id).equals(dynamicInfo.getUserMaxSanList().get(id))) {
-            ans = "正在尝试作战以校准理智值";
-        } else if (dynamicInfo.getLockTaskList().stream().anyMatch(e -> e.getAccount().getId().equals(id))) {
+        } else if (dynamicInfo.getWorkUserList().contains(id)) {
             ans = "等待作战结束以校准理智";
-        } else if (dynamicInfo.getUserSanList().get(id) == null || dynamicInfo.getUserMaxSanList().get(id) == null) {
-            ans = "等待作战以校准理智值";
+        } else if (!dynamicInfo.getUserSanInfoMap().containsKey(id)) {
+            ans = "出现严重错误，请立即使用立即作战以校准";
         } else {
-            ans = dynamicInfo.getUserSanList().get(id) + "/" + dynamicInfo.getUserMaxSanList().get(id);
+            ans = dynamicInfo.getUserSanInfoMap().get(id).getSan() + "/" + dynamicInfo.getUserSanInfoMap().get(id).getMaxSan();
         }
 
         return Result.success(ans, "获取成功");
