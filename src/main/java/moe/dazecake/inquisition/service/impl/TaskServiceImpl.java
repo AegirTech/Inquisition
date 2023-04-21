@@ -152,12 +152,15 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Result<String> completeTask(String deviceToken, String imageUrl) {
-        Result<String> result = new Result<>();
+        var id = dynamicInfo.getUserIdByDeviceToken(deviceToken);
+        if (id == null) {
+            return Result.success("任务不存在");
+        }
 
-
-        var account = accountMapper.selectById(
-                dynamicInfo.getUserIdByDeviceToken(deviceToken)
-        );
+        var account = accountMapper.selectById(id);
+        if (account == null) {
+            return Result.success("任务不存在");
+        }
 
         //检查B服限制新增设备
         if (account.getServer() == 1 && account.getBLimitDevice().size() == 0) {
@@ -195,21 +198,17 @@ public class TaskServiceImpl implements TaskService {
         //移除队列
         dynamicInfo.removeWorkUser(account.getId());
 
-        result.setCode(200)
-                .setMsg("success")
-                .setData("null");
-
-        return result;
+        return Result.success("success");
     }
 
     @Override
     public Result<String> failTask(String deviceToken, String type, String imageUrl) {
-        Result<String> result = new Result<>();
+        var id = dynamicInfo.getUserIdByDeviceToken(deviceToken);
+        if (id == null) {
+            return Result.success("任务不存在");
+        }
 
-        var account = accountMapper.selectById(
-                dynamicInfo.getUserIdByDeviceToken(deviceToken)
-        );
-
+        var account = accountMapper.selectById(id);
         if (account == null) {
             return Result.success("任务不存在");
         }
@@ -226,11 +225,7 @@ public class TaskServiceImpl implements TaskService {
         //推送消息
         messageService.push(account, "任务失败", "任务失败，请登陆面板查看失败原因");
 
-        result.setCode(200)
-                .setMsg("success")
-                .setData("null");
-
-        return result;
+        return Result.success("success");
     }
 
     @Override
@@ -495,14 +490,14 @@ public class TaskServiceImpl implements TaskService {
         LocalDateTime localDateTime = LocalDateTime.now();
         switch (account.getTaskType()) {
             case "daily":
-                dynamicInfo.addWorkUser(account.getId(),deviceToken,localDateTime.plusHours(2));
+                dynamicInfo.addWorkUser(account.getId(), deviceToken, localDateTime.plusHours(2));
                 break;
             case "rogue":
             case "rogue2":
-                dynamicInfo.addWorkUser(account.getId(),deviceToken,localDateTime.plusHours(72));
+                dynamicInfo.addWorkUser(account.getId(), deviceToken, localDateTime.plusHours(72));
                 break;
             case "sand_fire":
-                dynamicInfo.addWorkUser(account.getId(),deviceToken,localDateTime.plusHours(24));
+                dynamicInfo.addWorkUser(account.getId(), deviceToken, localDateTime.plusHours(24));
                 break;
         }
     }
@@ -634,7 +629,7 @@ public class TaskServiceImpl implements TaskService {
             }
 
             //递增用户理智
-            dynamicInfo.addUserSan(id,1);
+            dynamicInfo.addUserSan(id, 1);
 
             //检查是否到达阈值 阈值为最大值-40
             if (san >= maxSan - 40) {

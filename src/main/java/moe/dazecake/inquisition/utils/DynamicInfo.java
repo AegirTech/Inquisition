@@ -114,7 +114,12 @@ public class DynamicInfo {
 
     //通过deviceToken获取userId
     public Long getUserIdByDeviceToken(String deviceToken) {
-        return workUserInfoMap.entrySet().stream().filter(e -> e.getValue().getDeviceToken().equals(deviceToken)).findFirst().orElseThrow().getKey();
+        for (Long id : workUserList) {
+            if (workUserInfoMap.get(id).getDeviceToken().equals(deviceToken)) {
+                return id;
+            }
+        }
+        return null;
     }
 
     //设置用户理智
