@@ -101,7 +101,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
 
                         if (num == 0) {
                             dynamicInfo.getDeviceStatusMap().put(token, 0);
-                            log.warn("设备离线: " + token);
+//                            log.warn("设备离线: " + token);
                         } else if (num == -60) {
                             //重连超时提示
                             var device = deviceMapper.selectOne(
@@ -163,7 +163,6 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                 },
                 triggerContext -> new CronTrigger("0 0/5 * * * ?").nextExecutionTime(triggerContext)
         );
-
         //账号过期检测
         taskRegistrar.addTriggerTask(
                 () -> {
@@ -210,7 +209,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                 () -> {
                     log.info("每日刷新次数更新");
                     var accountList = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
-                            .eq(AccountEntity::getRefresh, 0)
+                            .le(AccountEntity::getRefresh, 0)
                             .eq(AccountEntity::getDelete, 0)
                             .ge(AccountEntity::getExpireTime, LocalDateTime.now())
                     );
@@ -294,6 +293,28 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                     }
                 },
                 triggerContext -> new CronTrigger("0 0 20 * * ?").nextExecutionTime(triggerContext)
+        );
+        //异常账号检测
+        taskRegistrar.addTriggerTask(
+                () -> {
+                    log.info("【异常账号检测】 检测开始");
+                    var accountList = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
+                            .eq(AccountEntity::getFreeze, 0)
+                            .eq(AccountEntity::getDelete, 0)
+                            .ge(AccountEntity::getExpireTime, LocalDateTime.now())
+                    );
+                    accountList.forEach(
+                            (account) -> {
+                                if (!dynamicInfo.getUserSanList().containsKey(account.getId()) || !dynamicInfo.getUserMaxSanList().containsKey(account.getId())) {
+                                    log.info("【异常账号检测】 异常账号: " + account.getAccount() + " " + account.getAccount());
+                                    dynamicInfo.getUserSanList().put(account.getId(), 135);
+                                    dynamicInfo.getUserMaxSanList().put(account.getId(), 135);
+                                }
+                            }
+                    );
+                    log.info("【异常账号检测】 已完成所有异常账号自动检修");
+                },
+                triggerContext -> new CronTrigger("0 0 4 * * ?").nextExecutionTime(triggerContext)
         );
     }
 }
