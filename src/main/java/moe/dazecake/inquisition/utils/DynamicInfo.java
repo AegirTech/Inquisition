@@ -13,65 +13,48 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 @Component
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DynamicInfo {
+public class DynamicInfo extends MemoryInfo {
 
     @Resource
     AccountMapper accountMapper;
 
     //======================
-    //队列 仅存储用户ID
-    //======================
-    private ArrayList<Long> waitUserList = new ArrayList<>();
-    private ArrayList<Long> workUserList = new ArrayList<>();
-    private ArrayList<String> haltList = new ArrayList<>();
-
-    //======================
-    //队列关系映射表 用于映射队列关系信息
-    //======================
-    private HashMap<Long, UserSan> userSanInfoMap = new HashMap<>();
-    private HashMap<Long, WorkUser> workUserInfoMap = new HashMap<>();
-    private HashMap<Long, LocalDateTime> freezeUserInfoMap = new HashMap<>();
-
-
-    //======================
-    //额外映射表 用于映射其他信息
-    //======================
-
-    //设备状态映射表
-    private HashMap<String, Integer> deviceStatusMap = new HashMap<>();
-
-    //设备摇篮计数器
-    private HashMap<String, Integer> deviceCounterMap = new HashMap<>();
-
-    //公告信息
-    private HashMap<String, String> announcement = new HashMap<>();
-
-
-    //======================
     //方法封装
     //======================
 
-    public void load(DynamicInfo dynamicInfo) {
-        this.setWaitUserList(dynamicInfo.getWaitUserList());
-        this.setWorkUserList(dynamicInfo.getWorkUserList());
-        this.setHaltList(dynamicInfo.getHaltList());
-        this.setUserSanInfoMap(dynamicInfo.getUserSanInfoMap());
-        this.setWorkUserInfoMap(dynamicInfo.getWorkUserInfoMap());
-        this.setFreezeUserInfoMap(dynamicInfo.getFreezeUserInfoMap());
-        this.setDeviceStatusMap(dynamicInfo.getDeviceStatusMap());
-        this.setDeviceCounterMap(dynamicInfo.getDeviceCounterMap());
-        this.setAnnouncement(dynamicInfo.getAnnouncement());
+    public void load(MemoryInfo memoryInfo) {
+        this.setWaitUserList(memoryInfo.getWaitUserList());
+        this.setWorkUserList(memoryInfo.getWorkUserList());
+        this.setHaltList(memoryInfo.getHaltList());
+        this.setUserSanInfoMap(memoryInfo.getUserSanInfoMap());
+        this.setWorkUserInfoMap(memoryInfo.getWorkUserInfoMap());
+        this.setFreezeUserInfoMap(memoryInfo.getFreezeUserInfoMap());
+        this.setDeviceStatusMap(memoryInfo.getDeviceStatusMap());
+        this.setDeviceCounterMap(memoryInfo.getDeviceCounterMap());
+        this.setAnnouncement(memoryInfo.getAnnouncement());
+    }
+
+    public MemoryInfo dump() {
+        return new MemoryInfo(
+                this.getWaitUserList(),
+                this.getWorkUserList(),
+                this.getHaltList(),
+                this.getUserSanInfoMap(),
+                this.getWorkUserInfoMap(),
+                this.getFreezeUserInfoMap(),
+                this.getDeviceStatusMap(),
+                this.getDeviceCounterMap(),
+                this.getAnnouncement());
     }
 
     //获取所有等待队列详细信息
     public ArrayList<AccountEntity> getAllWaitUserInfo() {
-        if (waitUserList.size() != 0) {
+        if (this.waitUserList.size() != 0) {
             return new ArrayList<>(accountMapper.selectBatchIds(waitUserList));
         } else {
             return new ArrayList<>();

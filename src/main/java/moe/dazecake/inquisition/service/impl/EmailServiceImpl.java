@@ -61,9 +61,9 @@ public class EmailServiceImpl implements EmailService {
             //发送
             mailSender.send(message);
             //日志信息
-            log.info("邮件已经发送。");
+            log.info("【审判庭】 邮件已经发送。");
         } catch (Exception e) {
-            log.error("发送邮件时发生异常！", e);
+            log.error("【审判庭】 发送邮件时发生异常！", e);
         }
     }
 }

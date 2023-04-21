@@ -46,7 +46,7 @@ public class MessageServiceImpl implements MessageService {
                         content);
             } catch (Exception e) {
                 e.printStackTrace();
-                log.warn("邮件推送失败 " + account.getAccount() + ": " + account.getNotice().getMail().getText());
+                log.warn("【审判庭】 邮件推送失败 " + account.getAccount() + ": " + account.getNotice().getMail().getText());
             }
         }
     }

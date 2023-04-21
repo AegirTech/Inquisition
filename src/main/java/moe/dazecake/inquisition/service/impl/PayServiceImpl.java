@@ -176,7 +176,7 @@ public class PayServiceImpl implements PayService {
                     .eq(BillEntity::getPlatformOrderNo, map.get("platformOrderNo")));
 
             if (bill == null) {
-                log.warn("[支付回调]: 前置账单获取出错");
+                log.warn("【支付回调】 前置账单获取出错");
                 return "500";
             }
 
@@ -188,19 +188,19 @@ public class PayServiceImpl implements PayService {
                 billMapper.updateById(bill);
 
                 if (billCallBackSolver(bill)) {
-                    log.info("[支付回调]: 支付成功");
+                    log.info("【支付回调】 支付成功");
                 } else {
-                    log.info("[支付回调]: 支付成功, 解决失败");
+                    log.info("【支付回调】 支付成功, 解决失败");
                     messageService.pushAdmin("支付成功, 但是解决失败", "支付成功, 但是解决失败");
                 }
                 return "success";
 
             }
 
-            log.warn("[支付回调]: 状态错误");
+            log.warn("【支付回调】  状态错误");
             return "state error";
         } else {
-            log.warn("[支付回调]: 签名错误");
+            log.warn("【支付回调】  签名错误");
             return "sign error";
         }
     }

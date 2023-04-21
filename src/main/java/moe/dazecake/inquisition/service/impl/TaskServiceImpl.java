@@ -127,7 +127,6 @@ public class TaskServiceImpl implements TaskService {
             }
 
             //任务上锁，同时分配强制超时期限
-            log.info("任务上锁");
             lockTask(deviceToken, account);
 
             //记录日志

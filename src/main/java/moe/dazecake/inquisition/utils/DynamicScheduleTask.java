@@ -157,7 +157,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                         }
                     }
                     if (num > 0) {
-                        log.info("已处理超时任务数: " + num);
+                        log.info("【审判庭】 已处理超时任务数: " + num);
                     }
                 },
                 triggerContext -> new CronTrigger("0 0/5 * * * ?").nextExecutionTime(triggerContext)
@@ -165,7 +165,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
         //账号过期检测
         taskRegistrar.addTriggerTask(
                 () -> {
-                    log.info("账号过期检测");
+                    log.info("【审判庭】 账号过期检测");
                     var finalTime = LocalDateTime.now().plusDays(7);
                     var accountList = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
                             .lt(AccountEntity::getExpireTime, finalTime)
@@ -186,7 +186,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
         //账号冻结检测
         taskRegistrar.addTriggerTask(
                 () -> {
-                    log.info("账号冻结检测");
+                    log.info("【审判庭】 账号冻结检测");
                     var accountList = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
                             .gt(AccountEntity::getExpireTime, LocalDateTime.now())
                             .eq(AccountEntity::getFreeze, 1)
@@ -206,7 +206,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
         //每日刷新次数更新
         taskRegistrar.addTriggerTask(
                 () -> {
-                    log.info("每日刷新次数更新");
+                    log.info("【审判庭】 每日刷新次数更新");
                     var accountList = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
                             .le(AccountEntity::getRefresh, 0)
                             .eq(AccountEntity::getDelete, 0)
@@ -227,7 +227,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                     if (!enableAutoDeviceManage) {
                         return;
                     }
-                    log.info("动态设备增加");
+                    log.info("【审判庭】 动态设备增加");
                     var payedUserList = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
                             .ge(AccountEntity::getExpireTime, LocalDateTime.now())
                             .eq(AccountEntity::getDelete, 0));
@@ -258,7 +258,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                                 "已为您自动增添新设备，请留意扣费信息";
                         messageService.pushAdmin("[审判庭] 设备增加提醒", text);
                     }
-                    log.info("设备自动续费");
+                    log.info("【审判庭】 设备自动续费");
 
                     //检测多余设备跳过续费 最多允许冗余设备数量: 2
                     var overNum = (payedUserList.size() - deviceList.size() * maxPlayerInDevice) / maxPlayerInDevice;

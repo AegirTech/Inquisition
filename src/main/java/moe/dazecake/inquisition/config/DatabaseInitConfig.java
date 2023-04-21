@@ -51,7 +51,7 @@ public class DatabaseInitConfig {
             // 创建数据库
             statement.executeUpdate("create database if not exists `" + datasourceName + "` default character set " +
                     "utf8mb4 COLLATE utf8mb4_0900_ai_ci");
-            log.info("创建数据库成功");
+            log.info("【审判庭初始化】 创建数据库成功");
             statement.close();
             connection.close();
         } catch (Exception e) {

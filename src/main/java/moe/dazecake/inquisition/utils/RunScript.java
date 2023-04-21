@@ -54,16 +54,16 @@ public class RunScript implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        log.info("审判庭初始化中...");
+        log.info("【审判庭初始化】 执行中...");
         File file = new File("config" + File.separator + "data.json");
         if (file.exists()) {
-            log.info("检测到数据文件，正在读取...");
+            log.info("【审判庭初始化】 检测到数据文件，正在读取...");
             Gson gson = new Gson();
-            dynamicInfo.load(gson.fromJson(new BufferedReader(new FileReader(file)), DynamicInfo.class));
+            dynamicInfo.load(gson.fromJson(new BufferedReader(new FileReader(file)), MemoryInfo.class));
 
-            log.info("读取完成");
+            log.info("【审判庭初始化】 读取完成");
         } else {
-            log.info("未检测到数据文件，正在初始化...");
+            log.info("【审判庭初始化】 未检测到数据文件，正在初始化...");
             //检查admin表是否有数据
             List<AdminEntity> adminEntities = adminMapper.selectList(null);
             if (adminEntities.size() == 0) {
@@ -72,6 +72,8 @@ public class RunScript implements ApplicationRunner {
                 adminEntity.setPassword("7966fd2201810e386e8407feaf09b4ea");
                 adminEntity.setPermission("root");
                 adminMapper.insert(adminEntity);
+                log.info("【审判庭初始化】 初始化管理员账号: root");
+                log.info("【审判庭初始化】 初始化管理员密码: 123456");
             }
 
             var devices = deviceMapper.selectList(
@@ -85,7 +87,7 @@ public class RunScript implements ApplicationRunner {
                     }
             );
             if (enableAutoDeviceManage) {
-                log.info("同步Chinac设备");
+                log.info("【审判庭初始化】 同步Chinac设备");
                 var chinacDeviceList = chinacService.queryAllDeviceList();
                 for (ChinacPhoneEntity chinacPhone : chinacDeviceList) {
                     if (!chinacPhone.getPayType().equals("PREPAID")) {
@@ -103,7 +105,7 @@ public class RunScript implements ApplicationRunner {
                                 .setDelete(0)
                                 .setChinac(1);
                         deviceMapper.insert(newDevice);
-                        log.info("同步设备 " + newDevice.getDeviceToken());
+                        log.info("【审判庭初始化】 同步设备 " + newDevice.getDeviceToken());
                         dynamicInfo.getDeviceStatusMap().put(newDevice.getDeviceToken(), 0);
                         dynamicInfo.getDeviceCounterMap().put(newDevice.getDeviceToken(), 1);
                     }
@@ -123,17 +125,18 @@ public class RunScript implements ApplicationRunner {
             SECRET = secret;
         } else {
             SECRET = RandomStringUtils.randomAlphabetic(16);
-            log.info("已生成随机 secret: " + SECRET);
+            log.info("【审判庭初始化】 已生成随机 secret: " + SECRET);
+            log.info("【审判庭初始化】 建议将 secret 写入配置文件中");
         }
 
-        log.info("审判庭初始化完成");
+        log.info("【审判庭初始化】 初始化完成");
     }
 
     @PreDestroy
     public void destroy() {
-        log.info("正在保存数据...");
+        log.info("【审判庭关闭】 正在保存数据...");
         Gson gson = new Gson();
-        String str = gson.toJson(dynamicInfo);
+        String str = gson.toJson(dynamicInfo.dump());
         try {
             var printWriter = new PrintWriter("config" + File.separator + "data.json");
             printWriter.write(str);
@@ -141,6 +144,7 @@ public class RunScript implements ApplicationRunner {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        log.info("数据保存完毕");
+        log.info("【审判庭关闭】 数据保存完毕");
+        log.info("【审判庭关闭】 服务端已正常关闭");
     }
 }

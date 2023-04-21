@@ -112,7 +112,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Result<UserLoginVO> userLogin(String account, String password) {
         if (account == null || password == null) {
-            return Result.unauthorized("账号或密码错误");
+            return Result.unauthorized("请输入账号密码");
         }
 
         var user = accountMapper.selectOne(
@@ -127,7 +127,7 @@ public class UserServiceImpl implements UserService {
             }
             return Result.success(new UserLoginVO(JWTUtils.generateTokenForUser(user)), "登录成功");
         } else {
-            return Result.notFound("不存在的账号");
+            return Result.unauthorized("账号或密码错误");
         }
     }
 

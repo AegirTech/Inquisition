@@ -129,7 +129,7 @@ public class ChinacServiceImpl implements ChinacService {
                                 new TypeToken<ChinacResult<HashMap<String, ArrayList<String>>>>() {
                                 }.getType());
                 if (result.getCode() == 10000) {
-                    log.info("[Chinac]: 购买设备成功");
+                    log.info("【Chinac】 购买设备成功");
                     return result.getData().get("ResourceIds");
                 }
             } else {
@@ -139,7 +139,7 @@ public class ChinacServiceImpl implements ChinacService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        log.warn("[Chinac]: 购买设备失败");
+        log.warn("【Chinac】 购买设备失败");
         return null;
     }
 
