@@ -167,7 +167,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         //记录日志
-        log(deviceToken, account, "INFO", "任务完成", "任务完成", imageUrl);
+        log(deviceToken, account, "INFO", "任务完成", "请查看上一条日志以查看状态", imageUrl);
 
         //推送消息
         messageService.push(account, "任务完成", "任务完成，可登陆面板查看作战结果");
@@ -216,7 +216,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         //记录日志
-        log(deviceToken, account, "WARN", "任务失败", "任务失败,请登陆面板查看失败原因: " + type, imageUrl);
+        log(deviceToken, account, "WARN", "任务失败", "任务失败,请查看上一条日志检查原因: " + type, imageUrl);
 
         //移除队列
         dynamicInfo.removeWorkUser(account.getId());
@@ -291,9 +291,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Result<String> forceUnlockOneTask(String deviceToken) {
-        dynamicInfo.removeWorkUser(
-                dynamicInfo.getUserIdByDeviceToken(deviceToken)
-        );
+        forceHaltTask(dynamicInfo.getUserIdByDeviceToken(deviceToken));
 
         return new Result<String>().setCode(200)
                 .setMsg("解锁成功")
