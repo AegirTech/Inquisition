@@ -55,7 +55,7 @@ public class RunScript implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         log.info("【审判庭初始化】 执行中...");
-        File file = new File("config" + File.separator + "data.json");
+        File file = new File(System.getProperty("user.dir") + File.separator + "config" + File.separator + "data.json");
         if (file.exists()) {
             log.info("【审判庭初始化】 检测到数据文件，正在读取...");
             Gson gson = new Gson();
@@ -138,7 +138,7 @@ public class RunScript implements ApplicationRunner {
         Gson gson = new Gson();
         String str = gson.toJson(dynamicInfo.dump());
         try {
-            var printWriter = new PrintWriter("config" + File.separator + "data.json");
+            var printWriter = new PrintWriter(System.getProperty("user.dir") + File.separator + "config" + File.separator + "data.json");
             printWriter.write(str);
             printWriter.close();
         } catch (FileNotFoundException e) {

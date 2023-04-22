@@ -38,3 +38,4 @@ out/
 .vscode/
 /src/main/resources/aegirtech.com.keystore
 application-dev.yml
+config/

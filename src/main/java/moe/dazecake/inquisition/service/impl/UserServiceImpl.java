@@ -286,12 +286,13 @@ public class UserServiceImpl implements UserService {
                 return Result.success(new UserStatusSTO("正在作战中，请勿顶号"), "获取成功");
             }
         }
-        var san = dynamicInfo.getUserSanInfoMap().get(id).getSan();
-        var maxSan = dynamicInfo.getUserSanInfoMap().get(id).getMaxSan();
 
-        if (san == null || maxSan == null) {
+
+        if (!dynamicInfo.getUserSanInfoMap().containsKey(id)) {
             return Result.success(new UserStatusSTO("无法获取理智状态，请尝试使用立即作战重新校准理智"), "获取成功");
         } else {
+            var san = dynamicInfo.getUserSanInfoMap().get(id).getSan();
+            var maxSan = dynamicInfo.getUserSanInfoMap().get(id).getMaxSan();
             LocalDateTime nextTime = LocalDateTime.now()
                     .plusMinutes((maxSan - san) * 6L);
             String nextTimeStr = nextTime.format(DateTimeFormatter.ofPattern("HH:mm"));

@@ -23,6 +23,9 @@ spring:
     password: "xxx" # 邮件发送者密码 (部分邮箱如QQ邮箱使用授权码)
     from: "xxx@qq.com" # 邮件发送者邮箱
     to: "xxx@qq.com" # 邮件接收者邮箱
+  output:
+    ansi:
+      enabled: always
 
 mybatis:
   table:
