@@ -3,6 +3,7 @@ package moe.dazecake.inquisition.utils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.TaskDateSet.LockTask;
@@ -14,6 +15,7 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+@Slf4j
 @Component
 @Data
 @NoArgsConstructor
@@ -112,7 +114,7 @@ public class DynamicInfo extends MemoryInfo {
 
     //置空用户理智
     public void setUserSanZero(Long userId) {
-        if (userSanInfoMap.get(userId) == null) {
+        if (!userSanInfoMap.containsKey(userId)) {
             userSanInfoMap.put(userId, new UserSan(0, 135));
         } else {
             userSanInfoMap.get(userId).setSan(0);
@@ -121,7 +123,12 @@ public class DynamicInfo extends MemoryInfo {
 
     //增加用户理智
     public void addUserSan(Long userId, Integer san) {
-        userSanInfoMap.get(userId).setSan(userSanInfoMap.get(userId).getSan() + san);
+        if (userSanInfoMap.containsKey(userId)) {
+            userSanInfoMap.get(userId).setSan(userSanInfoMap.get(userId).getSan() + san);
+        } else {
+            log.warn("【审判庭】 存在未知用户的理智增加请求，用户ID：" + userId);
+            setUserSanZero(userId);
+        }
     }
 
 }

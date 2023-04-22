@@ -597,8 +597,6 @@ public class TaskServiceImpl implements TaskService {
         //遍历所有用户
         while (entryIterator.hasNext()) {
             Long id = entryIterator.next().getKey();
-            Integer san = dynamicInfo.getUserSanInfoMap().get(id).getSan();
-            Integer maxSan = dynamicInfo.getUserSanInfoMap().get(id).getMaxSan();
 
             var account = accountMapper.selectById(id);
 
@@ -629,6 +627,9 @@ public class TaskServiceImpl implements TaskService {
 
             //递增用户理智
             dynamicInfo.addUserSan(id, 1);
+
+            var san = dynamicInfo.getUserSanInfoMap().get(id).getSan();
+            var maxSan = dynamicInfo.getUserSanInfoMap().get(id).getMaxSan();
 
             //检查是否到达阈值 阈值为最大值-40
             if (san >= maxSan - 40) {
