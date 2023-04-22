@@ -2,6 +2,7 @@ package moe.dazecake.inquisition.service.impl;
 
 import com.zjiecode.wxpusher.client.bean.Message;
 import lombok.extern.slf4j.Slf4j;
+import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.service.intf.MessageService;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,9 @@ public class MessageServiceImpl implements MessageService {
     @Resource
     WXPusherServiceImpl wxPusherService;
 
+    @Resource
+    AccountMapper accountMapper;
+
     @Override
     public void push(AccountEntity account, String title, String content) {
         //微信推送
@@ -45,6 +49,13 @@ public class MessageServiceImpl implements MessageService {
                 emailService.sendSimpleMail(account.getNotice().getMail().getText(), title,
                         content);
             } catch (Exception e) {
+                //正则匹配是否为邮箱地址格式
+                if (!account.getNotice().getMail().getText().matches("^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$")) {
+                    log.info("【审判庭】 邮件推送失败 " + account.getAccount() + ": " + account.getNotice().getMail().getText() + " 不是一个有效的邮箱地址");
+                    account.getNotice().getMail().setEnable(false);
+                    accountMapper.updateById(account);
+                    return;
+                }
                 e.printStackTrace();
                 log.warn("【审判庭】 邮件推送失败 " + account.getAccount() + ": " + account.getNotice().getMail().getText());
             }
