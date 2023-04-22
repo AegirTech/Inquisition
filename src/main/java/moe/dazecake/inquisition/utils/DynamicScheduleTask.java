@@ -176,7 +176,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                             .eq(AccountEntity::getDelete, 0));
                     accountList.forEach(
                             (account) -> {
-                                log.info("【临期账号】: " + account.getAccount() + " " + account.getAccount());
+                                log.info("【临期账号】: " + account.getName() + "\t" + account.getAccount());
                                 var msg = "您的托管账号将于" + account.getExpireTime()
                                         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "过期，记得及时续费哦。";
 
@@ -196,7 +196,7 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                             .eq(AccountEntity::getDelete, 0));
                     accountList.forEach(
                             (account) -> {
-                                log.info("【冻结账号】: " + account.getAccount() + " " + account.getAccount());
+                                log.info("【冻结账号】: " + account.getName() + "\t" + account.getAccount());
                                 var msg = "您的账号仍处于冻结状态，若非手动冻结请及时检查账号状态，避免浪费账号托管时长";
 
                                 messageService.push(account, "【明日方舟】账号冻结提醒", msg);
