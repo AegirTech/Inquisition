@@ -149,6 +149,9 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                     LocalDateTime nowTime = LocalDateTime.now();
                     int num = 0;
                     for (Long worker : dynamicInfo.getWorkUserList()) {
+                        if (!dynamicInfo.getWorkUserInfoMap().containsKey(worker)) {
+                            continue;
+                        }
                         if (dynamicInfo.getWorkUserExpireTime(worker).isBefore(nowTime)) {
                             //记录日志
                             logService.logWarn("任务超时", "");
