@@ -1,6 +1,7 @@
 package moe.dazecake.inquisition.filter;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.annotation.ProKey;
@@ -9,6 +10,7 @@ import moe.dazecake.inquisition.annotation.UserLogin;
 import moe.dazecake.inquisition.mapper.ProUserMapper;
 import moe.dazecake.inquisition.model.entity.ProUserEntity;
 import moe.dazecake.inquisition.utils.JWTUtils;
+import moe.dazecake.inquisition.utils.RequestWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -18,6 +20,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
@@ -33,6 +36,20 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,
                              @NotNull Object handler) {
+
+        RequestWrapper requestWrapper = new RequestWrapper(request);
+        if (requestWrapper.getContentType() != null && requestWrapper.getContentType().contains("application/json")) {
+            // 包装原始请求
+            String requestBody = requestWrapper.getBody();
+            try {
+                //尝试解析JSON
+                new Gson().fromJson(requestBody, Map.class);
+            } catch (Exception ex) {
+                // 解析失败，获取原始JSON数据
+                log.warn("无法解析JSON： \n"+ requestBody);
+            }
+        }
+
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }
