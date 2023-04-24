@@ -148,15 +148,17 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
                     //log.info("任务超时检测");
                     LocalDateTime nowTime = LocalDateTime.now();
                     int num = 0;
-                    for (Long worker : dynamicInfo.getWorkUserList()) {
-                        if (!dynamicInfo.getWorkUserInfoMap().containsKey(worker)) {
-                            continue;
-                        }
-                        if (dynamicInfo.getWorkUserExpireTime(worker).isBefore(nowTime)) {
-                            //记录日志
-                            logService.logWarn("任务超时", "");
-                            taskService.forceHaltTask(worker);
-                            num++;
+                    synchronized (dynamicInfo.getWorkUserList()) {
+                        for (Long worker : dynamicInfo.getWorkUserList()) {
+                            if (!dynamicInfo.getWorkUserInfoMap().containsKey(worker)) {
+                                continue;
+                            }
+                            if (dynamicInfo.getWorkUserExpireTime(worker).isBefore(nowTime)) {
+                                //记录日志
+                                logService.logWarn("任务超时", "");
+                                taskService.forceHaltTask(worker);
+                                num++;
+                            }
                         }
                     }
                     if (num > 0) {

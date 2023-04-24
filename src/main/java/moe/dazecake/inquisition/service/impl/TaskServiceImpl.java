@@ -572,18 +572,22 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void forceHaltTask(Long id) {
-        for (Long waiter : dynamicInfo.getWaitUserList()) {
-            if (waiter.equals(id)) {
-                dynamicInfo.getWaitUserList().remove(waiter);
-                break;
+        synchronized (dynamicInfo.getWaitUserList()) {
+            for (Long waiter : dynamicInfo.getWaitUserList()) {
+                if (waiter.equals(id)) {
+                    dynamicInfo.getWaitUserList().remove(waiter);
+                    break;
+                }
             }
         }
-        for (Long worker : dynamicInfo.getWorkUserList()) {
-            if (worker.equals(id)) {
-                var waitHaltDevice = dynamicInfo.getWorkUserInfoMap().get(worker).getDeviceToken();
-                dynamicInfo.removeWorkUser(worker);
-                dynamicInfo.getHaltList().add(waitHaltDevice);
-                break;
+        synchronized (dynamicInfo.getWorkUserList()) {
+            for (Long worker : dynamicInfo.getWorkUserList()) {
+                if (worker.equals(id)) {
+                    var waitHaltDevice = dynamicInfo.getWorkUserInfoMap().get(worker).getDeviceToken();
+                    dynamicInfo.removeWorkUser(worker);
+                    dynamicInfo.getHaltList().add(waitHaltDevice);
+                    break;
+                }
             }
         }
         dynamicInfo.getFreezeUserInfoMap().remove(id);

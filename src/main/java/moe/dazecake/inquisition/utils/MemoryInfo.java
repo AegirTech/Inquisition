@@ -8,7 +8,9 @@ import moe.dazecake.inquisition.model.local.WorkUser;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -19,7 +21,7 @@ public class MemoryInfo {
     //队列 仅存储用户ID
     //======================
     public ArrayList<Long> waitUserList = new ArrayList<>();
-    public ArrayList<Long> workUserList = new ArrayList<>();
+    public List<Long> workUserList = Collections.synchronizedList(new ArrayList<>());
     public ArrayList<String> haltList = new ArrayList<>();
 
     //======================
