@@ -138,28 +138,24 @@ public class ProUserServiceImpl implements ProUserService {
 
     @Override
     public Result<PageQueryVO<AccountWithSanVO>> queryAllSubUser(Long id, String type, Integer current, Integer size) {
-        var wrapper = Wrappers.<AccountEntity>lambdaQuery();
+        var wrapper = Wrappers.<AccountEntity>lambdaQuery().eq(AccountEntity::getAgent, id);
         switch (type) {
             case "all":
-                wrapper.eq(AccountEntity::getAgent, id);
                 break;
             case "active":
-                wrapper.eq(AccountEntity::getAgent, id)
-                        .gt(AccountEntity::getExpireTime, LocalDateTime.now())
+                wrapper.gt(AccountEntity::getExpireTime, LocalDateTime.now())
                         .eq(AccountEntity::getDelete, 0);
                 break;
             case "expired":
-                wrapper.eq(AccountEntity::getAgent, id)
-                        .lt(AccountEntity::getExpireTime, LocalDateTime.now())
+                wrapper.lt(AccountEntity::getExpireTime, LocalDateTime.now())
                         .eq(AccountEntity::getDelete, 0);
                 break;
             case "frozen":
-                wrapper.eq(AccountEntity::getAgent, id)
-                        .eq(AccountEntity::getFreeze, 1)
+                wrapper.eq(AccountEntity::getFreeze, 1)
                         .eq(AccountEntity::getDelete, 0);
+                break;
             case "deleted":
-                wrapper.eq(AccountEntity::getAgent, id)
-                        .eq(AccountEntity::getDelete, 1);
+                wrapper.eq(AccountEntity::getDelete, 1);
                 break;
             default:
                 return Result.paramError("参数错误");
