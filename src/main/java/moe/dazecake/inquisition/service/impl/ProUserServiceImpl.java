@@ -349,7 +349,13 @@ public class ProUserServiceImpl implements ProUserService {
             return Result.notFound("未找到该用户");
         }
         var result = new ArrayList<AccountDTO>();
-        var list = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery().eq(AccountEntity::getAgent, id).lt(AccountEntity::getExpireTime, LocalDateTime.now().plusDays(7)));
+        var list = accountMapper.selectList(
+                Wrappers.<AccountEntity>lambdaQuery()
+                        .eq(AccountEntity::getAgent, id)
+                        .lt(AccountEntity::getExpireTime, LocalDateTime.now().plusDays(7))
+                        .gt(AccountEntity::getExpireTime, LocalDateTime.now())
+                        .orderByAsc(AccountEntity::getExpireTime)
+        );
         for (AccountEntity accountEntity : list) {
             result.add(AccountConvert.INSTANCE.toAccountDTO(accountEntity));
         }
