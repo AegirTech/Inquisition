@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.GsonTypeHandler;
 import com.gitee.sunchenbin.mybatis.actable.annotation.Column;
 import com.gitee.sunchenbin.mybatis.actable.annotation.IsAutoIncrement;
 import com.gitee.sunchenbin.mybatis.actable.annotation.IsKey;
@@ -15,6 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Data
 @NoArgsConstructor
@@ -39,6 +41,11 @@ public class DeviceEntity {
     @Column(name = "device_token", comment = "设备token")
     @Schema(description = "设备token")
     String deviceToken;
+
+    @Column(name = "work_scope", comment = "作用域")
+    @Schema(description = "作用域")
+    @TableField(typeHandler = GsonTypeHandler.class)
+    ArrayList<String> workScope = new ArrayList<>();
 
     @Column(name = "chinac", comment = "华云设备")
     @Schema(description = "华云设备")
