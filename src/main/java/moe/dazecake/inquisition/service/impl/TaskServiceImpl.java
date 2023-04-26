@@ -64,8 +64,9 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public Result<AccountDTO> getTask(String deviceToken) {
         //设备合法性检查
-        if (deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
-                .eq(DeviceEntity::getDeviceToken, deviceToken)) == null) {
+        var device = deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
+                .eq(DeviceEntity::getDeviceToken, deviceToken));
+        if (device == null) {
             return Result.unauthorized("设备未授权");
         }
 
@@ -85,6 +86,11 @@ public class TaskServiceImpl implements TaskService {
             var hit = false;
             while (iterator.hasNext()) {
                 account = accountMapper.selectById(iterator.next());
+
+                //作用域检查
+                if (!device.getWorkScope().contains(account.getTaskType())) {
+                    continue;
+                }
 
                 //时间检查，不在激活区间则跳转到下一个判断
                 if (!checkActivationTime(account)) {
@@ -171,27 +177,25 @@ public class TaskServiceImpl implements TaskService {
         log(deviceToken, account, "INFO", "任务完成", "请查看上一条日志以查看状态", imageUrl);
 
         //推送消息
-        messageService.push(account, "任务完成", "任务完成，可登陆面板查看作战结果");
-
-        //管理员推送消息推送
-        if (account.getTaskType().equals("rogue") || account.getTaskType().equals("rogue2") && enableMail) {
-            //发送邮件通知
-            String msg = "<p>肉鸽任务已完成<p>\n" +
-                    "<p>用户名称: " + account.getName() + "<p>\n" +
-                    "<p>用户账号: " + account.getAccount() + "<p>\n" +
-                    "<p>服务器: " + account.getServer() + "<p>\n" +
-                    "<img src=\"" + imageUrl + "\" alt=\"screenshots\">";
-            emailService.sendHtmlMail(to, "肉鸽任务完成", msg);
-        }
-
-        if (account.getTaskType().equals("sand_fire") && enableMail) {
-            //发送邮件通知
-            String msg = "<p>生息演算任务已完成<p>\n" +
-                    "<p>用户名称: " + account.getName() + "<p>\n" +
-                    "<p>用户账号: " + account.getAccount() + "<p>\n" +
-                    "<p>服务器: " + account.getServer() + "<p>\n" +
-                    "<img src=\"" + imageUrl + "\" alt=\"screenshots\">";
-            emailService.sendHtmlMail(to, "生息演算任务完成", msg);
+        switch (account.getTaskType()) {
+            case "daily":
+                messageService.push(account, "每日任务完成", "任务完成，可登陆面板查看作战结果\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
+                break;
+            case "rogue":
+            case "rogue2":
+                messageService.pushAdmin("肉鸽任务完成", "用户: " + account.getName() + " 肉鸽任务已完成\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
+                messageService.push(account, "肉鸽任务完成", "肉鸽任务已完成，可登陆面板查看作战结果\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
+                //恢复日常任务
+                account.setTaskType("daily");
+                accountMapper.updateById(account);
+                break;
+            case "sand_fire":
+                messageService.pushAdmin("生息演算任务完成", "用户: " + account.getName() + " 生息演算任务已完成\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
+                messageService.push(account, "生息演算任务完成", "生息演算任务已完成，可登陆面板查看作战结果\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
+                //恢复日常任务
+                account.setTaskType("daily");
+                accountMapper.updateById(account);
+                break;
         }
 
         //移除队列
