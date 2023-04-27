@@ -3,6 +3,7 @@ package moe.dazecake.inquisition.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import moe.dazecake.inquisition.annotation.Login;
+import moe.dazecake.inquisition.constant.enums.TaskType;
 import moe.dazecake.inquisition.model.dto.device.*;
 import moe.dazecake.inquisition.model.vo.device.DeviceScreenshotVO;
 import moe.dazecake.inquisition.model.vo.device.DeviceVO;
@@ -65,6 +66,12 @@ public class DeviceController {
     @GetMapping("/getDeviceByToken")
     public Result<DeviceVO> getDeviceByToken(String deviceToken) {
         return deviceService.getDevice(deviceToken);
+    }
+
+    @Operation(summary = "获取域设备是否存在空闲")
+    @PostMapping("/isScopeDeviceFree")
+    public Result<Boolean> isScopeDeviceFree(DeviceTypeDTO type) {
+        return deviceService.isScopeDeviceFree(TaskType.getByStr(type.getType()));
     }
 
     @Login

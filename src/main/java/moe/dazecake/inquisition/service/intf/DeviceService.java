@@ -1,5 +1,6 @@
 package moe.dazecake.inquisition.service.intf;
 
+import moe.dazecake.inquisition.constant.enums.TaskType;
 import moe.dazecake.inquisition.model.dto.device.*;
 import moe.dazecake.inquisition.model.vo.device.DeviceScreenshotVO;
 import moe.dazecake.inquisition.model.vo.device.DeviceVO;
@@ -82,6 +83,13 @@ public interface DeviceService {
      * @date 2023/1/26 13:37
      */
     Result<DeviceVO> getDevice(String deviceToken);
+
+    /**
+     * 获取域设备是否存在空闲
+     * @param type 设备类型
+     * @return
+     */
+    Result<Boolean> isScopeDeviceFree(TaskType type);
 
     /**
      * 获取设备截图

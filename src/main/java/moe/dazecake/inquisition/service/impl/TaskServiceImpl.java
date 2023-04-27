@@ -2,6 +2,7 @@ package moe.dazecake.inquisition.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
+import moe.dazecake.inquisition.constant.enums.TaskType;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.mapper.mapstruct.AccountConvert;
@@ -90,6 +91,11 @@ public class TaskServiceImpl implements TaskService {
                 //作用域检查
                 if (!device.getWorkScope().contains(account.getTaskType())) {
                     continue;
+                } else {
+                    //B服日常任务不分配至特殊任务设备
+                    if (account.getServer() == 1 && account.getTaskType().equals("daily") && device.getWorkScope().size() > 1) {
+                        continue;
+                    }
                 }
 
                 //时间检查，不在激活区间则跳转到下一个判断
@@ -99,7 +105,7 @@ public class TaskServiceImpl implements TaskService {
                 }
 
                 //B服限制检查
-                if (account.getServer() == 1 && account.getBLimitDevice().size() != 0) {
+                if (account.getServer() == 1 && account.getBLimitDevice().size() != 0 && account.getTaskType().equals("daily")) {
                     var usedDeviceToken = account.getBLimitDevice().get(0);
                     if (!Objects.equals(usedDeviceToken, deviceToken)) {
                         if (dynamicInfo.getDeviceStatusMap().containsKey(usedDeviceToken)) {
@@ -177,19 +183,19 @@ public class TaskServiceImpl implements TaskService {
         log(deviceToken, account, "INFO", "任务完成", "请查看上一条日志以查看状态", imageUrl);
 
         //推送消息
-        switch (account.getTaskType()) {
-            case "daily":
+        switch (TaskType.getByStr(account.getTaskType())) {
+            case DAILY:
                 messageService.push(account, "每日任务完成", "任务完成，可登陆面板查看作战结果\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
                 break;
-            case "rogue":
-            case "rogue2":
+            case ROGUE:
+            case ROGUE2:
                 messageService.pushAdmin("肉鸽任务完成", "用户: " + account.getName() + " 肉鸽任务已完成\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
                 messageService.push(account, "肉鸽任务完成", "肉鸽任务已完成，可登陆面板查看作战结果\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
                 //恢复日常任务
                 account.setTaskType("daily");
                 accountMapper.updateById(account);
                 break;
-            case "sand_fire":
+            case SAND_FIRE:
                 messageService.pushAdmin("生息演算任务完成", "用户: " + account.getName() + " 生息演算任务已完成\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
                 messageService.push(account, "生息演算任务完成", "生息演算任务已完成，可登陆面板查看作战结果\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
                 //恢复日常任务
@@ -491,15 +497,15 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void lockTask(String deviceToken, AccountEntity account) {
         LocalDateTime localDateTime = LocalDateTime.now();
-        switch (account.getTaskType()) {
-            case "daily":
+        switch (TaskType.getByStr(account.getTaskType())) {
+            case DAILY:
                 dynamicInfo.addWorkUser(account.getId(), deviceToken, localDateTime.plusHours(2));
                 break;
-            case "rogue":
-            case "rogue2":
+            case ROGUE:
+            case ROGUE2:
                 dynamicInfo.addWorkUser(account.getId(), deviceToken, localDateTime.plusHours(72));
                 break;
-            case "sand_fire":
+            case SAND_FIRE:
                 dynamicInfo.addWorkUser(account.getId(), deviceToken, localDateTime.plusHours(24));
                 break;
         }
@@ -509,17 +515,10 @@ public class TaskServiceImpl implements TaskService {
     public void log(String deviceToken, AccountEntity account, String level, String title,
                     String content, String imgUrl) {
         var addLogDTO = new AddLogDTO();
-        String type = "";
-        if (Objects.equals(account.getTaskType(), "daily")) {
-            type = "每日";
-        } else if (Objects.equals(account.getTaskType(), "rogue") || Objects.equals(account.getTaskType(), "rogue2")) {
-            type = "肉鸽";
-        } else if (Objects.equals(account.getTaskType(), "sand_fire")) {
-            type = "生息演算";
-        }
+        TaskType type = TaskType.getByStr(account.getTaskType());
 
         String detail =
-                "[" + type + "] [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) + "] " + type +
+                "[" + type.getName() + "] [" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) + "] " + type +
                         content;
 
         addLogDTO.setLevel(level)

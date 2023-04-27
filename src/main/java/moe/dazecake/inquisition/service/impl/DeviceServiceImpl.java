@@ -2,6 +2,7 @@ package moe.dazecake.inquisition.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import moe.dazecake.inquisition.constant.enums.TaskType;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.mapper.mapstruct.DeviceConvert;
 import moe.dazecake.inquisition.model.dto.device.*;
@@ -114,6 +115,20 @@ public class DeviceServiceImpl implements DeviceService {
         } else {
             return Result.notFound("查询失败");
         }
+    }
+
+    @Override
+    public Result<Boolean> isScopeDeviceFree(TaskType type) {
+        var deviceList = deviceMapper.selectList(Wrappers.<DeviceEntity>lambdaQuery()
+                .eq(DeviceEntity::getDelete, 0)
+                .like(DeviceEntity::getWorkScope, type.getType())
+        );
+        for (DeviceEntity device : deviceList) {
+            if (dynamicInfo.getDeviceStatusMap().get(device.getDeviceToken()) == 0) {
+                return Result.success(true, "存在空闲设备");
+            }
+        }
+        return Result.success(false, "无空闲设备");
     }
 
     @Override

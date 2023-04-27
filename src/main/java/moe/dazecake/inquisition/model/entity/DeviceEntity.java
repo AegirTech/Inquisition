@@ -9,6 +9,7 @@ import com.gitee.sunchenbin.mybatis.actable.annotation.Column;
 import com.gitee.sunchenbin.mybatis.actable.annotation.IsAutoIncrement;
 import com.gitee.sunchenbin.mybatis.actable.annotation.IsKey;
 import com.gitee.sunchenbin.mybatis.actable.annotation.IsNotNull;
+import com.gitee.sunchenbin.mybatis.actable.constants.MySqlTypeConstant;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,7 +23,7 @@ import java.util.ArrayList;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@TableName("device")
+@TableName(value = "device", autoResultMap = true)
 @Schema(description = "设备配置")
 public class DeviceEntity {
 
@@ -42,7 +43,7 @@ public class DeviceEntity {
     @Schema(description = "设备token")
     String deviceToken;
 
-    @Column(name = "work_scope", comment = "作用域")
+    @Column(name = "work_scope", comment = "作用域", type = MySqlTypeConstant.JSON)
     @Schema(description = "作用域")
     @TableField(typeHandler = GsonTypeHandler.class)
     ArrayList<String> workScope = new ArrayList<>();
