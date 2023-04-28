@@ -1,5 +1,6 @@
 package moe.dazecake.inquisition.service.intf;
 
+import moe.dazecake.inquisition.constant.enums.TaskType;
 import moe.dazecake.inquisition.model.dto.account.AccountDTO;
 import moe.dazecake.inquisition.model.dto.account.AddAccountDTO;
 import moe.dazecake.inquisition.model.vo.account.AccountWithSanVO;
@@ -98,5 +99,15 @@ public interface AccountService {
      * @date 2023/1/26 0:15
      */
     String resetAccountDynamicInfo(Long id);
+
+    /***
+     * 重设账号任务类型
+     *
+     * @param id 账号id
+     * @param type 任务类型
+     * @author DazeCake
+     * @date 2023/4/28 20:40
+     */
+    void resetAccountType(Long id, TaskType type);
 }
 

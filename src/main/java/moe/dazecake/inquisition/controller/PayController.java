@@ -5,11 +5,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.annotation.UserLogin;
 import moe.dazecake.inquisition.model.dto.pay.AccountRenewalDTO;
+import moe.dazecake.inquisition.model.vo.goods.GoodsInfoVO;
+import moe.dazecake.inquisition.service.impl.GoodsServiceImpl;
 import moe.dazecake.inquisition.service.impl.PayServiceImpl;
 import moe.dazecake.inquisition.utils.Result;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Map;
 
 @Slf4j
@@ -20,6 +23,9 @@ public class PayController {
 
     @Resource
     PayServiceImpl payService;
+
+    @Resource
+    GoodsServiceImpl goodsService;
 
     @Operation(summary = "支付结果回调")
     @GetMapping("/payResultCallBack")
@@ -33,5 +39,12 @@ public class PayController {
     public Result<String> getAccountRenewalUrl(@RequestHeader("Authorization") String token,
                                                @RequestBody AccountRenewalDTO accountRenewalDTO) {
         return payService.getAccountRenewalUrl(token, accountRenewalDTO.getPayType(), accountRenewalDTO.getMo());
+    }
+
+    @UserLogin
+    @Operation(summary = "获取商品列表")
+    @GetMapping("/getGoodsList")
+    public Result<ArrayList<GoodsInfoVO>> getGoodsList() {
+        return goodsService.getGoodsList(false);
     }
 }

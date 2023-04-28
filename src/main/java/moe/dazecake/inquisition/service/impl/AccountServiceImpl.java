@@ -2,6 +2,7 @@ package moe.dazecake.inquisition.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import moe.dazecake.inquisition.constant.enums.TaskType;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.mapstruct.AccountConvert;
 import moe.dazecake.inquisition.model.dto.account.AccountDTO;
@@ -197,6 +198,15 @@ public class AccountServiceImpl implements AccountService {
         dynamicInfo.setUserSan(id, 135, 135);
 
         return "重置成功";
+    }
+
+    @Override
+    public void resetAccountType(Long id, TaskType type) {
+        var account = accountMapper.selectById(id);
+        if (account != null) {
+            account.setTaskType(type.getType());
+            accountMapper.updateById(account);
+        }
     }
 
     @NotNull

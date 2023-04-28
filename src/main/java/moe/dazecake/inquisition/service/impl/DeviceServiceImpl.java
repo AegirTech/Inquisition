@@ -124,7 +124,7 @@ public class DeviceServiceImpl implements DeviceService {
                 .like(DeviceEntity::getWorkScope, type.getType())
         );
         for (DeviceEntity device : deviceList) {
-            if (dynamicInfo.getDeviceStatusMap().get(device.getDeviceToken()) == 0) {
+            if (dynamicInfo.getDeviceStatusMap().get(device.getDeviceToken()) == 1) {
                 return Result.success(true, "存在空闲设备");
             }
         }
