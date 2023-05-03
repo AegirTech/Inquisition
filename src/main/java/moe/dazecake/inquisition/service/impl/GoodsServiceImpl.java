@@ -18,6 +18,9 @@ public class GoodsServiceImpl implements GoodsService {
     @Resource
     GoodsMapper goodsMapper;
 
+    @Resource
+    PayServiceImpl payService;
+
     @Override
     public Result<ArrayList<GoodsInfoVO>> getGoodsList(Boolean showAll) {
         var goodsList = new ArrayList<GoodsInfoVO>();
@@ -46,5 +49,20 @@ public class GoodsServiceImpl implements GoodsService {
     public Result<String> updateGoods(UpdateGoodsDTO updateGoodsDTO) {
         goodsMapper.updateById(GoodsConvert.INSTANCE.toGoodsEntity(updateGoodsDTO));
         return Result.success("更新成功");
+    }
+
+    @Override
+    public Result<String> getGoodsPayUrl(Long userId, Long goodsId, String payType) {
+        var goods = goodsMapper.selectById(goodsId);
+        if (goods.getOnSale() != 1) {
+            return Result.forbidden("商品已下架");
+        }
+
+        var url = payService.createBill(userId, goods.getParams(), goods.getType(), goods.getPrice(), payType, "/user/home/");
+        if (url != null) {
+            return Result.success(url, "创建订单成功");
+        } else {
+            return Result.failed("创建订单失败，请稍后尝试");
+        }
     }
 }

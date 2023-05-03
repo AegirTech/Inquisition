@@ -1,5 +1,6 @@
 package moe.dazecake.inquisition.service.intf;
 
+import moe.dazecake.inquisition.constant.enums.TaskType;
 import moe.dazecake.inquisition.model.dto.account.AccountDTO;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.utils.Result;
@@ -10,7 +11,7 @@ public interface TaskService {
      * 获取任务
      *
      * @param deviceToken 设备标识
-     * @return: moe.dazecake.inquisition.utils.Result<moe.dazecake.inquisition.model.dto.account.AccountDTO>
+     * @return moe.dazecake.inquisition.utils.Result<moe.dazecake.inquisition.model.dto.account.AccountDTO>
      * @author DazeCake
      * @date 2023/1/26 23:58
      */
@@ -21,7 +22,7 @@ public interface TaskService {
      *
      * @param deviceToken 设备标识
      * @param imageUrl    图片地址
-     * @return: moe.dazecake.inquisition.utils.Result<java.lang.String>
+     * @return moe.dazecake.inquisition.utils.Result<java.lang.String>
      * @author DazeCake
      * @date 2023/1/27 0:06
      */
@@ -33,7 +34,7 @@ public interface TaskService {
      * @param deviceToken 设备标识
      * @param type        失败类型
      * @param imageUrl    图片地址
-     * @return: moe.dazecake.inquisition.utils.Result<java.lang.String>
+     * @return moe.dazecake.inquisition.utils.Result<java.lang.String>
      * @author DazeCake
      * @date 2023/1/27 0:09
      */
@@ -43,7 +44,7 @@ public interface TaskService {
      * 临时插队
      *
      * @param id 账号id
-     * @return: moe.dazecake.inquisition.utils.Result<java.lang.String>
+     * @return moe.dazecake.inquisition.utils.Result<java.lang.String>
      * @author DazeCake
      * @date 2023/1/27 0:12
      */
@@ -53,7 +54,7 @@ public interface TaskService {
      * 临时移除任务
      *
      * @param id 账号id
-     * @return: moe.dazecake.inquisition.utils.Result<java.lang.String>
+     * @return moe.dazecake.inquisition.utils.Result<java.lang.String>
      * @author DazeCake
      * @date 2023/1/27 0:14
      */
@@ -62,7 +63,7 @@ public interface TaskService {
     /**
      * 立即从数据库重载全部任务
      *
-     * @return: moe.dazecake.inquisition.utils.Result<java.lang.String>
+     * @return moe.dazecake.inquisition.utils.Result<java.lang.String>
      * @author DazeCake
      * @date 2023/1/27 0:20
      */
@@ -72,7 +73,7 @@ public interface TaskService {
      * 立即强制释放一设备的上锁任务
      *
      * @param deviceToken 设备标识
-     * @return: moe.dazecake.inquisition.utils.Result<java.lang.String>
+     * @return moe.dazecake.inquisition.utils.Result<java.lang.String>
      * @author DazeCake
      * @date 2023/1/27 0:22
      */
@@ -81,7 +82,7 @@ public interface TaskService {
     /**
      * 立即强制释放整个上锁队列
      *
-     * @return: moe.dazecake.inquisition.utils.Result<java.lang.String>
+     * @return moe.dazecake.inquisition.utils.Result<java.lang.String>
      * @author DazeCake
      * @date 2023/1/27 0:25
      */
@@ -100,5 +101,17 @@ public interface TaskService {
     void forceHaltTask(Long id);
 
     void calculatingSan();
+
+    /**
+     * 启动任务类型转换
+     *
+     * @param taskType 任务类型
+     * @param userId   用户id
+     * @param params   参数
+     * @return boolean 是否成功启动转换任务
+     * @author DazeCake
+     * @date 2023/5/3 10:29
+     */
+    boolean initiateTaskConversion(TaskType taskType, Long userId, String params);
 
 }

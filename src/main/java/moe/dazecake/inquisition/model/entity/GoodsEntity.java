@@ -41,6 +41,10 @@ public class GoodsEntity {
     @Schema(description = "商品类型")
     String type;
 
+    @Column(name = "params", comment = "商品参数")
+    @Schema(description = "商品参数")
+    String params;
+
     @Column(name = "description", comment = "商品描述")
     @Schema(description = "商品描述")
     String description;

@@ -3,6 +3,7 @@ package moe.dazecake.inquisition.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
+import moe.dazecake.inquisition.constant.enums.TaskType;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.BillMapper;
 import moe.dazecake.inquisition.mapper.ProUserMapper;
@@ -68,6 +69,9 @@ public class PayServiceImpl implements PayService {
     @Resource
     AccountServiceImpl accountService;
 
+    @Resource
+    TaskServiceImpl taskService;
+
     @Override
     public BillEntity createOrder(Double amount, String payType, String returnPath) {
         if (!enablePay || merchantNum.equals("") || backUrl.equals("") || payToken.equals("")) {
@@ -118,48 +122,69 @@ public class PayServiceImpl implements PayService {
     }
 
     @Override
+    public String createBill(Long userId, String params, String type, Double amount, String payType, String returnPath) {
+        var bill = createOrder(amount, payType, returnPath);
+        if (bill == null) {
+            return null;
+        }
+        bill.setUserId(userId)
+                .setParam(params)
+                .setType(type);
+        billMapper.updateById(bill);
+        return bill.getPayUrl();
+    }
+
+    @Override
     public boolean billCallBackSolver(BillEntity bill) {
 
-        if (bill.getType().equals("daily")) {
+        switch (TaskType.getByStr(bill.getType())) {
+            //日常续费处理
+            case DAILY:
+                var user = accountMapper.selectById(bill.getUserId());
 
-            var user = accountMapper.selectById(bill.getUserId());
-
-            if (user.getExpireTime().isBefore(LocalDateTime.now())) {
-                user.setExpireTime(LocalDateTime.now());
-            }
-            user.setUpdateTime(LocalDateTime.now());
-            user.setExpireTime(user.getExpireTime().plusDays(Integer.parseInt(bill.getParam())));
-
-            //代理佣金
-            if (user.getAgent() != null) {
-                if (user.getAgent() != 0) {
-                    calculateCommission(user.getAgent(), dailyPrice * Integer.parseInt(bill.getParam()));
+                if (user.getExpireTime().isBefore(LocalDateTime.now())) {
+                    user.setExpireTime(LocalDateTime.now());
                 }
-            } else {
-                user.setAgent(0L);
-            }
+                user.setUpdateTime(LocalDateTime.now());
+                user.setExpireTime(user.getExpireTime().plusDays(Integer.parseInt(bill.getParam())));
 
-            accountMapper.updateById(user);
-            return true;
-        } else if (bill.getType().equals("register")) {
-            var newUser = new AccountEntity();
-            newUser.setName(bill.getParam().split("\\|")[0]);
-            newUser.setAccount(bill.getParam().split("\\|")[1]);
-            newUser.setPassword(bill.getParam().split("\\|")[2]);
-            newUser.setServer(Long.valueOf(bill.getParam().split("\\|")[3]));
-            newUser.setAgent(Long.valueOf(bill.getParam().split("\\|")[4]));
-            newUser.setExpireTime(LocalDateTime.now().plusDays(3));
-            accountMapper.insert(newUser);
-            var userId = accountMapper.selectOne(
-                    Wrappers.<AccountEntity>lambdaQuery()
-                            .eq(AccountEntity::getAccount, newUser.getAccount())).getId();
-            accountService.forceFightAccount(userId, true);
-            //代理佣金
-            if (newUser.getAgent() != 0) {
-                calculateCommission(newUser.getAgent(), 1.0);
-            }
-            return true;
+                //代理佣金
+                if (user.getAgent() != null) {
+                    if (user.getAgent() != 0) {
+                        calculateCommission(user.getAgent(), dailyPrice * Integer.parseInt(bill.getParam()));
+                    }
+                } else {
+                    user.setAgent(0L);
+                }
+
+                accountMapper.updateById(user);
+                return true;
+            case UNKNOWN:
+                //特殊类型 注册
+                if (bill.getType().equals("register")) {
+                    var newUser = new AccountEntity();
+                    newUser.setName(bill.getParam().split("\\|")[0]);
+                    newUser.setAccount(bill.getParam().split("\\|")[1]);
+                    newUser.setPassword(bill.getParam().split("\\|")[2]);
+                    newUser.setServer(Long.valueOf(bill.getParam().split("\\|")[3]));
+                    newUser.setAgent(Long.valueOf(bill.getParam().split("\\|")[4]));
+                    newUser.setExpireTime(LocalDateTime.now().plusDays(3));
+                    accountMapper.insert(newUser);
+                    var userId = accountMapper.selectOne(
+                            Wrappers.<AccountEntity>lambdaQuery()
+                                    .eq(AccountEntity::getAccount, newUser.getAccount())).getId();
+                    accountService.forceFightAccount(userId, true);
+                    //代理佣金
+                    if (newUser.getAgent() != 0) {
+                        calculateCommission(newUser.getAgent(), 1.0);
+                    }
+                    return true;
+                }
+                break;
+            default:
+                return taskService.initiateTaskConversion(TaskType.getByStr(bill.getType()), bill.getUserId(), bill.getParam());
         }
+
         return false;
     }
 
@@ -191,7 +216,7 @@ public class PayServiceImpl implements PayService {
                     log.info("【支付回调】 支付成功");
                 } else {
                     log.info("【支付回调】 支付成功, 解决失败");
-                    messageService.pushAdmin("支付成功, 但是解决失败", "支付成功, 但是解决失败");
+                    messageService.pushAdmin("支付成功, 但是解决失败", "订单：" + bill.getId() + " 支付成功, 但是解决失败");
                 }
                 return "success";
 
@@ -212,12 +237,12 @@ public class PayServiceImpl implements PayService {
             return Result.failed("不允许购买小于1个月的套餐");
         }
 
-        var bill = createOrder(mo * 30 * dailyPrice, payType, "/user/home/");
-        bill.setUserId(id)
-                .setType("daily")
-                .setParam(String.valueOf(30 * mo));
-        billMapper.updateById(bill);
-        return Result.success(bill.getPayUrl(), "获取成功");
+        String url = createBill(id, String.valueOf(30 * mo), TaskType.DAILY.getType(), mo * 30 * dailyPrice, payType, "/user/home/");
+        if (!url.isEmpty()) {
+            return Result.success(url, "获取成功");
+        } else {
+            return Result.failed("获取账单失败，稍后重试");
+        }
     }
 
     @NotNull

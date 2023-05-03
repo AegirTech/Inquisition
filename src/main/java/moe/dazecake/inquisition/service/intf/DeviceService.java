@@ -50,7 +50,7 @@ public interface DeviceService {
      *
      * @param current 当前页
      * @param size    每页大小
-     * @return: moe.dazecake.inquisition.model.vo.query.PageQueryVO<moe.dazecake.inquisition.model.vo.device.DeviceVO>
+     * @return moe.dazecake.inquisition.model.vo.query.PageQueryVO<moe.dazecake.inquisition.model.vo.device.DeviceVO>
      * @author DazeCake
      * @date 2023/1/26 13:22
      */
@@ -59,7 +59,7 @@ public interface DeviceService {
     /**
      * 查询已载入设备
      *
-     * @return: moe.dazecake.inquisition.model.vo.device.LoadDeviceVO 载入设备列表
+     * @return moe.dazecake.inquisition.model.vo.device.LoadDeviceVO 载入设备列表
      * @author DazeCake
      * @date 2023/1/26 13:26
      */
@@ -78,16 +78,19 @@ public interface DeviceService {
      * 获取设备信息
      *
      * @param deviceToken 设备token
-     * @return: moe.dazecake.inquisition.model.vo.device.DeviceVO
+     * @return moe.dazecake.inquisition.model.vo.device.DeviceVO
      * @author DazeCake
      * @date 2023/1/26 13:37
      */
     Result<DeviceVO> getDevice(String deviceToken);
 
     /**
-     * 获取域设备是否存在空闲
+     * 获取设备信息
+     *
      * @param type 设备类型
-     * @return
+     * @return moe.dazecake.inquisition.utils.Result<java.lang.Boolean>
+     * @author DazeCake
+     * @date 2023/5/3 10:46
      */
     Result<Boolean> isScopeDeviceFree(TaskType type);
 
@@ -95,7 +98,7 @@ public interface DeviceService {
      * 获取设备截图
      *
      * @param groupChinacDeviceDTO 设备参数
-     * @return: moe.dazecake.inquisition.model.vo.device.DeviceScreenshotVO 设备截图信息
+     * @return moe.dazecake.inquisition.model.vo.device.DeviceScreenshotVO 设备截图信息
      * @author DazeCake
      * @date 2023/1/26 14:07
      */
@@ -105,7 +108,7 @@ public interface DeviceService {
      * 获取chinac设备远程控制url
      *
      * @param deviceToken chinac设备token
-     * @return: java.lang.String 远程控制url
+     * @return java.lang.String 远程控制url
      * @author DazeCake
      * @date 2023/1/26 14:08
      */

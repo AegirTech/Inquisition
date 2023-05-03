@@ -50,7 +50,7 @@ public class TaskServiceImpl implements TaskService {
     AccountMapper accountMapper;
 
     @Resource
-    EmailServiceImpl emailService;
+    AccountServiceImpl accountService;
 
     @Value("${spring.mail.enable:false}")
     boolean enableMail;
@@ -668,5 +668,33 @@ public class TaskServiceImpl implements TaskService {
 
         }
 
+    }
+
+    @Override
+    public boolean initiateTaskConversion(TaskType taskType, Long userId, String params) {
+        var user = accountMapper.selectById(userId);
+        if (user == null || user.getDelete() == 1 || user.getFreeze() == 1) {
+            return false;
+        }
+
+        user.setTaskType(taskType.getType());
+        switch (taskType) {
+            case ROGUE:
+            case ROGUE2:
+                user.getConfig().getRogue().setLevel(Integer.parseInt(params.split("\\|")[0]));
+                user.getConfig().getRogue().setCoin(Integer.parseInt(params.split("\\|")[1]));
+                break;
+            case SAND_FIRE:
+                break;
+            default:
+                return false;
+        }
+        accountMapper.updateById(user);
+
+        accountService.forceFightAccount(userId, true);
+
+        messageService.push(user, "作战类型切换", "您的作战类型已切换为: " + taskType.getName() + " 正在等待分配，即将开始作战\n");
+
+        return true;
     }
 }

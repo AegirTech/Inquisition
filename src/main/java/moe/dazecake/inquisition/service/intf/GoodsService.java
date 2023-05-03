@@ -15,4 +15,6 @@ public interface GoodsService {
 
     Result<String> updateGoods(UpdateGoodsDTO updateGoodsDTO);
 
+    Result<String> getGoodsPayUrl(Long userId, Long goodsId, String payType);
+
 }

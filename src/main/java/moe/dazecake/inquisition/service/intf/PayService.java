@@ -9,6 +9,8 @@ public interface PayService {
 
     BillEntity createOrder(Double amount, String payType, String returnPath);
 
+    String createBill(Long userId, String params, String type, Double amount, String payType, String returnPath);
+
     boolean billCallBackSolver(BillEntity bill);
 
     String payResultCallBack(Map<String, String> map);
