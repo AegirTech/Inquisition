@@ -35,8 +35,8 @@ public class StatisticsServiceImpl implements StatisticsService {
                 .eq(AccountEntity::getDelete, 0));
 
         var newUserList = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
-                .ge(AccountEntity::getCreateTime, LocalDateTime.of(LocalDate.now(), LocalTime.MIN))
-                .lt(AccountEntity::getCreateTime, LocalDateTime.of(LocalDate.now(), LocalTime.MAX))
+                .ge(AccountEntity::getCreateTime, LocalDateTime.of(LocalDate.now(), LocalTime.MIN).plusHours(4))
+                .lt(AccountEntity::getCreateTime, LocalDateTime.of(LocalDate.now(), LocalTime.MAX).plusHours(4))
                 .ge(AccountEntity::getExpireTime, LocalDateTime.now())
                 .eq(AccountEntity::getDelete, 0));
 
@@ -48,8 +48,8 @@ public class StatisticsServiceImpl implements StatisticsService {
                 .eq(BillEntity::getState, 1));
 
         var dayBills = billMapper.selectList(Wrappers.<BillEntity>lambdaQuery()
-                .ge(BillEntity::getUpdateTime, LocalDateTime.of(LocalDate.now(), LocalTime.MIN))
-                .lt(BillEntity::getUpdateTime, LocalDateTime.of(LocalDate.now(), LocalTime.MAX))
+                .ge(BillEntity::getUpdateTime, LocalDateTime.of(LocalDate.now(), LocalTime.MIN).plusHours(4))
+                .lt(BillEntity::getUpdateTime, LocalDateTime.of(LocalDate.now(), LocalTime.MAX).plusHours(4))
                 .eq(BillEntity::getState, 1));
 
         result.getData().put("payedUserNum", payedUserList.size());
