@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
 import moe.dazecake.inquisition.constant.enums.CDKWrapper;
+import moe.dazecake.inquisition.constant.enums.TaskType;
 import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.CDKMapper;
 import moe.dazecake.inquisition.mapper.mapstruct.CDKConvert;
@@ -60,25 +61,27 @@ public class CDKServiceImpl implements CDKService {
             return Result.notFound("激活码不存在或已使用");
         }
 
-        if (accountEntity.getExpireTime().isBefore(LocalDateTime.now())) {
-            accountEntity.setExpireTime(LocalDateTime.now());
-        }
-
-        if ("daily".equals(cdkEntity.getType())) {
-            accountEntity.setExpireTime(accountEntity.getExpireTime().plusDays(cdkEntity.getParam()));
-        } else {
-            throw new IllegalStateException("Unexpected value: " + cdkEntity.getType());
+        var taskType = TaskType.getByStr(cdkEntity.getType());
+        switch (taskType) {
+            case DAILY:
+                accountService.addAccountExpireTime(id, 24 * Integer.parseInt(cdkEntity.getParam().split("\\|")[0]));
+                break;
+            case ROGUE:
+            case ROGUE2:
+            case SAND_FIRE:
+                accountService.initiateTaskConversion(taskType, id, cdkEntity.getParam());
+                break;
+            default:
+                break;
         }
 
         cdkEntity.setUsed(1);
         if (cdkEntity.getIsAgent() == 1) {
             accountEntity.setAgent(cdkEntity.getAgent());
+            accountMapper.updateById(accountEntity);
         }
-        accountEntity.setFreeze(0);
-        accountEntity.setUpdateTime(LocalDateTime.now());
 
         cdkMapper.updateById(cdkEntity);
-        accountMapper.updateById(accountEntity);
 
         dynamicInfo.setUserSan(accountEntity.getId(), 135, 135);
 
@@ -99,9 +102,9 @@ public class CDKServiceImpl implements CDKService {
         }
 
         if ("daily".equals(cdkEntity.getType())) {
-            accountEntity.setExpireTime(LocalDateTime.now().plusDays(cdkEntity.getParam()));
+            accountEntity.setExpireTime(LocalDateTime.now().plusDays(24L * Integer.parseInt(cdkEntity.getParam().split("\\|")[0])));
         } else {
-            throw new IllegalStateException("Unexpected value: " + cdkEntity.getType());
+            accountEntity.setExpireTime(LocalDateTime.now());
         }
 
         cdkEntity.setUsed(1);
@@ -117,6 +120,11 @@ public class CDKServiceImpl implements CDKService {
         cdkMapper.updateById(cdkEntity);
         logService.logInfo("CDK使用", "使用CDK " + cdk + " 创建了账号 " + accountEntity.getAccount());
         accountMapper.insert(accountEntity);
+
+        if (!"daily".equals(cdkEntity.getType())) {
+            var taskType = TaskType.getByStr(cdkEntity.getType());
+            accountService.initiateTaskConversion(taskType, accountEntity.getId(), cdkEntity.getParam());
+        }
 
 
         var account = accountMapper.selectOne(

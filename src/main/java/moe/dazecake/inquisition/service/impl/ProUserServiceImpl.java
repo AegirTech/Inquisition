@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import moe.dazecake.inquisition.constant.ResponseCodeConstants;
 import moe.dazecake.inquisition.constant.enums.CDKWrapper;
+import moe.dazecake.inquisition.constant.enums.TaskType;
 import moe.dazecake.inquisition.mapper.AccountMapper;
+import moe.dazecake.inquisition.mapper.GoodsMapper;
 import moe.dazecake.inquisition.mapper.LogMapper;
 import moe.dazecake.inquisition.mapper.ProUserMapper;
 import moe.dazecake.inquisition.mapper.mapstruct.AccountConvert;
@@ -50,6 +52,9 @@ public class ProUserServiceImpl implements ProUserService {
 
     @Resource
     private AccountMapper accountMapper;
+
+    @Resource
+    private GoodsMapper goodsMapper;
 
     @Resource
     private LogMapper logMapper;
@@ -248,6 +253,9 @@ public class ProUserServiceImpl implements ProUserService {
 
     @Override
     public Result<String> createCdkByProUser(Long id, CreateCDKDTO createCDKDTO) {
+        if (!"daily".equals(createCDKDTO.getType())) {
+            return Result.paramError("参数错误，暂不支持其他类型的cdk创建");
+        }
         var proUser = proUserMapper.selectById(id);
 
         if (proUser == null) {
@@ -255,12 +263,12 @@ public class ProUserServiceImpl implements ProUserService {
         }
 
         //检查余额
-        if (proUser.getBalance() < createCDKDTO.getCount() * dailyPrice * createCDKDTO.getParam() * proUser.getDiscount()) {
+        if (proUser.getBalance() < createCDKDTO.getCount() * dailyPrice * Integer.parseInt(createCDKDTO.getParam().split("\\|")[0]) * proUser.getDiscount()) {
             return Result.forbidden("余额不足");
         }
 
         //扣除余额
-        proUser.setBalance(proUser.getBalance() - createCDKDTO.getCount() * dailyPrice * createCDKDTO.getParam() * proUser.getDiscount());
+        proUser.setBalance(proUser.getBalance() - createCDKDTO.getCount() * dailyPrice * Integer.parseInt(createCDKDTO.getParam().split("\\|")[0]) * proUser.getDiscount());
         proUserMapper.updateById(proUser);
 
         createCDKDTO.setAgent(id);
@@ -280,7 +288,7 @@ public class ProUserServiceImpl implements ProUserService {
         }
 
         if (proUser == null) {
-            return Result.notFound("未找到该用户");
+            return Result.notFound("未找到该代理");
         }
 
         //检查余额
@@ -292,12 +300,7 @@ public class ProUserServiceImpl implements ProUserService {
         proUser.setBalance(proUser.getBalance() - mo * 30 * dailyPrice * proUser.getDiscount());
         proUserMapper.updateById(proUser);
 
-        if (subUser.getExpireTime().isAfter(LocalDateTime.now())) {
-            subUser.setExpireTime(subUser.getExpireTime().plusDays(mo * 30));
-        } else {
-            subUser.setExpireTime(LocalDateTime.now().plusDays(mo * 30));
-        }
-        accountMapper.updateById(subUser);
+        accountService.addAccountExpireTime(userID, mo * 30 * 24);
         return Result.success("续费成功");
     }
 
@@ -350,6 +353,35 @@ public class ProUserServiceImpl implements ProUserService {
             result.add(AccountConvert.INSTANCE.toAccountDTO(accountEntity));
         }
         return Result.success(result, "查询成功");
+    }
+
+    @Override
+    public Result<String> buyGoodsForSubUser(Long id, Long userID, Long goodsID) {
+        var proUser = proUserMapper.selectById(id);
+        var subUser = accountMapper.selectById(userID);
+        var goods = goodsMapper.selectById(goodsID);
+
+        if (proUser == null) {
+            return Result.notFound("未找到该用户");
+        } else if (subUser == null) {
+            return Result.notFound("未找到该用户");
+        } else if (goods == null) {
+            return Result.notFound("未找到该商品");
+        }
+
+        //检查余额
+        if (proUser.getBalance() < goods.getPrice() * proUser.getDiscount()) {
+            return Result.forbidden("余额不足");
+        }
+
+        //扣除余额
+        proUser.setBalance(proUser.getBalance() - goods.getPrice() * proUser.getDiscount());
+        proUserMapper.updateById(proUser);
+
+        //执行购买
+        accountService.initiateTaskConversion(TaskType.getByStr(goods.getType()), subUser.getId(), goods.getParams());
+
+        return Result.success("购买成功");
     }
 
     @NotNull

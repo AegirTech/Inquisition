@@ -30,7 +30,6 @@ public class GoodsController {
         return goodsService.getGoodsList(true);
     }
 
-    @UserLogin
     @Operation(summary = "获取商品列表")
     @GetMapping("/getGoodsList")
     public Result<ArrayList<GoodsInfoVO>> getGoodsList() {

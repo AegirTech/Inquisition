@@ -6,7 +6,7 @@ import lombok.Data;
 public class CreateCDKDTO {
     private String type;
 
-    private Integer param;
+    private String param;
 
     private String tag;
 

@@ -1,6 +1,5 @@
 package moe.dazecake.inquisition.service.intf;
 
-import moe.dazecake.inquisition.constant.enums.TaskType;
 import moe.dazecake.inquisition.model.dto.account.AccountDTO;
 import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.utils.Result;
@@ -101,17 +100,5 @@ public interface TaskService {
     void forceHaltTask(Long id);
 
     void calculatingSan();
-
-    /**
-     * 启动任务类型转换
-     *
-     * @param taskType 任务类型
-     * @param userId   用户id
-     * @param params   参数
-     * @return boolean 是否成功启动转换任务
-     * @author DazeCake
-     * @date 2023/5/3 10:29
-     */
-    boolean initiateTaskConversion(TaskType taskType, Long userId, String params);
 
 }

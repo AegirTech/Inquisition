@@ -30,6 +30,9 @@ public class AccountServiceImpl implements AccountService {
     AccountMapper accountMapper;
 
     @Resource
+    MessageServiceImpl messageService;
+
+    @Resource
     TaskServiceImpl taskService;
 
     @Override
@@ -201,10 +204,47 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void resetAccountType(Long id, TaskType type) {
+    public boolean initiateTaskConversion(TaskType taskType, Long userId, String params) {
+        var user = accountMapper.selectById(userId);
+        if (user == null || user.getDelete() == 1 || user.getFreeze() == 1) {
+            return false;
+        }
+
+        user.setTaskType(taskType.getType());
+        switch (taskType) {
+            case ROGUE:
+            case ROGUE2:
+                user.getConfig().getRogue().setLevel(Integer.parseInt(params.split("\\|")[0]));
+                user.getConfig().getRogue().setCoin(Integer.parseInt(params.split("\\|")[1]));
+                addAccountExpireTime(userId, 24 * 3);
+                break;
+            case SAND_FIRE:
+                addAccountExpireTime(userId, 24);
+                break;
+            default:
+                return false;
+        }
+        accountMapper.updateById(user);
+
+        forceFightAccount(userId, true);
+
+        messageService.push(user, "作战类型切换", "您的作战类型已切换为: " + taskType.getName() + " 即将开始作战\n");
+
+        return true;
+    }
+
+    @Override
+    public void addAccountExpireTime(Long id, Integer hour) {
         var account = accountMapper.selectById(id);
         if (account != null) {
-            account.setTaskType(type.getType());
+            account.setDelete(0);
+            if (account.getExpireTime().isBefore(LocalDateTime.now())) {
+                account.setExpireTime(LocalDateTime.now().plusHours(hour));
+            } else {
+                account.setExpireTime(account.getExpireTime().plusHours(hour));
+            }
+            account.setUpdateTime(LocalDateTime.now());
+            account.setFreeze(0);
             accountMapper.updateById(account);
         }
     }

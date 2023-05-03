@@ -37,7 +37,7 @@ public class CDKEntity {
 
     @Column(name = "param",comment = "参数")
     @Schema(description = "参数")
-    Integer param;
+    String param;
 
     @Column(name = "tag",comment = "tag")
     @Schema(description = "tag")

@@ -180,4 +180,12 @@ public class ProUserController {
                                             @RequestBody ProUserRenewalSubUserDTO proUserRenewalSubUserDTO) {
         return proUserService.renewSubUserDaily(JWTUtils.getId(token), proUserRenewalSubUserDTO.getId(), proUserRenewalSubUserDTO.getMo());
     }
+
+    @ProUserLogin
+    @Operation(summary = "pro_user代购商品")
+    @PostMapping("/buyGoodsForSubUser")
+    public Result<String> buyGoodsForSubUser(@RequestHeader("Authorization") String token,
+                                             @RequestBody BuyGoodsForSubUserDTO buyGoodsForSubUserDTO) {
+        return proUserService.buyGoodsForSubUser(JWTUtils.getId(token), buyGoodsForSubUserDTO.getSubUserId(), buyGoodsForSubUserDTO.getGoodsId());
+    }
 }

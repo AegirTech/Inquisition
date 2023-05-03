@@ -69,9 +69,6 @@ public class PayServiceImpl implements PayService {
     @Resource
     AccountServiceImpl accountService;
 
-    @Resource
-    TaskServiceImpl taskService;
-
     @Override
     public BillEntity createOrder(Double amount, String payType, String returnPath) {
         if (!enablePay || merchantNum.equals("") || backUrl.equals("") || payToken.equals("")) {
@@ -142,11 +139,7 @@ public class PayServiceImpl implements PayService {
             case DAILY:
                 var user = accountMapper.selectById(bill.getUserId());
 
-                if (user.getExpireTime().isBefore(LocalDateTime.now())) {
-                    user.setExpireTime(LocalDateTime.now());
-                }
-                user.setUpdateTime(LocalDateTime.now());
-                user.setExpireTime(user.getExpireTime().plusDays(Integer.parseInt(bill.getParam())));
+                accountService.addAccountExpireTime(user.getId(), 24 * Integer.parseInt(bill.getParam()));
 
                 //代理佣金
                 if (user.getAgent() != null) {
@@ -183,7 +176,7 @@ public class PayServiceImpl implements PayService {
                 break;
             default:
                 //一次性任务处理
-                return taskService.initiateTaskConversion(TaskType.getByStr(bill.getType()), bill.getUserId(), bill.getParam());
+                return accountService.initiateTaskConversion(TaskType.getByStr(bill.getType()), bill.getUserId(), bill.getParam());
         }
 
         return false;

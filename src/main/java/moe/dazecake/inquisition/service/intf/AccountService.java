@@ -51,7 +51,7 @@ public interface AccountService {
      *
      * @param current 当前页
      * @param size    每页数量
-     * @return: moe.dazecake.inquisition.model.vo.query.PageQueryVO<moe.dazecake.inquisition.model.vo.account.AccountWithSanVO>
+     * @return moe.dazecake.inquisition.model.vo.query.PageQueryVO<moe.dazecake.inquisition.model.vo.account.AccountWithSanVO>
      * @author DazeCake
      * @date 2023/1/25 23:34
      */
@@ -63,7 +63,7 @@ public interface AccountService {
      * @param current 当前页
      * @param size    每页数量
      * @param keyword 关键字 优先级：ID --> account --> name
-     * @return: moe.dazecake.inquisition.model.vo.query.PageQueryVO<moe.dazecake.inquisition.model.vo.account.AccountWithSanVO>
+     * @return moe.dazecake.inquisition.model.vo.query.PageQueryVO<moe.dazecake.inquisition.model.vo.account.AccountWithSanVO>
      * @author DazeCake
      * @date 2023/1/25 23:35
      */
@@ -84,7 +84,7 @@ public interface AccountService {
      *
      * @param id      id
      * @param isAdmin 是否以管理员身份执行
-     * @return: java.lang.String 返回的结果消息
+     * @return java.lang.String 返回的结果消息
      * @author DazeCake
      * @date 2023/1/25 23:59
      */
@@ -94,20 +94,32 @@ public interface AccountService {
      * 重置账号的动态信息，包括理智等内容
      *
      * @param id id
-     * @return: java.lang.String 返回的结果消息
+     * @return java.lang.String 返回的结果消息
      * @author DazeCake
      * @date 2023/1/26 0:15
      */
     String resetAccountDynamicInfo(Long id);
 
-    /***
-     * 重设账号任务类型
+    /**
+     * 启动任务类型转换
      *
-     * @param id 账号id
-     * @param type 任务类型
+     * @param taskType 任务类型
+     * @param userId   用户id
+     * @param params   参数
+     * @return boolean 是否成功启动转换任务
      * @author DazeCake
-     * @date 2023/4/28 20:40
+     * @date 2023/5/3 10:29
      */
-    void resetAccountType(Long id, TaskType type);
+    boolean initiateTaskConversion(TaskType taskType, Long userId, String params);
+
+    /**
+     * 增加账号过期时间
+     *
+     * @param id   账号id
+     * @param hour 增加的小时数
+     * @author DazeCake
+     * @date 2023/5/3 18:41
+     */
+    void addAccountExpireTime(Long id, Integer hour);
 }
 
