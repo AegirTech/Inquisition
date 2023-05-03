@@ -49,6 +49,8 @@ public class LogServiceImpl implements LogService {
             logEntity.setFrom("SYSTEM");
         } else {
             specialScan(addLogDTO);
+            //去除 "hikay960q4 "
+            logEntity.setDetail(logEntity.getDetail().replace("hikay960q4 ", ""));
         }
         logMapper.insert(logEntity);
     }

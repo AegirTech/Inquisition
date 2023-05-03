@@ -182,6 +182,7 @@ public class PayServiceImpl implements PayService {
                 }
                 break;
             default:
+                //一次性任务处理
                 return taskService.initiateTaskConversion(TaskType.getByStr(bill.getType()), bill.getUserId(), bill.getParam());
         }
 

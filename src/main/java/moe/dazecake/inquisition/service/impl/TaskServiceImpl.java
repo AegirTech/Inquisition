@@ -142,7 +142,7 @@ public class TaskServiceImpl implements TaskService {
             lockTask(deviceToken, account);
 
             //记录日志
-            log(deviceToken, account, "INFO", "任务开始", "任务开始", null);
+//            log(deviceToken, account, "INFO", "任务开始", "任务开始", null);
 
             //推送消息
             messageService.push(account, "任务开始", "请勿强行顶号，强行顶号将导致轮空");
@@ -180,28 +180,34 @@ public class TaskServiceImpl implements TaskService {
         }
 
         //记录日志
-        log(deviceToken, account, "INFO", "任务完成", "请查看上一条日志以查看状态", imageUrl);
+//        log(deviceToken, account, "INFO", "任务完成", "请查看上一条日志以查看状态", imageUrl);
 
+        var taskType = TaskType.getByStr(account.getTaskType());
         //推送消息
-        switch (TaskType.getByStr(account.getTaskType())) {
-            case DAILY:
-                messageService.push(account, "每日任务完成", "任务完成，可登陆面板查看作战结果\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
-                break;
-            case ROGUE:
-            case ROGUE2:
-                messageService.pushAdmin("肉鸽任务完成", "用户: " + account.getName() + " 肉鸽任务已完成\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
-                messageService.push(account, "肉鸽任务完成", "肉鸽任务已完成，可登陆面板查看作战结果\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
-                //恢复日常任务
-                account.setTaskType("daily");
-                accountMapper.updateById(account);
-                break;
-            case SAND_FIRE:
-                messageService.pushAdmin("生息演算任务完成", "用户: " + account.getName() + " 生息演算任务已完成\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
-                messageService.push(account, "生息演算任务完成", "生息演算任务已完成，可登陆面板查看作战结果\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
-                //恢复日常任务
-                account.setTaskType("daily");
-                accountMapper.updateById(account);
-                break;
+//        switch (TaskType.getByStr(account.getTaskType())) {
+//            case DAILY:
+//                messageService.push(account, "每日任务完成", "任务完成，可登陆面板查看作战结果\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
+//                break;
+//            case ROGUE:
+//            case ROGUE2:
+//                messageService.pushAdmin("肉鸽任务完成", "用户: " + account.getName() + " 肉鸽任务已完成\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
+//                messageService.push(account, "肉鸽任务完成", "肉鸽任务已完成，可登陆面板查看作战结果\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
+//                //恢复日常任务
+//                account.setTaskType("daily");
+//                accountMapper.updateById(account);
+//                break;
+//            case SAND_FIRE:
+//                messageService.pushAdmin("生息演算任务完成", "用户: " + account.getName() + " 生息演算任务已完成\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
+//                messageService.push(account, "生息演算任务完成", "生息演算任务已完成，可登陆面板查看作战结果\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
+//                //恢复日常任务
+//                account.setTaskType("daily");
+//                accountMapper.updateById(account);
+//                break;
+//        }
+        messageService.push(account, taskType.getName() + "任务完成", taskType.getName() + "任务完成，可登陆面板查看作战结果\n" + "<img src=\"" + imageUrl + "\" alt=\"screenshots\">");
+        if (taskType != TaskType.DAILY) {
+            account.setTaskType(TaskType.DAILY.getType());
+            accountMapper.updateById(account);
         }
 
         //移除队列
@@ -693,7 +699,7 @@ public class TaskServiceImpl implements TaskService {
 
         accountService.forceFightAccount(userId, true);
 
-        messageService.push(user, "作战类型切换", "您的作战类型已切换为: " + taskType.getName() + " 正在等待分配，即将开始作战\n");
+        messageService.push(user, "作战类型切换", "您的作战类型已切换为: " + taskType.getName() + " 即将开始作战\n");
 
         return true;
     }
