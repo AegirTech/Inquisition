@@ -6,9 +6,11 @@ import moe.dazecake.inquisition.annotation.Login;
 import moe.dazecake.inquisition.model.dto.account.AccountDTO;
 import moe.dazecake.inquisition.model.dto.account.AccountIDDTO;
 import moe.dazecake.inquisition.model.dto.account.AddAccountDTO;
+import moe.dazecake.inquisition.model.dto.user.UserStatusSTO;
 import moe.dazecake.inquisition.model.vo.account.AccountWithSanVO;
 import moe.dazecake.inquisition.model.vo.query.PageQueryVO;
 import moe.dazecake.inquisition.service.impl.AccountServiceImpl;
+import moe.dazecake.inquisition.service.impl.UserServiceImpl;
 import moe.dazecake.inquisition.utils.Result;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +24,9 @@ public class AccountController {
 
     @Resource
     AccountServiceImpl accountService;
+
+    @Resource
+    UserServiceImpl userService;
 
     @Login
     @Operation(summary = "增加账号")
@@ -90,5 +95,19 @@ public class AccountController {
     @PostMapping("/resetAccountDynamicInfo")
     public Result<String> fixAccount(@RequestBody AccountIDDTO accountIDDTO) {
         return Result.success(null, accountService.resetAccountDynamicInfo(accountIDDTO.getId()));
+    }
+
+    @Login
+    @Operation(summary = "查询用户状态")
+    @GetMapping("/showUserStatus")
+    public Result<UserStatusSTO> showUserStatus(Long userId) {
+        return userService.showMyStatus(userId);
+    }
+
+    @Login
+    @Operation(summary = "查询用户当前理智")
+    @GetMapping("/showUserSan")
+    public Result<String> showUserSan(Long userId) {
+        return userService.showMySan(userId);
     }
 }
