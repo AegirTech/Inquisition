@@ -18,6 +18,11 @@ import java.util.List;
 public class MemoryInfo {
 
     //======================
+    //全局启动
+    //======================
+    public Boolean active = true;
+
+    //======================
     //队列 仅存储用户ID
     //======================
     public ArrayList<Long> waitUserList = new ArrayList<>();

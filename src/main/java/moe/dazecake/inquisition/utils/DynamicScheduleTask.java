@@ -145,24 +145,26 @@ public class DynamicScheduleTask implements SchedulingConfigurer {
         //任务超时检测
         taskRegistrar.addTriggerTask(
                 () -> {
-                    //log.info("任务超时检测");
-                    LocalDateTime nowTime = LocalDateTime.now();
-                    int num = 0;
-                    synchronized (dynamicInfo.getWorkUserList()) {
-                        for (Long worker : dynamicInfo.getWorkUserList()) {
-                            if (!dynamicInfo.getWorkUserInfoMap().containsKey(worker)) {
-                                continue;
-                            }
-                            if (dynamicInfo.getWorkUserExpireTime(worker).isBefore(nowTime)) {
-                                //记录日志
-                                logService.logWarn("任务超时", "");
-                                taskService.forceHaltTask(worker);
-                                num++;
+                    if (dynamicInfo.getActive()) {
+                        //log.info("任务超时检测");
+                        LocalDateTime nowTime = LocalDateTime.now();
+                        int num = 0;
+                        synchronized (dynamicInfo.getWorkUserList()) {
+                            for (Long worker : dynamicInfo.getWorkUserList()) {
+                                if (!dynamicInfo.getWorkUserInfoMap().containsKey(worker)) {
+                                    continue;
+                                }
+                                if (dynamicInfo.getWorkUserExpireTime(worker).isBefore(nowTime)) {
+                                    //记录日志
+                                    logService.logWarn("任务超时", "");
+                                    taskService.forceHaltTask(worker);
+                                    num++;
+                                }
                             }
                         }
-                    }
-                    if (num > 0) {
-                        log.info("【审判庭】 已处理超时任务数: " + num);
+                        if (num > 0) {
+                            log.info("【审判庭】 已处理超时任务数: " + num);
+                        }
                     }
                 },
                 triggerContext -> new CronTrigger("0 0/5 * * * ?").nextExecutionTime(triggerContext)

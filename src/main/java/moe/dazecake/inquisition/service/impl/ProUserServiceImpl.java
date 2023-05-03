@@ -69,12 +69,6 @@ public class ProUserServiceImpl implements ProUserService {
     @Value("${inquisition.price.daily:1.0}")
     private Double dailyPrice;
 
-    @Value("${inquisition.price.rogue_1:40.0}")
-    private Double rogue1Price;
-
-    @Value("${inquisition.price.rogue_2:40.0}")
-    private Double rogue2Price;
-
     @Override
     public void CreateProUser(CreateProUserDTO createProUserDTO) {
         var proUserEntity = ProUserConvert.INSTANCE.toProUserEntity(createProUserDTO);

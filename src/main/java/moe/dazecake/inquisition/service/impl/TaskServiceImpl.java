@@ -64,6 +64,11 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Result<AccountDTO> getTask(String deviceToken) {
+
+        if (!dynamicInfo.getActive()) {
+            return Result.failed("审判庭暂停任务授权中");
+        }
+
         //设备合法性检查
         var device = deviceMapper.selectOne(Wrappers.<DeviceEntity>lambdaQuery()
                 .eq(DeviceEntity::getDeviceToken, deviceToken));

@@ -30,6 +30,7 @@ public class DynamicInfo extends MemoryInfo {
     //======================
 
     public void load(MemoryInfo memoryInfo) {
+        this.setActive(memoryInfo.getActive());
         this.setWaitUserList(memoryInfo.getWaitUserList());
         this.setWorkUserList(memoryInfo.getWorkUserList());
         this.setHaltList(memoryInfo.getHaltList());
@@ -43,6 +44,7 @@ public class DynamicInfo extends MemoryInfo {
 
     public MemoryInfo dump() {
         return new MemoryInfo(
+                this.getActive(),
                 this.getWaitUserList(),
                 this.getWorkUserList(),
                 this.getHaltList(),

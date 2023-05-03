@@ -252,6 +252,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Result<UserStatusSTO> showMyStatus(Long id) {
+        if (!dynamicInfo.getActive()) {
+            return Result.success(new UserStatusSTO("服务器维护中"), "获取成功");
+        }
         var user = accountMapper.selectOne(
                 Wrappers.<AccountEntity>lambdaQuery()
                         .eq(AccountEntity::getId, id)
@@ -309,7 +312,9 @@ public class UserServiceImpl implements UserService {
         } else if (dynamicInfo.getWorkUserList().contains(id)) {
             ans = "等待作战结束以校准理智";
         } else if (!dynamicInfo.getUserSanInfoMap().containsKey(id)) {
-            ans = "出现严重错误，请立即使用立即作战以校准";
+            if (dynamicInfo.getActive()) {
+                ans = "出现严重错误，请立即使用立即作战以校准";
+            }
         } else {
             ans = dynamicInfo.getUserSanInfoMap().get(id).getSan() + "/" + dynamicInfo.getUserSanInfoMap().get(id).getMaxSan();
         }
