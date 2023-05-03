@@ -57,7 +57,18 @@ public class DynamicInfo extends MemoryInfo {
     //获取所有等待队列详细信息
     public ArrayList<AccountEntity> getAllWaitUserInfo() {
         if (this.waitUserList.size() != 0) {
-            return new ArrayList<>(accountMapper.selectBatchIds(waitUserList));
+            var waitTasks = new ArrayList<>(accountMapper.selectBatchIds(waitUserList));
+            waitUserList.forEach(
+                    it -> {
+                        for (AccountEntity waitTask : waitTasks) {
+                            if (it.equals(waitTask.getId())) {
+                                waitTasks.add(waitTask);
+                                break;
+                            }
+                        }
+                    }
+            );
+            return waitTasks;
         } else {
             return new ArrayList<>();
         }
@@ -68,11 +79,18 @@ public class DynamicInfo extends MemoryInfo {
         if (workUserList.size() != 0) {
             var workers = new ArrayList<>(accountMapper.selectBatchIds(workUserList));
             var lockTasks = new ArrayList<LockTask>();
-            for (var worker : workers) {
-                lockTasks.add(new LockTask(workUserInfoMap.get(worker.getId()).getDeviceToken(),
-                        worker,
-                        workUserInfoMap.get(worker.getId()).getExpirationTime()));
-            }
+            workUserList.forEach(
+                    it -> {
+                        for (AccountEntity worker : workers) {
+                            if (it.equals(worker.getId())) {
+                                lockTasks.add(new LockTask(workUserInfoMap.get(worker.getId()).getDeviceToken(),
+                                        worker,
+                                        workUserInfoMap.get(worker.getId()).getExpirationTime()));
+                                break;
+                            }
+                        }
+                    }
+            );
             return lockTasks;
         } else {
             return new ArrayList<>();
