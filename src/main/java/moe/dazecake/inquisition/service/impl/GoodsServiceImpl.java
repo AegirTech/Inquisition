@@ -9,10 +9,12 @@ import moe.dazecake.inquisition.model.entity.GoodsEntity;
 import moe.dazecake.inquisition.model.vo.goods.GoodsInfoVO;
 import moe.dazecake.inquisition.service.intf.GoodsService;
 import moe.dazecake.inquisition.utils.Result;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
 
+@Service
 public class GoodsServiceImpl implements GoodsService {
 
     @Resource

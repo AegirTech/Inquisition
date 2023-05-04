@@ -27,13 +27,15 @@ public interface DeviceConvert {
             @Mapping(target = "chinac", constant = "0"),
             @Mapping(target = "region", expression = "java(null)"),
             @Mapping(target = "delete", constant = "0"),
-            @Mapping(target = "deviceToken", expression = "java(org.apache.commons.lang3.RandomStringUtils.randomAlphabetic(16))")
+            @Mapping(target = "deviceToken", expression = "java(org.apache.commons.lang3.RandomStringUtils.randomAlphabetic(16))"),
+            @Mapping(target = "workScope",expression = "java(new ArrayList<>())"),
     })
     AddDeviceDTO toAddDeviceDTO(AddCommonDeviceDTO addCommonDeviceDTO);
 
     @Mappings({
             @Mapping(target = "id", constant = "0L"),
-            @Mapping(target = "delete", constant = "0")
+            @Mapping(target = "delete", constant = "0"),
+            @Mapping(target = "workScope",expression = "java(new ArrayList<>())"),
     })
     AddDeviceDTO toAddDeviceDTO(AddChinacDeviceDTO addChinacDeviceDTO);
 
