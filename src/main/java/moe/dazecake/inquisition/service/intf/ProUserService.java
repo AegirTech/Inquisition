@@ -226,4 +226,15 @@ public interface ProUserService {
      * @date 2023/5/3 18:19
      */
     Result<String> buyGoodsForSubUser(Long id, Long userID, Long goodsID);
+
+    /**
+     * 删除并回收用户
+     *
+     * @param id     代理账号ID
+     * @param userID 用户ID
+     * @return moe.dazecake.inquisition.utils.Result<java.lang.String>
+     * @author DazeCake
+     * @date 2023/5/4 16:55
+     */
+    Result<String> deleteAndRecycleUser(Long id, Long userID);
 }

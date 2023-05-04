@@ -188,4 +188,12 @@ public class ProUserController {
                                              @RequestBody BuyGoodsForSubUserDTO buyGoodsForSubUserDTO) {
         return proUserService.buyGoodsForSubUser(JWTUtils.getId(token), buyGoodsForSubUserDTO.getSubUserId(), buyGoodsForSubUserDTO.getGoodsId());
     }
+
+    @ProUserLogin
+    @Operation(summary = "删除并回收用户")
+    @PostMapping("/deleteAndRecycleUser")
+    public Result<String> deleteAndRecycleUser(@RequestHeader("Authorization") String token,
+                                               @RequestBody AccountIDDTO accountIDDTO) {
+        return proUserService.deleteAndRecycleUser(JWTUtils.getId(token), accountIDDTO.getId());
+    }
 }

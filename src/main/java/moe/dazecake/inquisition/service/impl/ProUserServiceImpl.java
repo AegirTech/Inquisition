@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -382,6 +383,29 @@ public class ProUserServiceImpl implements ProUserService {
         accountService.initiateTaskConversion(TaskType.getByStr(goods.getType()), subUser.getId(), goods.getParams());
 
         return Result.success("购买成功");
+    }
+
+    @Override
+    public Result<String> deleteAndRecycleUser(Long id, Long userID) {
+        var proUser = proUserMapper.selectById(id);
+        var subUser = accountMapper.selectById(userID);
+        if (proUser == null) {
+            return Result.notFound("未找到该用户");
+        } else if (subUser == null) {
+            return Result.notFound("未找到该用户");
+        }
+        var msg = "";
+        if (subUser.getExpireTime().isAfter(LocalDateTime.now())) {
+            var recoveryDays = Duration.between(subUser.getExpireTime(), LocalDateTime.now()).toDays();
+            proUser.setBalance(proUser.getBalance() + recoveryDays * dailyPrice * proUser.getDiscount());
+            proUserMapper.updateById(proUser);
+            msg = "该用户还未过期，已回收" + recoveryDays + "天，共计" + recoveryDays * dailyPrice * proUser.getDiscount() + "元。当前余额：" + proUser.getBalance();
+        } else {
+            msg = "该用户已过期，无需回收。当前余额：" + proUser.getBalance();
+        }
+        subUser.setDelete(1);
+        accountMapper.updateById(subUser);
+        return Result.success(msg, "删除成功");
     }
 
     @NotNull
