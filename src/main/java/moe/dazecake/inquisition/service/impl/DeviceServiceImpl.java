@@ -3,9 +3,11 @@ package moe.dazecake.inquisition.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import moe.dazecake.inquisition.constant.enums.TaskType;
+import moe.dazecake.inquisition.mapper.AccountMapper;
 import moe.dazecake.inquisition.mapper.DeviceMapper;
 import moe.dazecake.inquisition.mapper.mapstruct.DeviceConvert;
 import moe.dazecake.inquisition.model.dto.device.*;
+import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.DeviceEntity;
 import moe.dazecake.inquisition.model.vo.device.DeviceScreenshotVO;
 import moe.dazecake.inquisition.model.vo.device.DeviceVO;
@@ -31,6 +33,9 @@ public class DeviceServiceImpl implements DeviceService {
     @Resource
     ChinacServiceImpl chinacService;
 
+    @Resource
+    AccountMapper accountMapper;
+
     @Override
     public void addDevice(AddDeviceDTO addDeviceDTO) {
         deviceMapper.insert(DeviceConvert.INSTANCE.toDeviceEntity(addDeviceDTO));
@@ -53,6 +58,13 @@ public class DeviceServiceImpl implements DeviceService {
 
         if (deviceEntity != null) {
             deviceEntity.setDelete(1);
+            var releaseUsers = accountMapper.selectList(Wrappers.<AccountEntity>lambdaQuery()
+                    .eq(AccountEntity::getServer, 1)
+                    .like(AccountEntity::getBLimitDevice, deviceEntity.getDeviceToken()));
+            for (AccountEntity releaseUser : releaseUsers) {
+                releaseUser.getBLimitDevice().remove(deviceEntity.getDeviceToken());
+                accountMapper.updateById(releaseUser);
+            }
             deviceMapper.updateById(deviceEntity);
             dynamicInfo.getDeviceStatusMap().remove(deviceEntity.getDeviceToken());
         }

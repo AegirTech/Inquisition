@@ -90,6 +90,12 @@ public class TaskServiceImpl implements TaskService {
             while (iterator.hasNext()) {
                 account = accountMapper.selectById(iterator.next());
 
+                //删除检查
+                if (account.getDelete() == 1 || account.getExpireTime().isAfter(LocalDateTime.now())) {
+                    iterator.remove();
+                    continue;
+                }
+
                 //作用域检查
                 if (!device.getWorkScope().contains(account.getTaskType())) {
                     continue;
@@ -231,7 +237,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         //记录日志
-        log(deviceToken, account, "WARN", "任务失败", "任务失败,请查看上一条日志检查原因: " + type, imageUrl);
+//        log(deviceToken, account, "WARN", "任务失败", "任务失败,请查看上一条日志检查原因: " + type, imageUrl);
 
         //移除队列
         dynamicInfo.removeWorkUser(account.getId());
