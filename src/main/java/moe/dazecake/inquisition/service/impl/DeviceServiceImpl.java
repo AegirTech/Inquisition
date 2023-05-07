@@ -11,6 +11,7 @@ import moe.dazecake.inquisition.model.entity.AccountEntity;
 import moe.dazecake.inquisition.model.entity.DeviceEntity;
 import moe.dazecake.inquisition.model.vo.device.DeviceScreenshotVO;
 import moe.dazecake.inquisition.model.vo.device.DeviceVO;
+import moe.dazecake.inquisition.model.vo.device.LoadDevice;
 import moe.dazecake.inquisition.model.vo.device.LoadDeviceVO;
 import moe.dazecake.inquisition.model.vo.query.PageQueryVO;
 import moe.dazecake.inquisition.service.intf.DeviceService;
@@ -19,7 +20,6 @@ import moe.dazecake.inquisition.utils.Result;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 
 @Service
 public class DeviceServiceImpl implements DeviceService {
@@ -91,18 +91,17 @@ public class DeviceServiceImpl implements DeviceService {
             if (device.getChinac() == null) {
                 device.setChinac(0);
             }
-
-            result.getLoadDeviceList().add(new HashMap<>() {
-                {
-                    put("id", String.valueOf(device.getId()));
-                    put("deviceName", device.getDeviceName());
-                    put("deviceToken", device.getDeviceToken());
-                    put("isChinac", device.getChinac().toString());
-                    put("region", device.getRegion());
-                    put("expireTime", String.valueOf(device.getExpireTime()));
-                    put("status", String.valueOf(dynamicInfo.getDeviceStatusMap().get(device.getDeviceToken())));
-                }
-            });
+            var loadDevice = new LoadDevice();
+            loadDevice.setId(device.getId());
+            loadDevice.setDeviceName(device.getDeviceName());
+            loadDevice.setDeviceToken(device.getDeviceToken());
+            loadDevice.setWorkScope(device.getWorkScope());
+            loadDevice.setChinac(device.getChinac());
+            loadDevice.setRegion(device.getRegion());
+            loadDevice.setExpireTime(device.getExpireTime());
+            loadDevice.setDelete(device.getDelete());
+            loadDevice.setStatus(dynamicInfo.getDeviceStatusMap().get(device.getDeviceToken()));
+            result.getLoadDeviceList().add(loadDevice);
         }
         return result;
     }

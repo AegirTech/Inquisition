@@ -92,6 +92,8 @@ public class TaskServiceImpl implements TaskService {
 
                 //删除检查
                 if (account.getDelete() == 1 || account.getExpireTime().isAfter(LocalDateTime.now())) {
+                    dynamicInfo.getUserSanInfoMap().remove(account.getId());
+                    dynamicInfo.getFreezeUserInfoMap().remove(account.getId());
                     iterator.remove();
                     continue;
                 }
@@ -101,7 +103,7 @@ public class TaskServiceImpl implements TaskService {
                     continue;
                 } else {
                     //B服日常任务不分配至特殊任务设备
-                    if (account.getServer() == 1 && account.getTaskType().equals("daily") && device.getWorkScope().size() > 1) {
+                    if (account.getServer() == 1 && account.getTaskType().equals("daily") && !device.getWorkScope().contains("b_daily")) {
                         continue;
                     }
                 }
@@ -115,7 +117,7 @@ public class TaskServiceImpl implements TaskService {
                 //B服限制检查
                 if (account.getServer() == 1 && account.getBLimitDevice().size() != 0 && account.getTaskType().equals("daily")) {
                     var usedDeviceToken = account.getBLimitDevice().get(0);
-                    if (!Objects.equals(usedDeviceToken, deviceToken)) {
+                    if (!deviceToken.equals(usedDeviceToken)) {
                         if (dynamicInfo.getDeviceStatusMap().containsKey(usedDeviceToken)) {
                             continue;
                         } else {

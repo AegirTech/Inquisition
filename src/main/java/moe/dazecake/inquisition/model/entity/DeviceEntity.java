@@ -64,5 +64,4 @@ public class DeviceEntity {
     @Schema(description = "逻辑删除")
     @TableField(value = "`delete`")
     Integer delete;
-
 }
