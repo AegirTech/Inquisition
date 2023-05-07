@@ -307,12 +307,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public Result<String> showMySan(Long id) {
         var ans = "";
-        if (dynamicInfo.getFreezeUserInfoMap().containsKey(id)) {
-            ans = "账号冻结中";
+        if (!dynamicInfo.getActive()) {
+            ans = "服务器维护中";
+        } else if (dynamicInfo.getFreezeUserInfoMap().containsKey(id)) {
+            ans = "作战失败正在冷却，稍后将自动重试";
         } else if (dynamicInfo.getWorkUserList().contains(id)) {
             ans = "等待作战结束以校准理智";
         } else if (!dynamicInfo.getUserSanInfoMap().containsKey(id)) {
-            if (dynamicInfo.getActive()) {
+            if (accountMapper.selectById(id).getFreeze() == 1) {
+                ans = "账号已被冻结，若需继续托管请先解冻";
+            } else {
                 ans = "出现严重错误，请立即使用立即作战以校准";
             }
         } else {
