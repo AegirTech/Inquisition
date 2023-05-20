@@ -4,6 +4,7 @@ import moe.dazecake.inquisition.utils.Result;
 
 public interface ImageService {
 
-    Result<String> uploadImageToCos(String base64Image);
+    Result<String> uploadImage(String base64Image);
+    
 
 }

@@ -50,13 +50,23 @@ wx-pusher:
   enable: false
   app-token: AT_XXXXX
 
-# 腾讯云COS存储配置 用于存储日志截图 需要自行配置删除规则
+# 存储配置 用于存储日志截图 需要自行配置删除规则 
 storage:
   oss:
+#腾讯云COS
     enable: false
     secretId: xxxx
     secretKey: xxxx
     bucket: xxx-xxx
     region: xxx
+  chfs:
+#CHFS——http://iscute.cn/chfs
+    enable: false
+    url: http://chfsurl:port
+    username: name
+    password: yourpassword
+    uploadDir: /inquisition/log/img
+#uploadDir是CHFS内的相对位置，直接放在主目录下请留空不填(连“/”也不要留)
+
 inquisition:
   secret: xxx # 用于加密token 建议使用系统随机生成的

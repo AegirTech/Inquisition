@@ -62,7 +62,7 @@ public class LogServiceImpl implements LogService {
         if (device == null) {
             return Result.notFound("设备不存在");
         }
-        return imageService.uploadImageToCos(addImageDTO.getBase64Image());
+        return imageService.uploadImage(addImageDTO.getBase64Image());
     }
 
     @Override
