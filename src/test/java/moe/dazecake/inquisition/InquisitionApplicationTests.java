@@ -2,6 +2,8 @@ package moe.dazecake.inquisition;
 
 import moe.dazecake.inquisition.service.impl.ChinacServiceImpl;
 import moe.dazecake.inquisition.service.impl.EmailServiceImpl;
+import moe.dazecake.inquisition.utils.Result;
+import moe.dazecake.inquisition.service.impl.ImageServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +18,7 @@ import java.util.HashMap;
 
 @SpringBootTest(classes = InquisitionApplication.class)
 @RunWith(SpringRunner.class)
-class InquisitionApplicationTests {
+public class InquisitionApplicationTests {
 
     @Autowired
     private ChinacServiceImpl chinacService;
@@ -83,5 +85,15 @@ class InquisitionApplicationTests {
         System.out.println("测试邮件");
         emailService.sendSimpleMail("1936260102@qq.com", "test", "test");
         System.out.println("测试邮件over");
+    }
+
+    @Test
+    void testUploadImage() {
+        ImageServiceImpl imageService = new ImageServiceImpl();
+        System.out.println("测试存储");
+
+        // 调用 uploadImage 方法并返回结果
+        Result<String> result = imageService.uploadImage("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=");
+        System.out.println(result);
     }
 }
