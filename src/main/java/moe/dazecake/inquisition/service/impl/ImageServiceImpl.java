@@ -116,7 +116,7 @@ public class ImageServiceImpl implements ImageService {
                 return Result.failed("登录失败，返回码为 " + statusCode);
             }
             var cookie = loginResponse.headers("Set-Cookie");
-            if (cookie == null || cookie.size() < 2) {
+            if (cookie.size() < 2) {
                 return Result.failed("登录失败，无法获取 Cookie");
             }
             //正则匹配COOKIE中JWT字段后的cookie
