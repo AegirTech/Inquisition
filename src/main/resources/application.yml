@@ -60,12 +60,14 @@ storage:
     bucket: xxx-xxx
     region: xxx
 # S3存储配置
+#各家支持可参考：https://1panel.cn/docs/user_manual/settings/#s3
   s3:
     enable: false 
     endpoint: s3-endpoint-url # 留空则默认使用amazon s3
     accessKey: s3-access-key
     secretKey: s3-secret-key
     bucketName: s3-bucket-name
+    pathStyleAccess: false #设为true:Path Style ;设为false：Virtual Hosted Style
 
 # CHFS——http://iscute.cn/chfs   (开发时CHFS版本为2.0)
 # uploadDir是CHFS内的相对位置，直接放在主目录下请留空不填(连“/”也不要留)

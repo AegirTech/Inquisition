@@ -1,32 +1,28 @@
 package moe.dazecake.inquisition.service.impl;
 
-import com.qcloud.cos.COSClient;
-import com.qcloud.cos.ClientConfig;
-import com.qcloud.cos.auth.BasicCOSCredentials;
-import com.qcloud.cos.http.HttpMethodName;
-import com.qcloud.cos.model.PutObjectRequest;
-import com.qcloud.cos.region.Region;
-
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-
+import com.qcloud.cos.COSClient;
+import com.qcloud.cos.ClientConfig;
+import com.qcloud.cos.auth.BasicCOSCredentials;
+import com.qcloud.cos.http.HttpMethodName;
+import com.qcloud.cos.region.Region;
 import moe.dazecake.inquisition.service.intf.ImageService;
 import moe.dazecake.inquisition.utils.Result;
+import okhttp3.*;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import okhttp3.*;
-import java.util.regex.Pattern;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 @Service
 public class ImageServiceImpl implements ImageService {
@@ -60,6 +56,9 @@ public class ImageServiceImpl implements ImageService {
 
     @Value("${storage.s3.bucketName}")
     private String s3BucketName;
+
+    @Value("${storage.s3.pathStyleAccess}")
+    private boolean pathStyleAccess;
     // chfs
     @Value("${storage.chfs.enable:false}")
     private boolean chfsEnable;
@@ -128,11 +127,11 @@ public class ImageServiceImpl implements ImageService {
         AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
                                 .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Endpoint, null))
                                 .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
-                                .withPathStyleAccessEnabled(true)
+                                .withPathStyleAccessEnabled(pathStyleAccess)
                                 .build();
 
         try {
-            var fileName = String.valueOf(System.currentTimeMillis()) + ".png";
+            var fileName = System.currentTimeMillis() + ".png";
             var file = File.createTempFile(fileName, ".png");
             var fos = new FileOutputStream(file);
             fos.write(Base64.decodeBase64(base64Image));
