@@ -7,6 +7,13 @@ import com.qcloud.cos.http.HttpMethodName;
 import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.region.Region;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+
 import moe.dazecake.inquisition.service.intf.ImageService;
 import moe.dazecake.inquisition.utils.Result;
 import org.apache.commons.codec.binary.Base64;
@@ -23,7 +30,7 @@ import java.util.Date;
 
 @Service
 public class ImageServiceImpl implements ImageService {
-
+    // cos
     @Value("${storage.oss.enable:false}")
     private boolean ossEnable;
 
@@ -38,7 +45,22 @@ public class ImageServiceImpl implements ImageService {
 
     @Value("${storage.oss.region:}")
     private String regionName;
+    // s3
+    @Value("${storage.s3.enable:false}")
+    private boolean s3Enable;
 
+    @Value("${storage.s3.endpoint}")
+    private String s3Endpoint;
+
+    @Value("${storage.s3.accessKey}")
+    private String s3AccessKey;
+
+    @Value("${storage.s3.secretKey}")
+    private String s3SecretKey;
+
+    @Value("${storage.s3.bucketName}")
+    private String s3BucketName;
+    // chfs
     @Value("${storage.chfs.enable:false}")
     private boolean chfsEnable;
 
@@ -54,11 +76,13 @@ public class ImageServiceImpl implements ImageService {
     @Value("${storage.chfs.uploadDir:}")
     private String chfsUploadDir;
 
-
+    
     @Override
     public Result<String> uploadImage(String base64Image) {
         if (ossEnable) {
             return uploadImageToCos(base64Image);
+        } else if (s3Enable) {
+            return uploadImageToS3(base64Image);
         } else if (chfsEnable) {
             return uploadImageToCHFS(base64Image);
         } else {
@@ -81,8 +105,9 @@ public class ImageServiceImpl implements ImageService {
             fos.close();
 
             //上传至 COS
-            PutObjectRequest objectRequest = new PutObjectRequest(bucketName, fileName + ".png", file);
-            cosClient.putObject(objectRequest);
+            com.qcloud.cos.model.PutObjectRequest cosRequest = 
+                new com.qcloud.cos.model.PutObjectRequest(bucketName, fileName + ".png", file);
+            cosClient.putObject(cosRequest);
 
             //获取下载地址
             Date expirationDate = new Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000);
@@ -96,6 +121,34 @@ public class ImageServiceImpl implements ImageService {
             throw new RuntimeException(e);
         } finally {
             cosClient.shutdown();
+        }
+    }
+    private Result<String> uploadImageToS3(String base64Image) {
+        BasicAWSCredentials awsCreds = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
+        AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
+                                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Endpoint, null))
+                                .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
+                                .withPathStyleAccessEnabled(true)
+                                .build();
+
+        try {
+            var fileName = String.valueOf(System.currentTimeMillis()) + ".png";
+            var file = File.createTempFile(fileName, ".png");
+            var fos = new FileOutputStream(file);
+            fos.write(Base64.decodeBase64(base64Image));
+            fos.flush();
+            fos.close();
+
+            // 上传至S3兼容存储
+            com.amazonaws.services.s3.model.PutObjectRequest s3PutRequest = 
+                new com.amazonaws.services.s3.model.PutObjectRequest(s3BucketName, fileName, file);
+            s3Client.putObject(s3PutRequest);
+
+            // 构建下载URL
+            String url = s3Client.getUrl(s3BucketName, fileName).toString();
+            return Result.success(url, "上传成功");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
     private Result<String> uploadImageToCHFS(String base64Image) {
